@@ -141,6 +141,22 @@
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
 
+    function renderPost(data) {
+  return `
+    <div class="post-card">
+      <div class="post-header">
+        <img src="${data.userProfilePic || 'default.png'}" class="mini-avatar">
+        <div>
+          <strong>${data.username}</strong>
+          <span class="rank-badge">${data.rank || 'Member'}</span>
+        </div>
+      </div>
+      <p>${data.content}</p>
+      ${data.imageURL ? `<img src="${data.imageURL}" class="post-img">` : ''}
+    </div>
+  `;
+}
+
   // --- 1. THE REDIRECT LOGIC ---
   onAuthStateChanged(auth, (user) => {
     if (!user) {
