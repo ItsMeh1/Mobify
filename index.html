@@ -4,197 +4,297 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mobify</title>
-
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg: #000000;
+    --panel-bg: #16181c;
+    --border: #2f3336;
+    --text-main: #e7e9ea;
+    --text-muted: #71767b;
+    --accent: #1d9bf0;
+    --accent-hover: #1a8cd8;
+    --danger: #f4212e;
+  }
 
-body {
-  font-family: system-ui;
-  display: flex;
-  height: 100vh;
-  background: #fafafa;
-}
+  * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-/* Sidebar */
-.sidebar {
-  width: 260px;
-  border-right: 2px solid black;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: white;
-}
+  body {
+    background: var(--bg);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+  }
 
-.profile-card {
-  display:flex;
-  gap:10px;
-  padding:10px;
-  border:2px solid black;
-  border-radius:10px;
-}
+  /* --- AUTH SCREEN --- */
+  #auth-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100%;
+    background: var(--bg);
+    z-index: 100;
+  }
+  
+  .auth-box {
+    background: var(--panel-bg);
+    padding: 40px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
 
-.profile-pic {
-  width:50px;
-  height:50px;
-  border-radius:50%;
-  border:2px solid black;
-}
+  .auth-box h1 { font-size: 32px; margin-bottom: 30px; letter-spacing: -1px; }
 
-.sidebar-content {
-  margin-top:20px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
+  .auth-box input {
+    width: 100%; padding: 15px; margin-bottom: 15px;
+    background: var(--bg); color: var(--text-main);
+    border: 1px solid var(--border); border-radius: 8px; font-size: 16px;
+  }
+  
+  .auth-box input:focus { outline: none; border-color: var(--accent); }
 
-/* Main */
-.main {
-  flex:1;
-  display:flex;
-  justify-content:center;
-}
+  .btn-primary {
+    background: var(--accent); color: white; border: none; font-weight: bold;
+    padding: 15px; border-radius: 30px; width: 100%; font-size: 16px;
+    cursor: pointer; transition: 0.2s; margin-bottom: 10px;
+  }
+  
+  .btn-primary:hover { background: var(--accent-hover); }
+  
+  .btn-outline {
+    background: transparent; color: var(--accent); border: 1px solid var(--accent);
+    font-weight: bold; padding: 15px; border-radius: 30px; width: 100%; 
+    font-size: 16px; cursor: pointer; transition: 0.2s;
+  }
+  
+  .btn-outline:hover { background: rgba(29, 155, 240, 0.1); }
 
-#feed {
-  width:100%;
-  max-width:600px;
-  padding:20px;
-  overflow-y:auto;
-}
+  /* --- MAIN APP --- */
+  #app-container {
+    display: none;
+    width: 100%;
+    max-width: 1200px;
+    height: 100vh;
+  }
 
-/* Post */
-.post {
-  border:2px solid black;
-  border-radius:12px;
-  padding:15px;
-  margin-bottom:20px;
-  background:white;
-}
+  /* Sidebar */
+  .sidebar {
+    width: 275px;
+    border-right: 1px solid var(--border);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
 
-.post-header {
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-bottom:10px;
-}
+  .logo { font-size: 28px; font-weight: 800; padding: 10px; margin-bottom: 20px; letter-spacing: -1px;}
 
-.post img {
-  width:100%;
-  border-radius:10px;
-  margin-top:10px;
-}
+  .nav-item {
+    font-size: 20px; padding: 12px 20px; border-radius: 30px;
+    cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px;
+    font-weight: 500; margin-bottom: 5px;
+  }
+  
+  .nav-item:hover { background: rgba(231, 233, 234, 0.1); }
 
-/* Actions */
-.actions {
-  display:flex;
-  gap:15px;
-  margin-top:10px;
-  cursor:pointer;
-}
+  .search-bar {
+    width: 100%; padding: 12px 20px; border-radius: 30px; border: none;
+    background: var(--panel-bg); color: var(--text-main); margin-bottom: 20px;
+    border: 1px solid transparent; outline: none;
+  }
+  
+  .search-bar:focus { border-color: var(--accent); background: var(--bg); }
 
-/* Modal */
-.modal {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.5);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
+  .profile-card {
+    display: flex; align-items: center; gap: 10px; padding: 10px;
+    border-radius: 30px; cursor: pointer; transition: 0.2s;
+  }
+  
+  .profile-card:hover { background: rgba(231, 233, 234, 0.1); }
 
-.modal-box {
-  background:white;
-  padding:20px;
-  border-radius:10px;
-  width:300px;
-}
+  .profile-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--border); }
+  .user-info h3 { font-size: 15px; }
+  .user-info p { font-size: 15px; color: var(--text-muted); }
 
-/* FAB */
-.fab {
-  position:fixed;
-  bottom:20px;
-  right:20px;
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  background:black;
-  color:white;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:24px;
-  cursor:pointer;
-}
+  /* Main Feed */
+  .main {
+    flex: 1; border-right: 1px solid var(--border);
+    overflow-y: auto; scrollbar-width: none; /* Hide scrollbar Firefox */
+  }
+  
+  .main::-webkit-scrollbar { display: none; /* Hide scrollbar Chrome */ }
+
+  .header {
+    backdrop-filter: blur(12px); background: rgba(0, 0, 0, 0.65);
+    position: sticky; top: 0; padding: 15px 20px; z-index: 10;
+    border-bottom: 1px solid var(--border); font-size: 20px; font-weight: 700;
+  }
+
+  /* Post */
+  .post { padding: 20px; border-bottom: 1px solid var(--border); display: flex; gap: 15px; transition: background 0.2s; }
+  .post:hover { background: rgba(255, 255, 255, 0.03); }
+  
+  .post-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+  
+  .post-body { flex: 1; }
+  .post-header { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+  .post-header strong { font-size: 15px; }
+  .post-header span { color: var(--text-muted); font-size: 15px; }
+  
+  .post-text { font-size: 15px; line-height: 1.5; margin-bottom: 10px; white-space: pre-wrap; }
+  .post-image { width: 100%; border-radius: 16px; margin-top: 10px; border: 1px solid var(--border); }
+
+  /* Actions */
+  .actions { display: flex; gap: 40px; margin-top: 15px; color: var(--text-muted); }
+  .action-btn { display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; font-size: 14px;}
+  .action-btn:hover { color: var(--accent); }
+  .action-btn.dislike:hover { color: var(--danger); }
+
+  /* Right Sidebar */
+  .right-sidebar { width: 350px; padding: 20px; }
+  .trending-box { background: var(--panel-bg); border-radius: 16px; padding: 15px; }
+  .trending-box h2 { font-size: 20px; margin-bottom: 15px; }
+  .trend-item { margin-bottom: 15px; cursor:pointer; }
+  .trend-item p { color: var(--text-muted); font-size: 13px; }
+  .trend-item strong { font-size: 15px; }
+
+  /* FAB & Modal */
+  .fab {
+    position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+    border-radius: 50%; background: var(--accent); color: white; display: none;
+    align-items: center; justify-content: center; font-size: 28px; cursor: pointer;
+    box-shadow: 0 4px 15px rgba(29, 155, 240, 0.4); transition: 0.2s; z-index: 50;
+  }
+  .fab:hover { background: var(--accent-hover); transform: scale(1.05); }
+
+  .modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(91, 112, 131, 0.4); display: none;
+    align-items: flex-start; justify-content: center; z-index: 200;
+    padding-top: 50px;
+  }
+
+  .modal-box {
+    background: var(--bg); padding: 20px; border-radius: 16px;
+    width: 100%; max-width: 600px; box-shadow: 0 0 20px rgba(255,255,255,0.1);
+  }
+
+  .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+  .close-modal { cursor: pointer; font-size: 20px; font-weight: bold; }
+  
+  .modal textarea {
+    width: 100%; height: 100px; background: transparent; color: var(--text-main);
+    border: none; font-size: 20px; outline: none; resize: none; margin-bottom: 15px;
+  }
+  .modal input {
+    width: 100%; padding: 10px; background: transparent; border: none;
+    border-bottom: 1px solid var(--border); color: var(--accent); margin-bottom: 20px; outline: none;
+  }
+
+  .post-btn-small { background: var(--accent); color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
+  .post-btn-small:hover { background: var(--accent-hover); }
+
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
-  <div>
-    <div class="profile-card">
-      <img id="pfp" class="profile-pic">
-      <div>
-        <h3 id="username">...</h3>
-        <p id="rank">Member</p>
-      </div>
-    </div>
+<div id="auth-container">
+  <div class="auth-box">
+    <h1>Mobify</h1>
+    <input id="email" placeholder="Email address" type="email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="loginBtn" class="btn-primary">Log in</button>
+    <button id="signupBtn" class="btn-outline">Create account</button>
+  </div>
+</div>
 
-    <div class="sidebar-content">
-      <p>🏠 Home</p>
-      <p>🔥 Trending</p>
-      <p>👤 Profile</p>
+<div id="app-container">
+  <div class="sidebar">
+    <div>
+      <div class="logo">Mobify</div>
+      <div class="nav-item">🏠 Home</div>
+      <div class="nav-item">🔥 Trending</div>
+      <div class="nav-item">👤 Profile</div>
+      <div class="nav-item" id="logoutBtn">🚪 Logout</div>
+    </div>
+    
+    <div class="profile-card">
+      <img id="pfp" class="profile-pic" src="https://via.placeholder.com/50">
+      <div class="user-info">
+        <h3 id="username">User</h3>
+        <p id="rank">@member</p>
+      </div>
     </div>
   </div>
 
-  <input id="search" placeholder="Search..." />
-</div>
+  <div class="main">
+    <div class="header">Home</div>
+    <div id="feed"></div>
+  </div>
 
-<div class="main">
-  <div id="feed"></div>
+  <div class="right-sidebar">
+    <input id="search" class="search-bar" placeholder="Search Mobify..." />
+    <div class="trending-box">
+      <h2>What's happening</h2>
+      <div class="trend-item"><p>Technology · Trending</p><strong>#ElonMusk</strong></div>
+      <div class="trend-item"><p>Web Development · Trending</p><strong>Firebase V12</strong></div>
+      <div class="trend-item"><p>Business · Trending</p><strong>Acquisitions</strong></div>
+    </div>
+  </div>
 </div>
 
 <div class="fab" id="openModal">+</div>
 
 <div class="modal" id="modal">
   <div class="modal-box">
+    <div class="modal-header">
+      <div class="close-modal" id="closeModal">✕</div>
+      <button id="postBtn" class="post-btn-small">Post</button>
+    </div>
     <textarea id="postText" placeholder="What's happening?"></textarea>
-    <input id="imageURL" placeholder="Image URL (optional)">
-    <button id="postBtn">Post</button>
+    <input id="imageURL" placeholder="Add image URL (optional)">
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import {
-  getAuth,
-  onAuthStateChanged,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut
+  getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
+  signInWithEmailAndPassword, signOut
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  onSnapshot,
-  updateDoc,
-  doc,
-  arrayUnion,
-  arrayRemove,
-  serverTimestamp,
-  setDoc,
-  getDoc
+  getFirestore, collection, addDoc, onSnapshot, updateDoc, doc,
+  arrayUnion, arrayRemove, serverTimestamp, setDoc, getDoc, query, orderBy
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-const firebaseConfig = { /* YOUR CONFIG */ };
+const firebaseConfig = {
+  apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
+  authDomain: "mobify-5b3c9.firebaseapp.com",
+  projectId: "mobify-5b3c9",
+  storageBucket: "mobify-5b3c9.firebasestorage.app",
+  messagingSenderId: "454093361079",
+  appId: "1:454093361079:web:ab1e1093a91a705be3a232"
+};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser;
+let currentUser = null;
+
+// DOM Elements
+const authContainer = document.getElementById("auth-container");
+const appContainer = document.getElementById("app-container");
+const fab = document.getElementById("openModal");
+const modal = document.getElementById("modal");
 
 async function loadUserProfile(user) {
   const ref = doc(db, "users", user.uid);
@@ -202,62 +302,62 @@ async function loadUserProfile(user) {
 
   if (snap.exists()) {
     const data = snap.data();
-
-    username.textContent = data.name;
-    rank.textContent = data.rank;
-    pfp.src = data.pfp || "https://via.placeholder.com/50";
+    document.getElementById("username").textContent = data.name;
+    document.getElementById("rank").textContent = "@" + (data.name.toLowerCase().replace(/\s/g, ''));
+    document.getElementById("pfp").src = data.pfp || "https://ui-avatars.com/api/?name=" + data.name + "&background=random";
   }
 }
 
-/* Render */
+/* Render Post Template */
 function render(post, id) {
-  const liked = post.likes?.includes(currentUser.uid);
-  const disliked = post.dislikes?.includes(currentUser.uid);
+  const likes = post.likes?.length || 0;
+  const dislikes = post.dislikes?.length || 0;
+  const profileImg = post.userProfilePic || "https://ui-avatars.com/api/?name=" + post.username + "&background=random";
 
   return `
   <div class="post">
-    <div class="post-header">
-      <img src="${post.userProfilePic}" width="40">
-      <strong>${post.username}</strong>
-    </div>
-    <p>${post.content}</p>
-    ${post.imageURL ? `<img src="${post.imageURL}">` : ""}
-    <div class="actions">
-      <span onclick="like('${id}')">❤️ ${post.likes?.length || 0}</span>
-      <span onclick="dislike('${id}')">👎 ${post.dislikes?.length || 0}</span>
+    <img src="${profileImg}" class="post-avatar">
+    <div class="post-body">
+      <div class="post-header">
+        <strong>${post.username}</strong>
+        <span>@${post.username.toLowerCase().replace(/\s/g, '')}</span>
+      </div>
+      <div class="post-text">${post.content}</div>
+      ${post.imageURL ? `<img src="${post.imageURL}" class="post-image">` : ""}
+      <div class="actions">
+        <div class="action-btn" onclick="like('${id}')">❤️ ${likes}</div>
+        <div class="action-btn dislike" onclick="dislike('${id}')">👎 ${dislikes}</div>
+      </div>
     </div>
   </div>`;
 }
 
 /* Realtime Feed */
 function startFeed() {
-  const q = collection(db, "posts");
+  // Using query to properly order posts by newest first
+  const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
 
   onSnapshot(q, (snap) => {
     const feed = document.getElementById("feed");
     feed.innerHTML = "";
-
-    snap.docs.reverse().forEach(docSnap => {
+    snap.forEach(docSnap => {
       feed.innerHTML += render(docSnap.data(), docSnap.id);
     });
   });
 }
 
-/* Like */
+/* Like / Dislike (Global window bindings for inline HTML onClick) */
 window.like = async (id) => {
-  const ref = doc(db, "posts", id);
-
-  await updateDoc(ref, {
+  if(!currentUser) return;
+  await updateDoc(doc(db, "posts", id), {
     likes: arrayUnion(currentUser.uid),
     dislikes: arrayRemove(currentUser.uid)
   });
 };
 
-/* Dislike */
 window.dislike = async (id) => {
-  const ref = doc(db, "posts", id);
-
-  await updateDoc(ref, {
+  if(!currentUser) return;
+  await updateDoc(doc(db, "posts", id), {
     dislikes: arrayUnion(currentUser.uid),
     likes: arrayRemove(currentUser.uid)
   });
@@ -265,109 +365,93 @@ window.dislike = async (id) => {
 
 /* Create Post */
 document.getElementById("postBtn").onclick = async () => {
-  await addDoc(collection(db, "posts"), {
-    content: postText.value,
-    imageURL: imageURL.value,
-    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-const userData = userDoc.data();
-
-await addDoc(collection(db, "posts"), {
-  content: postText.value,
-  imageURL: imageURL.value,
-  username: userData.name,
-  userProfilePic: userData.pfp || "",
-  userID: currentUser.uid,
-  likes: [],
-  dislikes: [],
-  timestamp: serverTimestamp()
-});
-    userID: currentUser.uid,
-    likes: [],
-    dislikes: [],
-    timestamp: serverTimestamp()
-  });
-
-  modal.style.display = "none";
-};
-
-/* Modal */
-openModal.onclick = () => modal.style.display = "flex";
-
-/* Search */
-search.oninput = (e) => {
-  const val = e.target.value.toLowerCase();
-  document.querySelectorAll(".post").forEach(p => {
-    p.style.display = p.innerText.toLowerCase().includes(val) ? "" : "none";
-  });
-};
-
-let currentUser;
-
-/* AUTH UI */
-function showAuth() {
-  document.body.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;">
-      <h1>Mobify</h1>
-
-      <input id="email" placeholder="Email" />
-      <input id="password" type="password" placeholder="Password" />
-
-      <button id="loginBtn">Login</button>
-      <button id="signupBtn">Sign Up</button>
-    </div>
-  `;
-
-  document.getElementById("loginBtn").onclick = login;
-  document.getElementById("signupBtn").onclick = signup;
-}
-
-/* SIGNUP */
-async function signup() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const textVal = document.getElementById("postText").value;
+  const imgVal = document.getElementById("imageURL").value;
+  
+  if(!textVal && !imgVal) return; // Prevent empty posts
 
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    const user = cred.user;
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    const userData = userDoc.exists() ? userDoc.data() : { name: "Unknown", pfp: "" };
 
-    // create user doc
-    await setDoc(doc(db, "users", user.uid), {
+    await addDoc(collection(db, "posts"), {
+      content: textVal,
+      imageURL: imgVal,
+      username: userData.name,
+      userProfilePic: userData.pfp || "",
+      userID: currentUser.uid,
+      likes: [],
+      dislikes: [],
+      timestamp: serverTimestamp() // Relies on Firestore for time
+    });
+
+    // Reset Modal
+    document.getElementById("postText").value = "";
+    document.getElementById("imageURL").value = "";
+    modal.style.display = "none";
+  } catch (error) {
+    console.error("Error creating post: ", error);
+  }
+};
+
+/* Modal Toggle */
+fab.onclick = () => modal.style.display = "flex";
+document.getElementById("closeModal").onclick = () => modal.style.display = "none";
+
+/* Search Filter */
+document.getElementById("search").oninput = (e) => {
+  const val = e.target.value.toLowerCase();
+  document.querySelectorAll(".post").forEach(p => {
+    p.style.display = p.innerText.toLowerCase().includes(val) ? "flex" : "none";
+  });
+};
+
+/* AUTHENTICATION LOGIC */
+document.getElementById("signupBtn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, "users", cred.user.uid), {
       name: email.split("@")[0],
       email: email,
       rank: "Member",
       pfp: ""
     });
+  } catch (err) { alert(err.message); }
+};
 
-  } catch (err) {
-    alert(err.message);
-  }
-}
-
-/* LOGIN */
-async function login() {
+document.getElementById("loginBtn").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-
   try {
     await signInWithEmailAndPassword(auth, email, password);
-  } catch (err) {
-    alert(err.message);
-  }
-}
+  } catch (err) { alert(err.message); }
+};
 
-/* AUTH STATE */
+document.getElementById("logoutBtn").onclick = () => {
+  signOut(auth);
+};
+
+/* Auth State Observer */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    showAuth();
+    // Show Login Screen, Hide App
+    authContainer.style.display = "flex";
+    appContainer.style.display = "none";
+    fab.style.display = "none";
+    currentUser = null;
   } else {
+    // Show App, Hide Login Screen
+    authContainer.style.display = "none";
+    appContainer.style.display = "flex";
+    fab.style.display = "flex";
     currentUser = user;
 
     await loadUserProfile(user);
-
     startFeed();
   }
 });
 </script>
-
 </body>
 </html>
