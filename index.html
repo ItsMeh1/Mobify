@@ -1,195 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobify Web</title>
-    <style>
-        /* General Reset and Body Styling */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 100vh; background-color: #fafafa; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobify Web</title>
 
-        /* Left Sidebar */
-        .sidebar {
-            width: 350px;
-            border-right: 4px solid #000;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* Pushes search to bottom */
-            background-color: #fff;
-        }
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Profile Card */
-        .profile-card {
-            border: 2px solid #000;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background-color: #f0f0f0;
-        }
-        .profile-pic {
-            width: 60px;
-            height: 60px;
-            border: 2px solid #000;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            text-align: center;
-            background-color: #e0e0e0;
-        }
-        .profile-info h3 { font-size: 18px; margin-bottom: 4px; }
-        .profile-info p { font-size: 14px; color: #555; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+    display: flex;
+    height: 100vh;
+    background-color: #fafafa;
+}
 
-        /* Sidebar Middle Content */
-        .sidebar-content { flex-grow: 1; padding: 40px 0; font-size: 20px; color: #666; }
+/* Sidebar */
+.sidebar {
+    width: 300px;
+    border-right: 3px solid black;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: white;
+}
 
-        /* Search Bar */
-        .search-bar {
-            border: 2px solid #000;
-            border-radius: 8px;
-            padding: 15px;
-            background-color: #f0f0f0;
-            font-size: 16px;
-        }
+.profile-card {
+    border: 2px solid black;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    gap: 10px;
+    background: #f0f0f0;
+}
 
-        /* Main Feed Area */
-        .main-content {
-            flex-grow: 1;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: #666;
-        }
+.profile-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid black;
+    background: #ddd;
+}
 
-        /* Floating Action Buttons */
-        .fab {
-            position: absolute;
-            width: 70px;
-            height: 70px;
-            border: 1px solid #000;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            text-align: center;
-            background-color: #f0f0f0;
-            cursor: pointer;
-        }
-        .fab-top-right { top: 20px; right: 20px; }
-        .fab-bottom-right { bottom: 20px; right: 20px; }
-    </style>
+.sidebar-content {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar-content p {
+    cursor: pointer;
+}
+
+.search-bar {
+    border: 2px solid black;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* Main */
+.main-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+}
+
+#feed {
+    width: 100%;
+    max-width: 700px;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Post */
+.post-card {
+    border: 2px solid black;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    background: white;
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.mini-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid black;
+}
+
+.rank-badge {
+    font-size: 12px;
+    color: #666;
+}
+
+.post-img {
+    width: 100%;
+    margin-top: 10px;
+    border-radius: 10px;
+}
+</style>
 </head>
+
 <body>
 
-    <div class="sidebar">
-        <div>
-            <div class="profile-card">
-                <div class="profile-pic">Profile<br>picture</div>
-                <div class="profile-info">
-                    <h3>User name</h3>
-                    <p>Rank</p>
-                </div>
-            </div>
-            
-            <div class="sidebar-content">
-                Whatever you want to put here
+<!-- Sidebar -->
+<div class="sidebar">
+    <div>
+        <div class="profile-card">
+            <div class="profile-pic"></div>
+            <div class="profile-info">
+                <h3>Loading...</h3>
+                <p>...</p>
             </div>
         </div>
 
-        <div class="search-bar">
-            quick search...
+        <div class="sidebar-content">
+            <p>🏠 Home</p>
+            <p>🔥 Trending</p>
+            <p>👤 Profile</p>
+            <p>⚙️ Settings</p>
         </div>
     </div>
 
-    <div class="main-content">
-        Posts go here
+    <input id="searchInput" class="search-bar" placeholder="Search posts...">
+</div>
 
-        <div class="fab fab-top-right">Add<br>new<br>post<br>btn</div>
-        <div class="fab fab-bottom-right">Info<br>btn</div>
-    </div>
+<!-- Main -->
+<div class="main-content">
+    <div id="feed"></div>
+</div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { 
-    getAuth, 
-    onAuthStateChanged, 
-    GoogleAuthProvider, 
-    signInWithPopup 
-  } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
-    authDomain: "mobify-5b3c9.firebaseapp.com",
-    projectId: "mobify-5b3c9",
-    storageBucket: "mobify-5b3c9.firebasestorage.app",
-    messagingSenderId: "454093361079",
-    appId: "1:454093361079:web:ab1e1093a91a705be3a232"
-  };
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
+/* Firebase config */
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "mobify-5b3c9.firebaseapp.com",
+  projectId: "mobify-5b3c9",
+};
 
-    function renderPost(data) {
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+/* Render Post */
+function renderPost(data) {
   return `
     <div class="post-card">
       <div class="post-header">
-        <img src="${data.userProfilePic || 'default.png'}" class="mini-avatar">
+        <img src="${data.userProfilePic || ''}" class="mini-avatar">
         <div>
           <strong>${data.username}</strong>
-          <span class="rank-badge">${data.rank || 'Member'}</span>
+          <div class="rank-badge">${data.rank || "Member"}</div>
         </div>
       </div>
-      <p>${data.content}</p>
-      ${data.imageURL ? `<img src="${data.imageURL}" class="post-img">` : ''}
+      <p>${data.content || ""}</p>
+      ${data.imageURL ? `<img src="${data.imageURL}" class="post-img">` : ""}
     </div>
   `;
 }
 
-  // --- 1. THE REDIRECT LOGIC ---
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      console.log("No user! Redirecting...");
-      // If you have a separate login.html, uncomment the line below:
-      window.location.href = "login.html"; 
-      
-      // For now, let's just show an overlay so they can't use the app
-      document.body.innerHTML = `
-        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;">
-          <h1>Welcome to Mobify</h1>
-          <p>Please sign in to continue</p>
-          <button id="google-login" style="padding:10px 20px; cursor:pointer;">Sign in with Google</button>
-        </div>
-      `;
-      
-      document.getElementById('google-login').addEventListener('click', () => {
-        signInWithPopup(auth, provider).then(() => window.location.reload());
-      });
-    } else {
-      console.log("Welcome,", user.displayName);
-      // Run your app initialization here (loadPosts, etc.)
+/* Load Posts */
+async function loadPosts() {
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "Loading...";
+
+  const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+  const snapshot = await getDocs(q);
+
+  feed.innerHTML = "";
+
+  snapshot.forEach(doc => {
+    feed.innerHTML += renderPost(doc.data());
+  });
+}
+
+/* Load User */
+async function loadUserData(user) {
+  const ref = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
+
+  if (snap.exists()) {
+    const data = snap.data();
+    document.querySelector(".profile-info h3").textContent = data.name;
+    document.querySelector(".profile-info p").textContent = data.rank || "Member";
+  }
+}
+
+/* Search */
+document.addEventListener("input", async (e) => {
+  if (e.target.id !== "searchInput") return;
+
+  const value = e.target.value.toLowerCase();
+  const feed = document.getElementById("feed");
+
+  const snapshot = await getDocs(collection(db, "posts"));
+
+  feed.innerHTML = "";
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    if (
+      data.content?.toLowerCase().includes(value) ||
+      data.username?.toLowerCase().includes(value)
+    ) {
+      feed.innerHTML += renderPost(data);
     }
   });
+});
 
-  // --- 2. THE TAG DELETION LOGIC ---
-  // Put this here so it listens globally for clicks on any "X" buttons
-  document.addEventListener('click', (event) => {
-    if (event.target.classList.contains('delete-btn')) {
-      event.target.parentElement.remove(); 
-    }
-  });
+/* Auth */
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    document.body.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;">
+        <h1>Mobify</h1>
+        <button id="loginBtn">Sign in with Google</button>
+      </div>
+    `;
 
+    document.getElementById("loginBtn").onclick = () => {
+      signInWithPopup(auth, provider).then(() => location.reload());
+    };
+  } else {
+    loadUserData(user);
+    loadPosts();
+  }
+});
 </script>
+
 </body>
 </html>
