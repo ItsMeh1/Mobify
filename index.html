@@ -244,9 +244,9 @@
     <input id="search" class="search-bar" placeholder="Search Mobify..." />
     <div class="trending-box">
       <h2>What's happening</h2>
-      <div class="trend-item"><p>Technology · Trending</p><strong>#ElonMusk</strong></div>
-      <div class="trend-item"><p>Web Development · Trending</p><strong>Firebase V12</strong></div>
-      <div class="trend-item"><p>Business · Trending</p><strong>Acquisitions</strong></div>
+      <div id="trending-list">
+        <div class="trend-item"><p>Loading trends...</p></div>
+      </div>
     </div>
   </div>
 </div>
@@ -296,16 +296,66 @@ const appContainer = document.getElementById("app-container");
 const fab = document.getElementById("openModal");
 const modal = document.getElementById("modal");
 
+// --- 1. UPGRADED PROFILE LOADER ---
 async function loadUserProfile(user) {
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
 
+  // Fallback data based on their email if they don't have a name set
+  let name = user.email.split('@')[0];
+  let pfpUrl = "https://ui-avatars.com/api/?name=" + name + "&background=random";
+
   if (snap.exists()) {
     const data = snap.data();
-    document.getElementById("username").textContent = data.name;
-    document.getElementById("rank").textContent = "@" + (data.name.toLowerCase().replace(/\s/g, ''));
-    document.getElementById("pfp").src = data.pfp || "https://ui-avatars.com/api/?name=" + data.name + "&background=random";
+    name = data.name || name;
+    pfpUrl = data.pfp || pfpUrl;
+  } else {
+    // SELF-HEALING: If an old user logs in and doesn't have a database profile, create one now!
+    await setDoc(ref, {
+      name: name,
+      email: user.email,
+      rank: "Member",
+      pfp: ""
+    });
   }
+
+  // Update the DOM
+  document.getElementById("username").textContent = name;
+  document.getElementById("rank").textContent = "@" + name.toLowerCase().replace(/\s/g, '');
+  
+  // Add an error fallback just in case the UI-avatar image fails to load
+  const pfpImg = document.getElementById("pfp");
+  pfpImg.src = pfpUrl;
+  pfpImg.onerror = () => { pfpImg.src = "https://via.placeholder.com/50"; };
+}
+
+
+// --- 2. UPGRADED FEED & TRENDING ENGINE ---
+function updateTrending(counts) {
+  const trendingContainer = document.getElementById("trending-list");
+  trendingContainer.innerHTML = "";
+
+  // Sort the hashtags from highest count to lowest, and grab the top 5
+  const sortedTags = Object.keys(counts)
+    .sort((a, b) => counts[b] - counts[a])
+    .slice(0, 5);
+
+  if (sortedTags.length === 0) {
+    trendingContainer.innerHTML = `<div class="trend-item"><p style="color: var(--text-muted); font-size: 14px;">No hashtags yet. Try posting something with a #hashtag!</p></div>`;
+    return;
+  }
+
+  // Generate HTML for each trending tag
+  sortedTags.forEach(tag => {
+    const count = counts[tag];
+    trendingContainer.innerHTML += `
+      <div class="trend-item">
+        <p>Trending</p>
+        <strong>${tag}</strong>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 3px;">${count} post${count > 1 ? 's' : ''}</p>
+      </div>
+    `;
+  });
 }
 
 /* Render Post Template */
