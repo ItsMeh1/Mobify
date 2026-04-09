@@ -1,142 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Mobify | v4.0</title>
+<meta name="color-scheme" content="dark" />
 <style>
   :root {
     --bg: #000000;
+    --bg-elevated: #0b0c0f;
     --panel-bg: #16181c;
+    --panel-bg-2: #1d2128;
     --border: #2f3336;
+    --border-soft: rgba(47, 51, 54, 0.7);
     --text-main: #e7e9ea;
     --text-muted: #71767b;
     --accent: #1d9bf0;
     --accent-hover: #1a8cd8;
+    --success: #00ba7c;
+    --danger: #f91880;
+    --shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+    --radius-xl: 24px;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --content-max: 1280px;
+    --sidebar-left: 280px;
+    --sidebar-right: 350px;
   }
 
-  * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  body { background: var(--bg); color: var(--text-main); display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+  * { box-sizing: border-box; }
+  html { height: 100%; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top, rgba(29, 155, 240, 0.12), transparent 30%),
+      linear-gradient(180deg, #050608 0%, #000 100%);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, system-ui, sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
 
-  #app-container { display: none; width: 100%; max-width: 1200px; height: 100vh; }
+  button, input, textarea { font: inherit; }
+  button { border: 0; background: none; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .app-shell {
+    display: none; width: 100%; height: 100vh; max-width: var(--content-max); margin: 0 auto;
+    border-left: 1px solid var(--border-soft); border-right: 1px solid var(--border-soft);
+    background: rgba(0, 0, 0, 0.22); backdrop-filter: blur(12px);
+  }
+
+  .auth-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+  .auth-card {
+    width: min(100%, 420px); background: linear-gradient(180deg, rgba(22, 24, 28, 0.95), rgba(11, 12, 15, 0.95));
+    border: 1px solid var(--border); border-radius: 28px; padding: 34px; box-shadow: var(--shadow);
+  }
+
+  .brand-mark { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+  .brand-dot { width: 14px; height: 14px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 0 6px rgba(29, 155, 240, 0.12); }
+  .brand-title { font-size: 34px; line-height: 1; margin: 0; letter-spacing: -0.04em; font-weight: 900; }
+  .brand-subtitle { margin: 8px 0 0; color: var(--text-muted); font-size: 14px; line-height: 1.5; }
+
+  .auth-form { display: grid; gap: 12px; margin-top: 18px; }
+  .field {
+    width: 100%; border: 1px solid var(--border); background: rgba(0, 0, 0, 0.85);
+    color: var(--text-main); border-radius: 14px; padding: 14px 16px;
+    transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+  }
+  .field::placeholder { color: #8a8f98; }
+  .field:focus { border-color: rgba(29, 155, 240, 0.85); background: #000; transform: translateY(-1px); outline: none; }
+
+  .btn-primary, .btn-ghost { transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease; }
+  .btn-primary {
+    width: 100%; padding: 14px 16px; border-radius: 999px; background: var(--accent);
+    color: white; font-weight: 800; box-shadow: 0 12px 24px rgba(29, 155, 240, 0.2);
+  }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.6; cursor: wait; transform: none; }
   
-  /* --- SIDEBAR --- */
-  .sidebar { width: 275px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; }
-  .logo { font-size: 32px; font-weight: 900; margin-bottom: 30px; letter-spacing: -1.5px; }
+  .btn-ghost { color: var(--accent); font-weight: bold; margin-top: 10px; padding: 10px; border-radius: 999px; }
+  .btn-ghost:hover { background: rgba(29, 155, 240, 0.1); }
+
+  .auth-status { min-height: 22px; margin-top: 12px; font-size: 14px; color: var(--text-muted); text-align: center; }
   
-  .nav-item { font-size: 20px; padding: 14px 24px; border-radius: 30px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px; margin-bottom: 5px; }
-  .nav-item:hover { background: rgba(231, 233, 234, 0.1); }
+  .layout { display: grid; grid-template-columns: var(--sidebar-left) minmax(0, 1fr) var(--sidebar-right); height: 100%; }
+  .sidebar, .right-sidebar { height: 100%; overflow: auto; scrollbar-width: none; }
+  .sidebar::-webkit-scrollbar, .right-sidebar::-webkit-scrollbar, .main::-webkit-scrollbar, .modal-body::-webkit-scrollbar { width: 0; height: 0; }
+  .sidebar { border-right: 1px solid var(--border-soft); padding: 18px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  .logo-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px 18px; }
+  .logo { font-size: 28px; line-height: 1; font-weight: 900; letter-spacing: -0.05em; }
+
+  .nav-stack { display: grid; gap: 6px; }
+  .nav-btn { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 14px 18px; border-radius: 999px; color: var(--text-main); font-size: 18px; font-weight: 700; }
+  .nav-btn:hover { background: rgba(231, 233, 234, 0.08); }
+  .nav-btn.active { background: rgba(29, 155, 240, 0.12); color: #8ed1ff; }
+  .nav-btn.secondary { color: var(--text-muted); font-size: 16px; font-weight: 650; }
+  .nav-icon { width: 24px; text-align: center; }
+  .sidebar-footer { margin-top: auto; padding-top: 10px; }
+
+  .profile-card { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 24px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.04); }
+  .avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: #101214; flex-shrink: 0; }
+  .avatar.large { width: 82px; height: 82px; }
+  .profile-name { display: block; font-size: 14px; font-weight: 800; }
+  .profile-handle { display: block; margin-top: 2px; color: var(--text-muted); font-size: 12px; }
+
+  .main { min-width: 0; overflow: auto; border-right: 1px solid var(--border-soft); background: rgba(0, 0, 0, 0.1); }
+  .main-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--border-soft); background: rgba(0, 0, 0, 0.76); backdrop-filter: blur(16px); }
+  .main-title { margin: 0; font-size: 22px; line-height: 1.2; letter-spacing: -0.03em; }
+  .main-subtitle { margin: 4px 0 0; color: var(--text-muted); font-size: 13px; }
+
+  .toolbar { display: flex; align-items: center; gap: 8px; }
+  .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.04); border: 1px solid transparent; color: var(--text-main); }
+  .icon-btn:hover { background: rgba(255, 255, 255, 0.08); }
+
+  .feed { padding: 0; }
+  .composer-hint { padding: 16px 18px; color: var(--text-muted); font-size: 14px; border-bottom: 1px solid var(--border-soft); background: rgba(255, 255, 255, 0.02); }
+  .empty-state { padding: 36px 20px; text-align: center; color: var(--text-muted); }
+
+  .post { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--border-soft); cursor: pointer; transition: background 0.15s ease; }
+  .post:hover { background: rgba(255, 255, 255, 0.025); }
+  .post-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #101214; flex-shrink: 0; }
+  .post-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .post-name { font-size: 15px; font-weight: 850; }
+  .post-handle, .post-time { color: var(--text-muted); font-size: 14px; }
+  .post-body { margin-top: 4px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .post-media { width: 100%; margin-top: 12px; border-radius: 18px; border: 1px solid var(--border); display: block; max-height: 560px; object-fit: cover; background: #101214; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #202327; color: #8ed1ff; font-size: 11px; font-weight: 800; letter-spacing: 0.01em; white-space: nowrap; }
+  .badge.soft { color: var(--text-muted); background: rgba(255,255,255,0.04); }
+  .badge.success { color: var(--success); }
+  .tag-link { color: #8ed1ff; font-weight: 700; text-decoration: none; }
+  .tag-link:hover { text-decoration: underline; }
+
+  .right-sidebar { padding: 18px; display: grid; gap: 16px; align-content: start; }
+  .search-bar { width: 100%; padding: 13px 18px; border-radius: 999px; background: var(--panel-bg); border: 1px solid var(--border); color: var(--text-main); outline: none; }
+  .search-bar:focus { border-color: rgba(29, 155, 240, 0.85); box-shadow: 0 0 0 4px rgba(29, 155, 240, 0.12); }
+  .card { background: linear-gradient(180deg, rgba(22, 24, 28, 0.96), rgba(17, 19, 23, 0.96)); border-radius: 20px; padding: 18px; border: 1px solid var(--border-soft); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22); }
+  .card h3 { margin: 0 0 14px; font-size: 17px; line-height: 1.2; }
+  .rule-item { color: var(--text-muted); font-size: 14px; line-height: 1.4; padding-left: 18px; position: relative; margin-bottom: 8px;}
+  .rule-item::before { content: "•"; color: var(--accent); position: absolute; left: 0; top: 0; }
   
-  /* BIG HOME BUTTON */
-  .nav-home { font-size: 24px; font-weight: 800; background: rgba(29, 155, 240, 0.1); color: var(--accent); margin-bottom: 15px; }
+  .mini-tag { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left; padding: 11px 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid transparent; color: var(--text-main); margin-bottom: 10px;}
+  .mini-tag:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.05); }
 
-  .main { flex: 1; border-right: 1px solid var(--border); overflow-y: auto; scrollbar-width: none; position: relative; }
-  .header { padding: 15px 20px; border-bottom: 1px solid var(--border); font-weight: bold; font-size: 22px; backdrop-filter: blur(12px); position: sticky; top: 0; background: rgba(0,0,0,0.75); z-index: 5; }
+  .fab { position: fixed; right: 28px; bottom: 28px; width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; display: none; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 16px 36px rgba(29, 155, 240, 0.35); z-index: 60; }
+  .fab:hover { background: var(--accent-hover); transform: translateY(-1px); }
 
-  /* --- POSTS --- */
-  .post { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; cursor: pointer; }
-  .post:hover { background: rgba(255, 255, 255, 0.02); }
-  .post-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-  .post-image { width: 100%; border-radius: 16px; margin-top: 12px; border: 1px solid var(--border); }
-  .rank-badge { background: #202327; color: var(--accent); font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-left: 8px; }
+  .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(91, 112, 131, 0.38); backdrop-filter: blur(6px); z-index: 200; padding: 18px; }
+  .modal-box { width: min(100%, 660px); max-height: 90vh; background: linear-gradient(180deg, rgba(7, 8, 10, 0.98), rgba(11, 12, 15, 0.98)); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border-soft); background: rgba(255, 255, 255, 0.02); }
+  .modal-body { padding: 20px 18px 24px; overflow: auto; }
+  .profile-top { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .profile-copy h2 { margin: 0; font-size: 26px; }
+  .profile-copy p { margin: 8px 0 0; color: var(--text-muted); }
+  .status-line { margin-top: 14px; color: var(--text-muted); font-style: italic; }
 
-  /* --- RIGHT SIDEBAR & RULES --- */
-  .right-sidebar { width: 350px; padding: 20px; overflow-y: auto; }
-  .info-box { background: var(--panel-bg); border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
-  .info-box h3 { margin-bottom: 12px; font-size: 18px; }
-  .rule-item { font-size: 14px; margin-bottom: 8px; color: var(--text-muted); display: flex; gap: 10px; }
-  .rule-item::before { content: "•"; color: var(--accent); }
-
-  /* --- MODALS --- */
-  .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(91, 112, 131, 0.4); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(5px); }
-  .modal-box { background: var(--bg); width: 100%; max-width: 600px; max-height: 85vh; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border); }
-  .modal-body { flex: 1; overflow-y: auto; padding: 25px; }
-  #profPfp { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); }
-
-  .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; display: none; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: 0 8px 25px rgba(29, 155, 240, 0.4); }
+  .hidden { display: none !important; }
+  
+  @media (max-width: 920px) {
+    body { overflow: auto; }
+    .app-shell { height: auto; min-height: 100vh; border: 0; }
+    .layout { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+    .sidebar, .right-sidebar { display: none; }
+    .main { border-right: 0; min-height: 100vh; }
+    .fab { display: inline-flex; }
+  }
 </style>
 </head>
 <body>
 
-<div id="auth-container" style="display: flex; align-items: center; justify-content: center; height: 100vh; width: 100%;">
-  <div style="background: var(--panel-bg); padding: 40px; border-radius: 24px; width: 380px; text-align: center; border: 1px solid var(--border);">
-    <h1 style="margin-bottom:25px; font-size: 32px;">Mobify</h1>
-    <input id="email" type="email" placeholder="Email" style="width:100%; padding:14px; margin-bottom:12px; background:#000; border:1px solid var(--border); color:white; border-radius:10px;">
-    <input id="password" type="password" placeholder="Password" style="width:100%; padding:14px; margin-bottom:20px; background:#000; border:1px solid var(--border); color:white; border-radius:10px;">
-    <button id="loginBtn" style="width:100%; padding:14px; background:var(--accent); color:white; border:none; border-radius:30px; font-weight:bold; cursor:pointer; font-size:16px;">Log in</button>
+<div id="auth-container" class="auth-screen">
+  <div class="auth-card">
+    <div class="brand-mark">
+      <div class="brand-dot" aria-hidden="true"></div>
+      <h1 class="brand-title">Mobify</h1>
+    </div>
+    <p id="authSubtitle" class="brand-subtitle">Log in to browse posts, trends, and profiles.</p>
+
+    <form id="authForm" class="auth-form" autocomplete="on">
+      <input id="username" class="field hidden" type="text" placeholder="Username" autocomplete="username" />
+      <input id="email" class="field" type="email" placeholder="Email" autocomplete="email" required />
+      <input id="password" class="field" type="password" placeholder="Password" autocomplete="current-password" required />
+      <button id="authSubmitBtn" class="btn-primary" type="submit">Log in</button>
+      <button type="button" id="toggleAuthBtn" class="btn-ghost">Need an account? Sign up</button>
+      <div id="authStatus" class="auth-status" aria-live="polite"></div>
+    </form>
   </div>
 </div>
 
-<div id="app-container">
-  <div class="sidebar">
-    <div class="logo">Mobify</div>
-    <div class="nav-item nav-home" onclick="showFeed()">🏠 Home</div>
-    <div class="nav-item" onclick="showTrendingPage()">🔥 Trending</div>
-    <div class="nav-item" id="openMyProfile">👤 Profile</div>
-    <div class="nav-item" id="logoutBtn" style="margin-top:10px; color: var(--text-muted); font-size: 16px;">🚪 Logout</div>
-    
-    <div class="profile-card" style="margin-top:auto; display:flex; align-items:center; gap:12px; padding:12px; border-radius:40px; background: rgba(255,255,255,0.03);">
-      <img id="myPfp" style="width:42px; height:42px; border-radius:50%; object-fit:cover;">
-      <div>
-        <strong id="myUsername" style="display:block; font-size:14px;">User</strong>
-        <span id="myHandle" style="color:var(--text-muted); font-size:12px;">@handle</span>
+<div id="app-container" class="app-shell">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="logo-row">
+        <div class="brand-dot" aria-hidden="true"></div>
+        <div class="logo">Mobify</div>
       </div>
-    </div>
-  </div>
 
-  <div class="main" id="mainView">
-    <div class="header" id="viewTitle">Home</div>
-    <div id="feed"></div>
-  </div>
+      <div class="nav-stack">
+        <button class="nav-btn active" id="navHome" type="button"><span class="nav-icon">🏠</span><span>Home</span></button>
+        <button class="nav-btn" id="navTrending" type="button"><span class="nav-icon">🔥</span><span>Trending</span></button>
+        <button class="nav-btn" id="openMyProfile" type="button"><span class="nav-icon">👤</span><span>Profile</span></button>
+        <button class="nav-btn secondary" id="logoutBtn" type="button" style="margin-top: 8px;"><span class="nav-icon">🚪</span><span>Logout</span></button>
+      </div>
 
-  <div class="right-sidebar">
-    <input id="search" class="search-bar" style="width:100%; padding:12px 20px; border-radius:30px; background:var(--panel-bg); border:1px solid var(--border); color:white; outline:none; margin-bottom:20px;" placeholder="Search Mobify..." />
-    
-    <div class="info-box">
-      <h3>📜 Rules & Conduct</h3>
-      <div class="rule-item">Be respectful to all members.</div>
-      <div class="rule-item">No spamming or repetitive posts.</div>
-      <div class="rule-item">Keep content SFW (Safe for Work).</div>
-      <div class="rule-item">Don't impersonate other users.</div>
-      <div class="rule-item">Report bugs to @admins.</div>
-    </div>
+      <div class="sidebar-footer">
+        <div class="profile-card">
+          <img id="myPfp" class="avatar" alt="Your profile picture" />
+          <div style="min-width: 0;">
+            <strong id="myUsername" class="profile-name">User</strong>
+            <span id="myHandle" class="profile-handle">@handle</span>
+          </div>
+        </div>
+      </div>
+    </aside>
 
-    <div class="info-box" id="sidebarTrending">
-      <h3>🔥 Trending Tags</h3>
-      <div id="miniTrendingList" style="font-size: 14px;"></div>
-    </div>
+    <main class="main" id="mainView">
+      <div class="main-header">
+        <div class="main-title-wrap">
+          <h2 class="main-title" id="viewTitle">Home</h2>
+          <p class="main-subtitle" id="viewSubtitle">Latest posts from everyone</p>
+        </div>
+        <div class="toolbar">
+          <button class="icon-btn" id="refreshFeedBtn" type="button" aria-label="Refresh feed">⟳</button>
+        </div>
+      </div>
+      <div class="composer-hint" id="composerHint">Tap a post to open the author profile.</div>
+      <div id="feed" class="feed"></div>
+    </main>
+
+    <aside class="right-sidebar">
+      <input id="search" class="search-bar" type="search" placeholder="Search Mobify..." />
+      <section class="card">
+        <h3>📜 Rules & Conduct</h3>
+        <div class="rules">
+          <div class="rule-item">Be respectful to all members.</div>
+          <div class="rule-item">No spamming or repetitive posts.</div>
+          <div class="rule-item">Keep content SFW (Safe for Work).</div>
+          <div class="rule-item">Do not impersonate other users.</div>
+          <div class="rule-item">Report bugs to @admins.</div>
+        </div>
+      </section>
+      <section class="card">
+        <h3>🔥 Trending Tags</h3>
+        <div id="miniTrendingList" class="mini-list"></div>
+      </section>
+    </aside>
   </div>
 </div>
 
-<div class="fab" id="openPostModal">+</div>
+<button class="fab" id="openPostModal" type="button">+</button>
 
 <div class="modal" id="profileModal">
   <div class="modal-box">
-    <div style="padding:15px 25px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-        <strong>Profile</strong>
-        <span class="close-modal" style="cursor:pointer; font-size:20px;">✕</span>
+    <div class="modal-head">
+      <strong id="profileDialogTitle">Profile</strong>
+      <button class="icon-btn close-modal" type="button">✕</button>
     </div>
     <div class="modal-body" id="profileScrollArea">
-        <div style="display:flex; gap:20px; align-items:center;">
-            <img id="profPfp" src="">
-            <div>
-                <h2 id="profName">Name</h2>
-                <p id="profHandle" style="color:var(--accent); font-weight:700;">@handle</p>
-                <div id="profRank" class="rank-badge" style="display:inline-block; margin:5px 0 0 0;">Rank</div>
-            </div>
+      <div class="profile-top">
+        <img id="profPfp" class="avatar large" alt="Profile picture" />
+        <div class="profile-copy">
+          <h2 id="profName">Name</h2>
+          <p id="profHandle">@handle</p>
+          <div id="profRank" class="badge" style="margin-top: 10px;">Rank</div>
         </div>
-        <p id="profStatus" style="margin-top:15px; font-style:italic; color:var(--text-muted);"></p>
-        <hr style="border:none; border-top:1px solid var(--border); margin:20px 0;">
-        <h3 style="margin-bottom:15px;">Recent Posts</h3>
-        <div id="userPosts"></div>
+      </div>
+      <div class="status-line" id="profStatus"></div>
+      <hr style="border:none; border-top:1px solid var(--border-soft); margin:20px 0;" />
+      <h3 style="margin: 0 0 14px;">Recent Posts</h3>
+      <div id="userPosts"></div>
     </div>
   </div>
 </div>
 
+<template id="postTemplate">
+  <article class="post" tabindex="0">
+    <img class="post-avatar" alt="Post author avatar" />
+    <div class="post-content" style="width: 100%;">
+      <div class="post-header"></div>
+      <div class="post-body"></div>
+      <img class="post-media hidden" alt="Attached post image" />
+    </div>
+  </article>
+</template>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
@@ -151,126 +307,294 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+const els = {
+  authContainer: document.getElementById("auth-container"),
+  appContainer: document.getElementById("app-container"),
+  authForm: document.getElementById("authForm"),
+  authSubmitBtn: document.getElementById("authSubmitBtn"),
+  toggleAuthBtn: document.getElementById("toggleAuthBtn"),
+  authSubtitle: document.getElementById("authSubtitle"),
+  authStatus: document.getElementById("authStatus"),
+  username: document.getElementById("username"),
+  email: document.getElementById("email"),
+  password: document.getElementById("password"),
+  feed: document.getElementById("feed"),
+  viewTitle: document.getElementById("viewTitle"),
+  viewSubtitle: document.getElementById("viewSubtitle"),
+  composerHint: document.getElementById("composerHint"),
+  search: document.getElementById("search"),
+  miniTrendingList: document.getElementById("miniTrendingList"),
+  profileModal: document.getElementById("profileModal"),
+  profileDialogTitle: document.getElementById("profileDialogTitle"),
+  profName: document.getElementById("profName"),
+  profHandle: document.getElementById("profHandle"),
+  profPfp: document.getElementById("profPfp"),
+  profRank: document.getElementById("profRank"),
+  profStatus: document.getElementById("profStatus"),
+  userPosts: document.getElementById("userPosts"),
+  myPfp: document.getElementById("myPfp"),
+  myUsername: document.getElementById("myUsername"),
+  myHandle: document.getElementById("myHandle"),
+  navHome: document.getElementById("navHome"),
+  navTrending: document.getElementById("navTrending"),
+  openMyProfile: document.getElementById("openMyProfile"),
+  logoutBtn: document.getElementById("logoutBtn"),
+  openPostModal: document.getElementById("openPostModal"),
+  refreshFeedBtn: document.getElementById("refreshFeedBtn")
+};
+
 let allPosts = [];
 let currentUser = null;
+let currentView = "home";
+let currentTagFilter = null;
+let unsubscribePosts = null;
+let searchTimer = null;
+let isLoginMode = true;
 
-function getPostHTML(p) {
-    const handle = `@${p.username.toLowerCase().replace(/\s/g, '')}`;
-    return `
-    <div class="post" onclick="viewProfile('${p.userId}')">
-      <img src="${p.userProfilePic || ''}" class="post-avatar">
-      <div style="flex:1">
-        <div style="display:flex; align-items:center; gap:5px;">
-            <strong style="font-size:15px;">${p.username}</strong>
-            <span style="color:var(--text-muted); font-size:14px;">${handle}</span>
-            <span class="rank-badge">${p.rank || 'Member'}</span>
-        </div>
-        <div style="margin-top:4px; font-size:15px; line-height:1.4;">${p.content}</div>
-        ${p.imageURL ? `<img src="${p.imageURL}" class="post-image">` : ""}
-      </div>
-    </div>`;
+function escapeHTML(value = "") {
+  return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
+function normalizeText(value = "") { return String(value).toLowerCase().trim(); }
+function getHandle(name = "user") { const cleaned = String(name).toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9_]/g, ""); return cleaned ? `@${cleaned}` : "@user"; }
+
+function formatTime(timestamp) {
+  if (!timestamp) return "";
+  try {
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+  } catch { return ""; }
 }
 
-// --- NAVIGATION LOGIC ---
-window.showFeed = () => {
-    document.getElementById("viewTitle").innerText = "Home";
-    renderFeed(allPosts);
-};
+function extractTags(text = "") { return (String(text).match(/#[\w]+/g) || []); }
+function renderHashtagLinks(text = "") { return escapeHTML(text).replace(/(#[\w]+)/g, '<a class="tag-link" href="#" data-tag="$1">$1</a>'); }
 
-window.showTrendingPage = () => {
-    document.getElementById("viewTitle").innerText = "Trending Topics";
-    const feed = document.getElementById("feed");
-    feed.innerHTML = "<div style='padding:20px;'><h3 style='margin-bottom:20px;'>Popular Hashtags</h3><div id='trendingContainer'></div></div>";
+function buildPostElement(post) {
+  const template = document.getElementById("postTemplate");
+  const node = template.content.firstElementChild.cloneNode(true);
+  const username = post.username || "Unknown";
+  const handle = getHandle(username);
+  const rank = post.rank || "Member";
+  const avatar = node.querySelector(".post-avatar");
+  const header = node.querySelector(".post-header");
+  const body = node.querySelector(".post-body");
+  const media = node.querySelector(".post-media");
+
+  avatar.src = post.userProfilePic || "https://via.placeholder.com/50";
+  const time = formatTime(post.timestamp);
+  header.innerHTML = `<span class="post-name">${escapeHTML(username)}</span><span class="post-handle">${escapeHTML(handle)}</span><span class="badge ${rank === "Member" ? "soft" : ""}">${escapeHTML(rank)}</span>${time ? `<span class="post-time">• ${escapeHTML(time)}</span>` : ""}`;
+  body.innerHTML = renderHashtagLinks(post.content || "");
+
+  if (post.imageURL) { media.src = post.imageURL; media.classList.remove("hidden"); }
+  node.addEventListener("click", () => { if (post.userId) viewProfile(post.userId); });
+  node.querySelectorAll(".tag-link").forEach(link => {
+    link.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); applyTagFilter(link.dataset.tag); });
+  });
+  return node;
+}
+
+function setActiveNav(view) {
+  [els.navHome, els.navTrending].forEach(btn => btn.classList.remove("active"));
+  if (view === "home") els.navHome.classList.add("active");
+  if (view === "trending") els.navTrending.classList.add("active");
+}
+
+function setMainView(title, subtitle, hintText) {
+  els.viewTitle.textContent = title;
+  els.viewSubtitle.textContent = subtitle;
+  els.composerHint.textContent = hintText;
+}
+
+function updateMiniTrending() {
+  const counts = {};
+  allPosts.forEach(post => { extractTags(post.content).forEach(tag => counts[tag] = (counts[tag] || 0) + 1); });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  els.miniTrendingList.innerHTML = "";
+  if (!sorted.length) { els.miniTrendingList.innerHTML = `<div class="empty-state" style="padding: 8px 0 0; text-align:left;">No tags yet.</div>`; return; }
+  sorted.forEach(([tag, count]) => {
+    const btn = document.createElement("button");
+    btn.className = "mini-tag";
+    btn.innerHTML = `<strong>${escapeHTML(tag)}</strong><span>${count} posts</span>`;
+    btn.addEventListener("click", () => applyTagFilter(tag));
+    els.miniTrendingList.appendChild(btn);
+  });
+}
+
+function renderFeed(posts, options = {}) {
+  const { emptyMessage = "No posts found." } = options;
+  els.feed.innerHTML = "";
+  if (!posts.length) { els.feed.innerHTML = `<div class="empty-state">${escapeHTML(emptyMessage)}</div>`; return; }
+  const fragment = document.createDocumentFragment();
+  posts.forEach(post => fragment.appendChild(buildPostElement(post)));
+  els.feed.appendChild(fragment);
+}
+
+function getVisiblePosts() {
+  let posts = [...allPosts];
+  if (currentTagFilter) posts = posts.filter(p => extractTags(p.content).includes(currentTagFilter));
+  const searchValue = normalizeText(els.search.value);
+  if (searchValue) {
+    posts = posts.filter(p => {
+      const u = normalizeText(p.username); const h = normalizeText(getHandle(p.username)); const c = normalizeText(p.content);
+      return u.includes(searchValue) || h.includes(searchValue) || c.includes(searchValue);
+    });
+  }
+  return posts;
+}
+
+function showHome() {
+  currentView = "home"; currentTagFilter = null; setActiveNav("home");
+  setMainView("Home", "Latest posts from everyone", "Tap a post to open the author profile.");
+  renderFeed(getVisiblePosts(), { emptyMessage: "Nothing here yet." });
+}
+
+function showTrendingPage() {
+  currentView = "trending"; currentTagFilter = null; setActiveNav("trending");
+  setMainView("Trending Topics", "The most used hashtags right now", "Tap a tag to filter posts.");
+  const counts = {};
+  allPosts.forEach(post => extractTags(post.content).forEach(tag => counts[tag] = (counts[tag] || 0) + 1));
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  if (!sorted.length) { renderFeed([], { emptyMessage: "No trending tags yet." }); return; }
+  
+  els.feed.innerHTML = "";
+  const section = document.createElement("section");
+  section.innerHTML = `<div style="padding: 18px 18px 10px;"><span class="badge success">Live</span></div>`;
+  sorted.forEach(([tag, count]) => {
+    const row = document.createElement("button");
+    row.className = "post"; row.style.textAlign = "left";
+    row.innerHTML = `<div></div><div><div class="post-header"><span class="post-name">${escapeHTML(tag)}</span><span class="badge">${count} posts</span></div><div class="post-body" style="margin-top:8px; color: var(--text-muted);">View all posts with this tag.</div></div>`;
+    row.addEventListener("click", () => applyTagFilter(tag));
+    section.appendChild(row);
+  });
+  els.feed.appendChild(section);
+}
+
+function applyTagFilter(tag) {
+  currentView = "home"; currentTagFilter = tag; setActiveNav("home");
+  setMainView(`Posts tagged ${tag}`, `Filtered by ${tag}`, `Showing posts that include ${tag}.`);
+  renderFeed(getVisiblePosts(), { emptyMessage: `No posts found with ${tag}.` });
+}
+
+async function viewProfile(uid) {
+  try {
+    const snapshot = await getDoc(doc(db, "users", uid));
+    if (!snapshot.exists()) return;
+    const data = snapshot.data();
+    const name = data.name || "Unknown";
+    els.profName.textContent = name;
+    els.profHandle.textContent = getHandle(name);
+    els.profPfp.src = data.pfp || "https://via.placeholder.com/100";
+    els.profRank.textContent = data.rank || "Member";
+    els.profRank.className = `badge ${data.rank === "Member" || !data.rank ? "soft" : ""}`;
+    els.profStatus.textContent = data.status || "";
     
-    const tags = {};
-    allPosts.forEach(p => {
-        (p.content.match(/#[\w]+/g) || []).forEach(t => tags[t] = (tags[t] || 0) + 1);
-    });
-
-    const container = document.getElementById("trendingContainer");
-    Object.keys(tags).sort((a,b) => tags[b]-tags[a]).forEach(tag => {
-        const item = document.createElement("div");
-        item.style.cssText = "padding:15px; background:var(--panel-bg); border-radius:12px; margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between;";
-        item.innerHTML = `<strong>${tag}</strong><span style='color:var(--text-muted)'>${tags[tag]} posts</span>`;
-        item.onclick = () => filterByTag(tag);
-        container.appendChild(item);
-    });
-};
-
-function filterByTag(tag) {
-    document.getElementById("viewTitle").innerText = `Posts tagged ${tag}`;
-    const filtered = allPosts.filter(p => p.content.includes(tag));
-    renderFeed(filtered);
+    const userPosts = allPosts.filter(post => post.userId === uid);
+    els.userPosts.innerHTML = "";
+    if (!userPosts.length) els.userPosts.innerHTML = `<div class="empty-state" style="padding: 10px 0 0; text-align:left;">No recent posts.</div>`;
+    else userPosts.forEach(post => els.userPosts.appendChild(buildPostElement(post)));
+    els.profileModal.style.display = "flex";
+  } catch (error) { console.error(error); }
 }
 
-function renderFeed(posts) {
-    const feed = document.getElementById("feed");
-    feed.innerHTML = "";
-    posts.forEach(p => feed.innerHTML += getPostHTML(p));
-}
+function closeModal() { els.profileModal.style.display = "none"; }
+function setAuthStatus(msg, isError = false) { els.authStatus.textContent = msg; els.authStatus.style.color = isError ? "#ff7aa8" : "var(--text-muted)"; }
 
-// --- SEARCH & SIDEBAR ---
-document.getElementById("search").oninput = (e) => {
-    const val = e.target.value.toLowerCase().trim();
-    if(!val) { renderFeed(allPosts); return; }
-    const filtered = allPosts.filter(p => {
-        const handle = `@${p.username.toLowerCase()}`;
-        return p.username.toLowerCase().includes(val) || handle.includes(val) || p.content.toLowerCase().includes(val);
-    });
-    renderFeed(filtered);
-};
+// --- AUTHENTICATION LOGIC ---
 
-// --- PROFILE VIEW ---
-window.viewProfile = async (uid) => {
-    const uDoc = await getDoc(doc(db, "users", uid));
-    if(!uDoc.exists()) return;
-    const data = uDoc.data();
-    
-    document.getElementById("profName").textContent = data.name;
-    document.getElementById("profHandle").textContent = "@" + data.name.toLowerCase();
-    document.getElementById("profPfp").src = data.pfp || "";
-    document.getElementById("profRank").textContent = data.rank || "Member";
-    document.getElementById("profStatus").textContent = data.status || "";
-
-    const feed = document.getElementById("userPosts");
-    feed.innerHTML = "";
-    allPosts.filter(p => p.userId === uid).forEach(p => feed.innerHTML += getPostHTML(p));
-    document.getElementById("profileModal").style.display = "flex";
-};
-
-// --- AUTH & SETUP ---
-onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-    document.getElementById("auth-container").style.display = user ? "none" : "flex";
-    document.getElementById("app-container").style.display = user ? "flex" : "none";
-    document.getElementById("openPostModal").style.display = user ? "flex" : "none";
-    if(user) {
-        const d = await getDoc(doc(db, "users", user.uid));
-        const data = d.data();
-        document.getElementById("myUsername").innerText = data.name;
-        document.getElementById("myHandle").innerText = "@" + data.name.toLowerCase();
-        document.getElementById("myPfp").src = data.pfp || "";
-        
-        onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snap) => {
-            allPosts = snap.docs.map(d => ({id: d.id, ...d.data()}));
-            if(document.getElementById("viewTitle").innerText === "Home") renderFeed(allPosts);
-            
-            // Update Mini Trending Sidebar
-            const tags = {};
-            allPosts.forEach(p => (p.content.match(/#[\w]+/g) || []).forEach(t => tags[t] = (tags[t] || 0) + 1));
-            const mini = document.getElementById("miniTrendingList");
-            mini.innerHTML = "";
-            Object.keys(tags).sort((a,b) => tags[b]-tags[a]).slice(0,3).forEach(t => {
-                mini.innerHTML += `<div style="margin-bottom:8px; cursor:pointer;" onclick="filterByTag('${t}')"><strong>${t}</strong></div>`;
-            });
-        });
-    }
+els.toggleAuthBtn.addEventListener("click", () => {
+  isLoginMode = !isLoginMode;
+  els.username.classList.toggle("hidden", isLoginMode);
+  els.username.required = !isLoginMode;
+  els.authSubmitBtn.textContent = isLoginMode ? "Log in" : "Sign up";
+  els.toggleAuthBtn.textContent = isLoginMode ? "Need an account? Sign up" : "Already have an account? Log in";
+  els.authSubtitle.textContent = isLoginMode ? "Log in to browse posts, trends, and profiles." : "Create an account to join the community.";
+  setAuthStatus("");
 });
 
-document.getElementById("loginBtn").onclick = () => signInWithEmailAndPassword(auth, email.value, password.value);
-document.getElementById("logoutBtn").onclick = () => signOut(auth);
-document.getElementById("openMyProfile").onclick = () => viewProfile(currentUser.uid);
-document.querySelectorAll(".close-modal").forEach(b => b.onclick = () => b.closest(".modal").style.display = "none");
+els.authForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  setAuthStatus("");
+  els.authSubmitBtn.disabled = true;
+  els.authSubmitBtn.textContent = "Please wait...";
+
+  try {
+    if (isLoginMode) {
+      await signInWithEmailAndPassword(auth, els.email.value.trim(), els.password.value);
+    } else {
+      const userCredential = await createUserWithEmailAndPassword(auth, els.email.value.trim(), els.password.value);
+      // Create their user document in Firestore automatically upon sign-up
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        name: els.username.value.trim(),
+        pfp: "",
+        status: "Hello, world!",
+        rank: "Member",
+        createdAt: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    setAuthStatus(error.message || "Authentication failed.", true);
+    els.authSubmitBtn.disabled = false;
+    els.authSubmitBtn.textContent = isLoginMode ? "Log in" : "Sign up";
+  }
+});
+
+els.logoutBtn.addEventListener("click", () => signOut(auth));
+els.navHome.addEventListener("click", showHome);
+els.navTrending.addEventListener("click", showTrendingPage);
+els.openMyProfile.addEventListener("click", () => { if (currentUser) viewProfile(currentUser.uid); });
+els.refreshFeedBtn.addEventListener("click", () => currentView === "trending" ? showTrendingPage() : showHome());
+els.openPostModal.addEventListener("click", () => alert("Add your create-post modal here."));
+els.search.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => currentView === "trending" ? showTrendingPage() : showHome(), 100);
+});
+els.profileModal.addEventListener("click", (e) => { if (e.target === els.profileModal) closeModal(); });
+document.querySelectorAll(".close-modal").forEach(btn => btn.addEventListener("click", closeModal));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+// --- FINISHED FIREBASE INITIALIZATION & SYNC ---
+
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+
+  if (!user) {
+    if (unsubscribePosts) { unsubscribePosts(); unsubscribePosts = null; }
+    els.authContainer.style.display = "flex";
+    els.appContainer.style.display = "none";
+    els.openPostModal.style.display = "none";
+    setAuthStatus("");
+    els.authSubmitBtn.disabled = false;
+    els.authSubmitBtn.textContent = isLoginMode ? "Log in" : "Sign up";
+    return;
+  }
+
+  els.authContainer.style.display = "none";
+  els.appContainer.style.display = "block";
+  els.openPostModal.style.display = "inline-flex";
+
+  try {
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      const name = data.name || "Unknown";
+      els.myUsername.textContent = name;
+      els.myHandle.textContent = getHandle(name);
+      els.myPfp.src = data.pfp || "https://via.placeholder.com/50";
+    }
+
+    // Subscribe to Global Feed
+    unsubscribePosts = onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snap) => {
+      allPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      updateMiniTrending();
+      
+      // Auto-refresh the current view seamlessly when new data comes in
+      if (currentView === "home") showHome();
+      else if (currentView === "trending") showTrendingPage();
+    });
+  } catch (error) {
+    console.error("Error fetching user data on auth state change:", error);
+  }
+});
 </script>
 </body>
 </html>
