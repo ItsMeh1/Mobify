@@ -17,73 +17,54 @@
   }
 
   * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-
   body { background: var(--bg); color: var(--text-main); display: flex; justify-content: center; height: 100vh; overflow: hidden; }
 
-  /* --- AUTH SCREEN --- */
+  /* --- AUTH & APP CONTAINERS --- */
   #auth-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100%; background: var(--bg); z-index: 100; }
-  .auth-box { background: var(--panel-bg); padding: 40px; border-radius: 16px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; }
-  .auth-box h1 { font-size: 32px; margin-bottom: 20px; letter-spacing: -1px; }
-  .auth-box input[type="text"], .auth-box input[type="email"], .auth-box input[type="password"] {
-    width: 100%; padding: 15px; margin-bottom: 15px; background: var(--bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; font-size: 16px;
-  }
-  .file-label { display: block; margin-bottom: 15px; color: var(--accent); cursor: pointer; font-size: 14px; }
-
-  .btn-primary { background: var(--accent); color: white; border: none; font-weight: bold; padding: 15px; border-radius: 30px; width: 100%; font-size: 16px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
-  .btn-primary:hover { background: var(--accent-hover); }
-  .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); font-weight: bold; padding: 15px; border-radius: 30px; width: 100%; font-size: 16px; cursor: pointer; transition: 0.2s; }
-
-  /* --- MAIN APP --- */
   #app-container { display: none; width: 100%; max-width: 1200px; height: 100vh; }
+
+  /* Sidebar */
   .sidebar { width: 275px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
-  .logo { font-size: 28px; font-weight: 800; padding: 10px; margin-bottom: 20px; letter-spacing: -1px;}
-  .nav-item { font-size: 20px; padding: 12px 20px; border-radius: 30px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px; font-weight: 500; margin-bottom: 5px; }
+  .logo { font-size: 28px; font-weight: 800; padding: 10px; margin-bottom: 20px; cursor: pointer; }
+  .nav-item { font-size: 20px; padding: 12px 20px; border-radius: 30px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px; font-weight: 500; }
   .nav-item:hover { background: rgba(231, 233, 234, 0.1); }
-  .search-bar { width: 100%; padding: 12px 20px; border-radius: 30px; border: none; background: var(--panel-bg); color: var(--text-main); margin-bottom: 20px; border: 1px solid transparent; outline: none; }
-  .profile-card { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 30px; cursor: pointer; transition: 0.2s; }
-  .profile-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--border); }
   
+  /* Feed */
   .main { flex: 1; border-right: 1px solid var(--border); overflow-y: auto; scrollbar-width: none; }
-  .main::-webkit-scrollbar { display: none; }
   .header { backdrop-filter: blur(12px); background: rgba(0, 0, 0, 0.65); position: sticky; top: 0; padding: 15px 20px; z-index: 10; border-bottom: 1px solid var(--border); font-size: 20px; font-weight: 700; }
 
-  .post { padding: 20px; border-bottom: 1px solid var(--border); display: flex; gap: 15px; }
+  /* Post Style */
+  .post { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; cursor: pointer; transition: 0.2s; }
+  .post:hover { background: rgba(255, 255, 255, 0.03); }
   .post-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
   .post-body { flex: 1; }
-  .post-header { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
-  .post-text { font-size: 15px; line-height: 1.5; margin-bottom: 10px; white-space: pre-wrap; }
-  .post-image { width: 100%; border-radius: 16px; margin-top: 10px; border: 1px solid var(--border); max-height: 500px; object-fit: cover;}
+  .post-header { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+  .post-header strong { font-size: 15px; }
+  .handle { color: var(--text-muted); font-size: 14px; }
+  .rank-badge { background: var(--border); color: var(--accent); font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+  .post-text { font-size: 15px; line-height: 1.4; margin-top: 4px; }
+  .post-image { width: 100%; border-radius: 16px; margin-top: 12px; border: 1px solid var(--border); max-height: 510px; object-fit: cover; }
 
-  .actions { display: flex; gap: 40px; margin-top: 15px; color: var(--text-muted); }
-  .action-btn { display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; font-size: 14px;}
-
-  .right-sidebar { width: 350px; padding: 20px; }
-  .trending-box { background: var(--panel-bg); border-radius: 16px; padding: 15px; }
-  .trend-item { margin-bottom: 15px; }
-  .trend-item p { color: var(--text-muted); font-size: 13px; }
-
-  .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; display: none; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; z-index: 50; }
+  /* Modals */
   .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(91, 112, 131, 0.4); display: none; align-items: flex-start; justify-content: center; z-index: 200; padding-top: 50px; }
-  .modal-box { background: var(--bg); padding: 20px; border-radius: 16px; width: 100%; max-width: 600px; }
-  .modal textarea { width: 100%; height: 100px; background: transparent; color: var(--text-main); border: none; font-size: 20px; outline: none; resize: none; }
+  .modal-box { background: var(--bg); padding: 20px; border-radius: 16px; width: 100%; max-width: 600px; position: relative; }
   
-  #imagePreview { max-width: 100px; border-radius: 8px; display: none; margin-bottom: 10px; }
+  /* Search */
+  .right-sidebar { width: 350px; padding: 20px; }
+  .search-bar { width: 100%; padding: 12px 20px; border-radius: 30px; border: 1px solid transparent; background: var(--panel-bg); color: var(--text-main); outline: none; margin-bottom: 20px; }
+  .search-bar:focus { border-color: var(--accent); background: var(--bg); }
+
+  .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; display: none; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; }
 </style>
 </head>
-
 <body>
 
 <div id="auth-container">
-  <div class="auth-box">
-    <h1>Mobify</h1>
-    <input id="email" placeholder="Email address" type="email" />
-    <input id="password" type="password" placeholder="Password" />
-    <label class="file-label">
-      📸 Upload Profile Picture
-      <input type="file" id="authPfpInput" hidden accept="image/*">
-    </label>
-    <button id="loginBtn" class="btn-primary">Log in</button>
-    <button id="signupBtn" class="btn-outline">Create account</button>
+  <div style="background: var(--panel-bg); padding: 40px; border-radius: 16px; text-align: center; width: 350px;">
+    <h1 style="margin-bottom: 20px;">Mobify</h1>
+    <input id="email" type="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; background:#000; color:#fff; border:1px solid var(--border); border-radius:8px;">
+    <input id="password" type="password" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; background:#000; color:#fff; border:1px solid var(--border); border-radius:8px;">
+    <button id="loginBtn" style="width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:30px; font-weight:bold; cursor:pointer;">Log in</button>
   </div>
 </div>
 
@@ -92,14 +73,13 @@
     <div>
       <div class="logo">Mobify</div>
       <div class="nav-item">🏠 Home</div>
-      <div class="nav-item">🔥 Trending</div>
       <div class="nav-item" id="logoutBtn">🚪 Logout</div>
     </div>
     <div class="profile-card">
-      <img id="pfp" class="profile-pic" src="">
+      <img id="pfp" class="profile-pic">
       <div class="user-info">
         <h3 id="username">User</h3>
-        <p id="rank">@member</p>
+        <p id="rank" style="color:var(--text-muted); font-size:12px;">@member</p>
       </div>
     </div>
   </div>
@@ -110,35 +90,33 @@
   </div>
 
   <div class="right-sidebar">
-    <input id="search" class="search-bar" placeholder="Search Mobify..." />
-    <div class="trending-box">
-      <h2>What's happening</h2>
-      <div id="trending-list"></div>
+    <input id="search" class="search-bar" placeholder="Search people or posts..." />
+    <div id="trending-list" class="trending-box" style="background:var(--panel-bg); padding:15px; border-radius:16px;">
+      <h3>Trending</h3>
     </div>
   </div>
 </div>
 
 <div class="fab" id="openModal">+</div>
 
-<div class="modal" id="modal">
+<div class="modal" id="detailModal">
   <div class="modal-box">
-    <div style="display:flex; justify-content: space-between; margin-bottom: 10px;">
-      <div id="closeModal" style="cursor:pointer">✕</div>
-      <button id="postBtn" class="btn-primary" style="width:auto; padding: 5px 20px;">Post</button>
-    </div>
-    <textarea id="postText" placeholder="What's happening?"></textarea>
-    <img id="imagePreview">
-    <label class="file-label">
-      🖼️ Add Image
-      <input type="file" id="postImageInput" hidden accept="image/*">
-    </label>
+    <div id="closeDetail" style="position:absolute; right:20px; top:15px; cursor:pointer; font-size:20px;">✕</div>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<div class="modal" id="postModal">
+  <div class="modal-box">
+    <textarea id="postText" placeholder="What's happening?" style="width:100%; height:150px; background:transparent; color:white; border:none; font-size:18px; outline:none; resize:none;"></textarea>
+    <button id="submitPost" style="float:right; background:var(--accent); border:none; padding:8px 20px; border-radius:20px; color:white; font-weight:bold; cursor:pointer;">Post</button>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, arrayUnion, arrayRemove, serverTimestamp, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
@@ -153,131 +131,116 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 let currentUser = null;
-let currentPostBase64 = "";
+let allPosts = [];
 
-// Helper: Convert File to Base64 (with simple compression)
-const toBase64 = file => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-});
-
-async function loadUserProfile(user) {
-  const snap = await getDoc(doc(db, "users", user.uid));
-  let name = user.email.split('@')[0];
-  let pfp = `https://ui-avatars.com/api/?name=${name}`;
+// --- POST RENDERING ---
+function renderPost(post, id) {
+  const handle = post.username.toLowerCase().replace(/\s/g, '');
+  const rank = post.rank || "Member";
   
-  if (snap.exists()) {
-    name = snap.data().name || name;
-    pfp = snap.data().pfp || pfp;
-  }
-  document.getElementById("username").textContent = name;
-  document.getElementById("pfp").src = pfp;
-  document.getElementById("rank").textContent = "@" + name.toLowerCase();
-}
-
-function updateTrending(counts) {
-  const list = document.getElementById("trending-list");
-  list.innerHTML = "";
-  Object.keys(counts).sort((a,b) => counts[b] - counts[a]).slice(0,5).forEach(tag => {
-    list.innerHTML += `<div class="trend-item"><p>Trending</p><strong>${tag}</strong><p>${counts[tag]} posts</p></div>`;
-  });
-}
-
-function render(post, id) {
   return `
-  <div class="post">
-    <img src="${post.userProfilePic || ''}" class="post-avatar">
-    <div class="post-body">
-      <div class="post-header"><strong>${post.username}</strong></div>
-      <div class="post-text">${post.content}</div>
-      ${post.imageURL ? `<img src="${post.imageURL}" class="post-image">` : ""}
-      <div class="actions">
-        <div class="action-btn" onclick="like('${id}')">❤️ ${post.likes?.length || 0}</div>
-        <div class="action-btn" onclick="dislike('${id}')">👎 ${post.dislikes?.length || 0}</div>
+    <div class="post" onclick="openDetail('${id}')">
+      <img src="${post.userProfilePic || 'https://via.placeholder.com/50'}" class="post-avatar">
+      <div class="post-body">
+        <div class="post-header">
+          <strong>${post.username}</strong>
+          <span class="rank-badge">${rank}</span>
+          <span class="handle">@${handle}</span>
+        </div>
+        <div class="post-text">${post.content}</div>
+        ${post.imageURL ? `<img src="${post.imageURL}" class="post-image">` : ""}
       </div>
     </div>
-  </div>`;
+  `;
 }
 
+// --- DETAIL VIEW FUNCTION ---
+window.openDetail = async (id) => {
+  const post = allPosts.find(p => p.id === id);
+  if (!post) return;
+
+  const handle = post.username.toLowerCase().replace(/\s/g, '');
+  const detailModal = document.getElementById("detailModal");
+  const container = document.getElementById("detailContent");
+
+  container.innerHTML = `
+    <div style="display:flex; gap:15px; align-items:center; margin-bottom:20px;">
+        <img src="${post.userProfilePic}" style="width:60px; height:60px; border-radius:50%;">
+        <div>
+            <h2 style="margin:0;">${post.username} <span class="rank-badge">${post.rank || 'Member'}</span></h2>
+            <p class="handle">@${handle}</p>
+        </div>
+    </div>
+    <p style="font-size:22px; line-height:1.4; margin-bottom:20px;">${post.content}</p>
+    ${post.imageURL ? `<img src="${post.imageURL}" style="width:100%; border-radius:16px; border:1px solid var(--border);">` : ""}
+    <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
+    <div style="color:var(--text-muted);">Posted on ${post.timestamp?.toDate().toLocaleString() || 'Just now'}</div>
+  `;
+  
+  detailModal.style.display = "flex";
+};
+
+// --- SEARCH ENGINE ---
+document.getElementById("search").oninput = (e) => {
+  const query = e.target.value.toLowerCase();
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "";
+
+  allPosts.filter(p => {
+    const handle = `@${p.username.toLowerCase().replace(/\s/g, '')}`;
+    const name = p.username.toLowerCase();
+    const text = p.content.toLowerCase();
+    
+    // If query starts with @, search strictly by handle
+    if (query.startsWith("@")) {
+        return handle.includes(query);
+    }
+    // Otherwise search text and names
+    return text.includes(query) || name.includes(query);
+  }).forEach(p => {
+    feed.innerHTML += renderPost(p, p.id);
+  });
+};
+
+// --- FEED LOGIC ---
 function startFeed() {
   const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
   onSnapshot(q, (snap) => {
+    allPosts = snap.docs.map(d => ({id: d.id, ...d.data()}));
     const feed = document.getElementById("feed");
-    const counts = {};
     feed.innerHTML = "";
-    snap.forEach(docSnap => {
-      const data = docSnap.data();
-      feed.innerHTML += render(data, docSnap.id);
-      (data.content.match(/#[\w]+/g) || []).forEach(tag => counts[tag] = (counts[tag] || 0) + 1);
-    });
-    updateTrending(counts);
+    allPosts.forEach(p => feed.innerHTML += renderPost(p, p.id));
   });
 }
 
-// Global Actions
-window.like = id => updateDoc(doc(db, "posts", id), { likes: arrayUnion(currentUser.uid), dislikes: arrayRemove(currentUser.uid) });
-window.dislike = id => updateDoc(doc(db, "posts", id), { dislikes: arrayUnion(currentUser.uid), likes: arrayRemove(currentUser.uid) });
+// --- APP INITIALIZATION ---
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    document.getElementById("auth-container").style.display = "none";
+    document.getElementById("app-container").style.display = "flex";
+    document.getElementById("openModal").style.display = "flex";
+    
+    // Load User Sidebar
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+        document.getElementById("username").textContent = userDoc.data().name;
+        document.getElementById("pfp").src = userDoc.data().pfp || "https://via.placeholder.com/50";
+        document.getElementById("rank").textContent = userDoc.data().rank || "Member";
+    }
+    startFeed();
+  } else {
+    document.getElementById("auth-container").style.display = "flex";
+    document.getElementById("app-container").style.display = "none";
+  }
+});
 
-// Post Logic
-document.getElementById("postImageInput").onchange = async (e) => {
-  currentPostBase64 = await toBase64(e.target.files[0]);
-  document.getElementById("imagePreview").src = currentPostBase64;
-  document.getElementById("imagePreview").style.display = "block";
-};
-
-document.getElementById("postBtn").onclick = async () => {
-  const text = document.getElementById("postText").value;
-  if(!text && !currentPostBase64) return;
-  const userSnap = await getDoc(doc(db, "users", currentUser.uid));
-  const userData = userSnap.data();
-  
-  await addDoc(collection(db, "posts"), {
-    content: text,
-    imageURL: currentPostBase64,
-    username: userData.name,
-    userProfilePic: userData.pfp,
-    timestamp: serverTimestamp(),
-    likes: [], dislikes: []
-  });
-  
-  document.getElementById("modal").style.display = "none";
-  document.getElementById("postText").value = "";
-  currentPostBase64 = "";
-  document.getElementById("imagePreview").style.display = "none";
-};
-
-// Auth
-document.getElementById("signupBtn").onclick = async () => {
-  const email = document.getElementById("email").value;
-  const pass = document.getElementById("password").value;
-  const file = document.getElementById("authPfpInput").files[0];
-  let pfpBase64 = "";
-  if(file) pfpBase64 = await toBase64(file);
-
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await setDoc(doc(db, "users", cred.user.uid), {
-      name: email.split("@")[0],
-      pfp: pfpBase64,
-      email: email
-    });
-  } catch (e) { alert(e.message); }
-};
-
+// Basic UI Toggles
 document.getElementById("loginBtn").onclick = () => signInWithEmailAndPassword(auth, email.value, password.value);
 document.getElementById("logoutBtn").onclick = () => signOut(auth);
-document.getElementById("openModal").onclick = () => document.getElementById("modal").style.display = "flex";
-document.getElementById("closeModal").onclick = () => document.getElementById("modal").style.display = "none";
-
-onAuthStateChanged(auth, u => {
-  currentUser = u;
-  document.getElementById("auth-container").style.display = u ? "none" : "flex";
-  document.getElementById("app-container").style.display = u ? "flex" : "none";
-  document.getElementById("openModal").style.display = u ? "flex" : "none";
-  if(u) { loadUserProfile(u); startFeed(); }
-});
+document.getElementById("openModal").onclick = () => document.getElementById("postModal").style.display = "flex";
+document.getElementById("closeDetail").onclick = () => document.getElementById("detailModal").style.display = "none";
+window.onclick = (e) => { if(e.target.className === 'modal') e.target.style.display = "none"; };
 </script>
 </body>
 </html>
