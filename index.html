@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mobify</title>
+<title>Mobify | v3.5</title>
 <style>
   :root {
     --bg: #000000;
@@ -15,135 +15,112 @@
     --accent-hover: #1a8cd8;
   }
 
-  * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, sans-serif; }
   body { background: var(--bg); color: var(--text-main); display: flex; justify-content: center; height: 100vh; overflow: hidden; }
 
-  /* --- APP LAYOUT --- */
   #app-container { display: none; width: 100%; max-width: 1200px; height: 100vh; }
   .sidebar { width: 275px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; }
   .main { flex: 1; border-right: 1px solid var(--border); overflow-y: auto; scrollbar-width: none; }
   .right-sidebar { width: 350px; padding: 20px; }
 
-  /* --- UI ELEMENTS --- */
-  .logo { font-size: 28px; font-weight: 800; padding: 10px; margin-bottom: 20px; color: var(--text-main); text-decoration: none; }
-  .nav-item { font-size: 20px; padding: 12px 20px; border-radius: 30px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px; }
-  .nav-item:hover { background: rgba(231, 233, 234, 0.1); }
-  
-  .profile-card { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 40px; margin-top: auto; cursor: pointer; transition: 0.2s; }
-  .profile-card:hover { background: rgba(231, 233, 234, 0.1); }
-  .profile-pic { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; background: #333; }
-
-  /* --- POSTS --- */
-  .post { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; cursor: pointer; }
+  /* --- POSTS (Feed) --- */
+  .post { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; cursor: pointer; transition: 0.1s; }
   .post:hover { background: rgba(255, 255, 255, 0.02); }
+  .post-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+  .post-image { width: 100%; border-radius: 16px; margin-top: 12px; border: 1px solid var(--border); display: block; }
   .rank-badge { background: #202327; color: var(--accent); font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-left: 8px; }
 
-  /* --- MODERN NEAT MODALS --- */
-  .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(91, 112, 131, 0.4); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }
+  /* --- MODALS (Neater & Fixed Scaling) --- */
+  .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(91, 112, 131, 0.4); display: none; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(5px); }
   .modal-box { 
     background: var(--bg); width: 100%; max-width: 600px; max-height: 85vh; 
     border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; 
-    border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    animation: modalIn 0.2s ease-out;
+    border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.7);
   }
-  @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-body { flex: 1; overflow-y: auto; padding: 25px; }
 
-  .modal-header { padding: 15px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-  .modal-body { flex: 1; overflow-y: auto; padding: 25px; scrollbar-width: thin; }
+  /* FIX: Constraints for the Profile/Detail Avatars */
+  #profPfp, .detail-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+
+  .nav-item { font-size: 20px; padding: 12px 20px; border-radius: 30px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px; }
+  .nav-item:hover { background: rgba(231, 233, 234, 0.1); }
   
-  .btn-primary { background: var(--accent); color: white; border: none; padding: 10px 24px; border-radius: 30px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-  .btn-primary:hover { background: var(--accent-hover); }
+  .search-bar { width: 100%; padding: 12px 20px; border-radius: 30px; background: var(--panel-bg); border: 1px solid transparent; color: white; outline: none; transition: 0.2s; }
+  .search-bar:focus { border-color: var(--accent); background: var(--bg); }
 
-  /* --- AUTH --- */
-  #auth-container { display: flex; align-items: center; justify-content: center; height: 100vh; width: 100%; }
-  .auth-box { background: var(--panel-bg); padding: 40px; border-radius: 20px; width: 380px; text-align: center; border: 1px solid var(--border); }
-  .auth-box input { width: 100%; padding: 14px; margin-bottom: 12px; background: #000; border: 1px solid var(--border); border-radius: 8px; color: #fff; }
-
-  .fab { position: fixed; bottom: 30px; right: 30px; width: 55px; height: 55px; border-radius: 50%; background: var(--accent); color: white; display: none; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 8px 20px rgba(29, 155, 240, 0.3); }
+  .fab { position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: white; display: none; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 100; }
 </style>
 </head>
 <body>
 
-<div id="auth-container">
-  <div class="auth-box">
+<div id="auth-container" style="display: flex; align-items: center; justify-content: center; height: 100vh; width: 100%;">
+  <div style="background: var(--panel-bg); padding: 40px; border-radius: 20px; width: 350px; text-align: center;">
     <h1 style="margin-bottom:20px;">Mobify</h1>
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
-    <button id="loginBtn" class="btn-primary" style="width:100%; margin-bottom:10px;">Log in</button>
-    <button id="signupBtn" class="btn-primary" style="width:100%; background:none; border:1px solid var(--accent); color:var(--accent);">Create account</button>
+    <input id="email" type="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; background:#000; border:1px solid var(--border); color:white; border-radius:8px;">
+    <input id="password" type="password" placeholder="Password" style="width:100%; padding:12px; margin-bottom:15px; background:#000; border:1px solid var(--border); color:white; border-radius:8px;">
+    <button id="loginBtn" style="width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:30px; font-weight:bold; cursor:pointer;">Log in</button>
   </div>
 </div>
 
 <div id="app-container">
   <div class="sidebar">
-    <div class="logo">Mobify</div>
+    <div style="font-size:28px; font-weight:800; margin-bottom:20px;">Mobify</div>
     <div class="nav-item" onclick="location.reload()">🏠 Home</div>
     <div class="nav-item" id="openProfile">👤 Profile</div>
-    <div class="nav-item" id="logoutBtn" style="margin-top:10px;">🚪 Logout</div>
+    <div class="nav-item" id="logoutBtn">🚪 Logout</div>
     
-    <div class="profile-card" id="myProfileTrigger">
-      <img id="pfp" class="profile-pic">
-      <div class="user-info">
-        <h3 id="usernameDisplay">User</h3>
-        <p id="handleDisplay" style="color: var(--text-muted); font-size: 13px;">@handle</p>
+    <div class="profile-card" style="margin-top:auto; display:flex; align-items:center; gap:10px; padding:10px;">
+      <img id="myPfp" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+      <div>
+        <strong id="myUsername">User</strong>
+        <div id="myHandle" style="color:var(--text-muted); font-size:12px;">@handle</div>
       </div>
     </div>
   </div>
 
   <div class="main">
-    <div id="feedTitle" class="header">Home</div>
+    <div class="header" style="padding:15px; border-bottom:1px solid var(--border); font-weight:bold; font-size:20px; backdrop-filter:blur(10px); position:sticky; top:0; background:rgba(0,0,0,0.7);">Home</div>
     <div id="feed"></div>
   </div>
 
   <div class="right-sidebar">
-    <input id="search" class="search-bar" style="width:100%; padding:12px 20px; border-radius:30px; background:var(--panel-bg); border:none; color:white; outline:none;" placeholder="Search Mobify..." />
-    <div id="trending-list" class="trending-box" style="margin-top:20px;"></div>
+    <input id="search" class="search-bar" placeholder="Search users, @tags, or posts..." />
+    <div id="results-count" style="margin-top:10px; color:var(--text-muted); font-size:13px; display:none;"></div>
   </div>
 </div>
 
-<div class="fab" id="openModal">+</div>
-
-<div class="modal" id="postModal">
-  <div class="modal-box">
-    <div class="modal-header"><span>Draft Post</span><span class="close" style="cursor:pointer">✕</span></div>
-    <div class="modal-body">
-      <textarea id="postText" placeholder="What's happening?" style="width:100%; height:120px; background:transparent; border:none; color:white; font-size:19px; outline:none; resize:none;"></textarea>
-      <input type="file" id="postImgInput" hidden accept="image/*">
-      <label for="postImgInput" style="color:var(--accent); cursor:pointer; font-weight:bold;">🖼️ Add Image</label>
-    </div>
-    <div style="padding:15px 25px; border-top:1px solid var(--border); text-align:right;">
-      <button id="submitPost" class="btn-primary">Post</button>
-    </div>
-  </div>
-</div>
+<div class="fab" id="openPostModal">+</div>
 
 <div class="modal" id="profileModal">
   <div class="modal-box">
-    <div class="modal-header"><span id="profNameTitle">Profile</span><span class="close" style="cursor:pointer">✕</span></div>
+    <div style="padding:15px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <strong>Profile</strong>
+        <span class="close-modal" style="cursor:pointer">✕</span>
+    </div>
     <div class="modal-body">
         <div style="display:flex; gap:20px; align-items:center;">
-            <img id="profPfp" style="width:80px; height:80px; border-radius:50%; border:2px solid var(--accent);">
+            <img id="profPfp" src="">
             <div>
                 <h2 id="profName">Name</h2>
-                <p id="profHandle" style="color:var(--accent);">@handle</p>
-                <p id="profRank" class="rank-badge" style="display:inline-block; margin:5px 0 0 0;">Rank</p>
+                <p id="profHandle" style="color:var(--accent); font-weight:bold;">@handle</p>
+                <div id="profRank" class="rank-badge" style="display:inline-block; margin-top:5px; margin-left:0;">Rank</div>
             </div>
         </div>
-        <div id="statusSection" style="margin-top:20px;">
-            <p id="profStatus" style="font-style:italic; color:var(--text-muted);">No status set</p>
-            <input id="statusInput" placeholder="Update status..." style="display:none; width:100%; background:#111; border:1px solid var(--border); padding:8px; border-radius:8px; color:white; margin-top:10px;">
+        <div style="margin-top:15px;">
+            <p id="profStatus" style="font-style:italic; color:var(--text-muted);"></p>
+            <input id="statusInput" placeholder="Set a new status..." style="width:100%; background:#111; border:1px solid var(--border); color:white; padding:10px; border-radius:8px; margin-top:10px; display:none;">
         </div>
         <hr style="border:none; border-top:1px solid var(--border); margin:20px 0;">
         <h3>Posts</h3>
-        <div id="userPostsFeed" style="margin-top:15px;"></div>
+        <div id="userPosts" style="margin-top:15px;"></div>
     </div>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, where, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, query, orderBy, where, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
@@ -158,39 +135,59 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+let allPosts = [];
 let currentUser = null;
-let postImgBase64 = "";
 
-const toBase64 = f => new Promise((r, j) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result); rd.onerror = j; });
-
-// --- RENDER POST ---
-function createPostHTML(p) {
-    const handle = p.username.toLowerCase();
+// --- RENDER POST HELPER ---
+function getPostHTML(p) {
+    const handle = `@${p.username.toLowerCase().replace(/\s/g, '')}`;
     return `
     <div class="post" onclick="viewProfile('${p.userId}')">
-      <img src="${p.userProfilePic}" class="post-avatar">
-      <div class="post-body">
+      <img src="${p.userProfilePic || 'https://via.placeholder.com/50'}" class="post-avatar">
+      <div style="flex:1">
         <div style="display:flex; align-items:center;">
             <strong>${p.username}</strong>
-            <span style="color:var(--text-muted); margin-left:8px;">@${handle}</span>
+            <span style="color:var(--text-muted); margin-left:8px;">${handle}</span>
             <span class="rank-badge">${p.rank || 'Member'}</span>
         </div>
-        <div style="margin-top:6px; line-height:1.4;">${p.content}</div>
-        ${p.imageURL ? `<img src="${p.imageURL}" style="width:100%; border-radius:15px; margin-top:12px; border:1px solid var(--border);">` : ""}
+        <div style="margin-top:5px; line-height:1.4;">${p.content}</div>
+        ${p.imageURL ? `<img src="${p.imageURL}" class="post-image">` : ""}
       </div>
     </div>`;
 }
 
-// --- GLOBAL FEED ---
-function startFeed() {
-  onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snap) => {
+// --- FUZZY SEARCH ENGINE ---
+document.getElementById("search").oninput = (e) => {
+    const val = e.target.value.toLowerCase().trim();
+    const feed = document.getElementById("feed");
+    const countLabel = document.getElementById("results-count");
+    
+    if(!val) {
+        countLabel.style.display = "none";
+        renderFeed(allPosts);
+        return;
+    }
+
+    const filtered = allPosts.filter(p => {
+        const handle = `@${p.username.toLowerCase().replace(/\s/g, '')}`;
+        const name = p.username.toLowerCase();
+        const content = p.content.toLowerCase();
+        // Check if query is in name, handle, or post text
+        return name.includes(val) || handle.includes(val) || content.includes(val);
+    });
+
+    countLabel.innerText = `Found ${filtered.length} results for "${val}"`;
+    countLabel.style.display = "block";
+    renderFeed(filtered);
+};
+
+function renderFeed(posts) {
     const feed = document.getElementById("feed");
     feed.innerHTML = "";
-    snap.forEach(d => feed.innerHTML += createPostHTML({id: d.id, ...d.data()}));
-  });
+    posts.forEach(p => feed.innerHTML += getPostHTML(p));
 }
 
-// --- PROFILE VIEW SYSTEM ---
+// --- PROFILE LOGIC ---
 window.viewProfile = async (uid) => {
     const uDoc = await getDoc(doc(db, "users", uid));
     if(!uDoc.exists()) return;
@@ -201,8 +198,7 @@ window.viewProfile = async (uid) => {
     document.getElementById("profPfp").src = data.pfp || "";
     document.getElementById("profRank").textContent = data.rank || "Member";
     document.getElementById("profStatus").textContent = data.status || "No status set";
-    
-    // Toggle status input if it's MY profile
+
     const sInput = document.getElementById("statusInput");
     if(currentUser.uid === uid) {
         sInput.style.display = "block";
@@ -215,61 +211,40 @@ window.viewProfile = async (uid) => {
         };
     } else { sInput.style.display = "none"; }
 
-    // Load User's Posts
-    const q = query(collection(db, "posts"), where("userId", "==", uid), orderBy("timestamp", "desc"));
-    onSnapshot(q, (snap) => {
-        const uFeed = document.getElementById("userPostsFeed");
-        uFeed.innerHTML = snap.empty ? "<p>No posts yet.</p>" : "";
-        snap.forEach(d => uFeed.innerHTML += createPostHTML(d.data()));
-    });
+    const uPosts = allPosts.filter(p => p.userId === uid);
+    const feed = document.getElementById("userPosts");
+    feed.innerHTML = uPosts.length ? "" : "<p style='color:var(--text-muted)'>No posts yet.</p>";
+    uPosts.forEach(p => feed.innerHTML += getPostHTML(p));
 
     document.getElementById("profileModal").style.display = "flex";
 };
 
-// --- AUTH & SETUP ---
-document.getElementById("signupBtn").onclick = async () => {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
-    try {
-        const c = await createUserWithEmailAndPassword(auth, email, pass);
-        await setDoc(doc(db, "users", c.user.uid), { name: email.split("@")[0], pfp: "", rank: "Member", status: "Hello Mobify!", userId: c.user.uid });
-    } catch(e) { alert(e.message); }
-};
-
-document.getElementById("loginBtn").onclick = () => signInWithEmailAndPassword(auth, email.value, password.value);
-document.getElementById("logoutBtn").onclick = () => signOut(auth);
-
-onAuthStateChanged(auth, async (u) => {
-    currentUser = u;
-    document.getElementById("auth-container").style.display = u ? "none" : "flex";
-    document.getElementById("app-container").style.display = u ? "flex" : "none";
-    document.getElementById("openModal").style.display = u ? "flex" : "none";
-    if(u) {
-        const d = await getDoc(doc(db, "users", u.uid));
-        const userData = d.data();
-        document.getElementById("usernameDisplay").textContent = userData.name;
-        document.getElementById("handleDisplay").textContent = "@" + userData.name.toLowerCase();
-        document.getElementById("pfp").src = userData.pfp || "";
-        startFeed();
+// --- AUTH & INITIALIZATION ---
+onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    document.getElementById("auth-container").style.display = user ? "none" : "flex";
+    document.getElementById("app-container").style.display = user ? "flex" : "none";
+    document.getElementById("openPostModal").style.display = user ? "flex" : "none";
+    if(user) {
+        const d = await getDoc(doc(db, "users", user.uid));
+        const data = d.data();
+        document.getElementById("myUsername").innerText = data.name;
+        document.getElementById("myHandle").innerText = "@" + data.name.toLowerCase();
+        document.getElementById("myPfp").src = data.pfp || "";
+        
+        // Listen to Global Feed
+        onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snap) => {
+            allPosts = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            // Only re-render if not searching
+            if(!document.getElementById("search").value) renderFeed(allPosts);
+        });
     }
 });
 
-// UI Controls
-document.getElementById("openModal").onclick = () => document.getElementById("postModal").style.display = "flex";
-document.querySelectorAll(".close").forEach(c => c.onclick = () => c.closest(".modal").style.display = "none");
-document.getElementById("postImgInput").onchange = async (e) => postImgBase64 = await toBase64(e.target.files[0]);
+document.getElementById("loginBtn").onclick = () => signInWithEmailAndPassword(auth, email.value, password.value);
+document.getElementById("logoutBtn").onclick = () => signOut(auth);
 document.getElementById("openProfile").onclick = () => viewProfile(currentUser.uid);
-
-document.getElementById("submitPost").onclick = async () => {
-    const val = document.getElementById("postText").value;
-    const d = await getDoc(doc(db, "users", currentUser.uid));
-    const u = d.data();
-    await addDoc(collection(db, "posts"), {
-        content: val, imageURL: postImgBase64, userId: currentUser.uid, username: u.name, userProfilePic: u.pfp, rank: u.rank, timestamp: serverTimestamp()
-    });
-    document.getElementById("postModal").style.display = "none";
-    document.getElementById("postText").value = ""; postImgBase64 = "";
-};
+document.querySelectorAll(".close-modal").forEach(b => b.onclick = () => b.closest(".modal").style.display = "none");
 </script>
 </body>
 </html>
