@@ -264,8 +264,18 @@
     </div>
     <div class="modal-body">
       <form id="createPostForm" style="display: grid; gap: 14px;">
-        <textarea id="postContent" class="field" placeholder="What's happening? Use #tags to join trends!" rows="4" required style="resize: vertical;"></textarea>
-        <input id="postImage" class="field" type="url" placeholder="Attach an Image URL (optional)" />
+        <textarea id="postContent" class="field" placeholder="What's happening?" rows="4" required style="resize: vertical;"></textarea>
+        
+        <label for="postImageFile" class="btn-ghost" style="border: 1px dashed var(--border); text-align: center; cursor: pointer;">
+          Click to upload image
+        </label>
+        <input id="postImageFile" type="file" accept="image/*" style="display: none;" />
+        
+        <div id="imagePreviewContainer" class="hidden" style="position: relative;">
+          <img id="imagePreview" style="width: 100%; border-radius: 10px; border: 1px solid var(--border);" />
+          <button type="button" id="removeImage" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; width: 25px; height: 25px;">✕</button>
+        </div>
+
         <button type="submit" class="btn-primary" id="submitPostBtn">Publish Post</button>
       </form>
     </div>
