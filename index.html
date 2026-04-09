@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mobify</title>
+<title>Mobify | Focus</title>
 <style>
   :root {
     --bg: #000000;
@@ -13,103 +13,110 @@
     --text-muted: #71767b;
     --accent: #1d9bf0;
     --accent-hover: #1a8cd8;
+    --danger: #f4212e;
   }
 
-  * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, sans-serif; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   body { background: var(--bg); color: var(--text-main); display: flex; justify-content: center; height: 100vh; overflow: hidden; }
 
-  /* Layout */
+  /* --- AUTH & APP CONTAINERS --- */
+  #auth-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100%; background: var(--bg); z-index: 100; }
   #app-container { display: none; width: 100%; max-width: 1200px; height: 100vh; }
-  .sidebar { width: 275px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
-  .main { flex: 1; border-right: 1px solid var(--border); overflow-y: auto; scrollbar-width: none; }
-  .right-sidebar { width: 350px; padding: 20px; }
 
-  /* Posts */
-  .post { padding: 15px 20px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; gap: 12px; }
+  /* Sidebar */
+  .sidebar { width: 275px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+  .logo { font-size: 28px; font-weight: 800; padding: 10px; margin-bottom: 20px; cursor: pointer; }
+  .nav-item { font-size: 20px; padding: 12px 20px; border-radius: 30px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px; font-weight: 500; }
+  .nav-item:hover { background: rgba(231, 233, 234, 0.1); }
+  
+  /* Feed */
+  .main { flex: 1; border-right: 1px solid var(--border); overflow-y: auto; scrollbar-width: none; }
+  .header { backdrop-filter: blur(12px); background: rgba(0, 0, 0, 0.65); position: sticky; top: 0; padding: 15px 20px; z-index: 10; border-bottom: 1px solid var(--border); font-size: 20px; font-weight: 700; }
+
+  /* Post Style */
+  .post { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; cursor: pointer; transition: 0.2s; }
   .post:hover { background: rgba(255, 255, 255, 0.03); }
   .post-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-  .post-image { width: 100%; border-radius: 16px; margin-top: 10px; border: 1px solid var(--border); }
+  .post-body { flex: 1; }
+  .post-header { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+  .post-header strong { font-size: 15px; }
+  .handle { color: var(--text-muted); font-size: 14px; }
+  .rank-badge { background: var(--border); color: var(--accent); font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+  .post-text { font-size: 15px; line-height: 1.4; margin-top: 4px; }
+  .post-image { width: 100%; border-radius: 16px; margin-top: 12px; border: 1px solid var(--border); max-height: 510px; object-fit: cover; }
 
-  /* SCROLLABLE DETAIL MODAL */
-  .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(91, 112, 131, 0.4); display: none; align-items: center; justify-content: center; z-index: 200; }
-  .modal-box { 
-    background: var(--bg); 
-    width: 100%; 
-    max-width: 600px; 
-    max-height: 90vh; /* Limits height */
-    border-radius: 16px; 
-    display: flex; 
-    flex-direction: column; 
-    overflow: hidden; /* Clips the box, child will scroll */
-  }
+  /* Modals */
+  .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(91, 112, 131, 0.4); display: none; align-items: flex-start; justify-content: center; z-index: 200; padding-top: 50px; }
+  .modal-box { background: var(--bg); padding: 20px; border-radius: 16px; width: 100%; max-width: 600px; position: relative; }
   
-  .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg); }
-  
-  .modal-body { 
-    flex: 1; 
-    overflow-y: auto; /* THIS MAKES IT SCROLLABLE */
-    padding: 20px; 
-    scrollbar-width: thin;
-  }
-
-  /* Comments Section */
-  .comment-input-area { padding: 15px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; background: var(--bg); }
-  .comment-input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 16px; }
-  .comment-item { padding: 12px 0; border-bottom: 1px solid #111; display: flex; gap: 10px; }
-  .comment-avatar { width: 32px; height: 32px; border-radius: 50%; }
+  /* Search */
+  .right-sidebar { width: 350px; padding: 20px; }
+  .search-bar { width: 100%; padding: 12px 20px; border-radius: 30px; border: 1px solid transparent; background: var(--panel-bg); color: var(--text-main); outline: none; margin-bottom: 20px; }
+  .search-bar:focus { border-color: var(--accent); background: var(--bg); }
 
   .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; display: none; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; }
 </style>
 </head>
 <body>
 
-<div id="auth-container" style="display:flex; justify-content:center; align-items:center; height:100vh; width:100%;">
-    <button onclick="login()" class="btn-primary" style="padding: 15px 30px; background: var(--accent); border:none; border-radius:30px; color:white; font-weight:bold; cursor:pointer;">Click to Log In (Demo Mode)</button>
+<div id="auth-container">
+  <div style="background: var(--panel-bg); padding: 40px; border-radius: 16px; text-align: center; width: 350px;">
+    <h1 style="margin-bottom: 20px;">Mobify</h1>
+    <input id="email" type="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; background:#000; color:#fff; border:1px solid var(--border); border-radius:8px;">
+    <input id="password" type="password" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; background:#000; color:#fff; border:1px solid var(--border); border-radius:8px;">
+    <button id="loginBtn" style="width:100%; padding:12px; background:var(--accent); color:white; border:none; border-radius:30px; font-weight:bold; cursor:pointer;">Log in</button>
+  </div>
 </div>
 
 <div id="app-container">
   <div class="sidebar">
-    <div class="logo" style="font-size:24px; font-weight:bold;">Mobify</div>
-    <div class="profile-card" style="display:flex; align-items:center; gap:10px;">
-      <img id="pfp" style="width:40px; height:40px; border-radius:50%;">
-      <span id="username"></span>
+    <div>
+      <div class="logo">Mobify</div>
+      <div class="nav-item">🏠 Home</div>
+      <div class="nav-item" id="logoutBtn">🚪 Logout</div>
+    </div>
+    <div class="profile-card">
+      <img id="pfp" class="profile-pic">
+      <div class="user-info">
+        <h3 id="username">User</h3>
+        <p id="rank" style="color:var(--text-muted); font-size:12px;">@member</p>
+      </div>
     </div>
   </div>
 
   <div class="main">
-    <div class="header" style="padding:15px; font-weight:bold; border-bottom:1px solid var(--border);">Home</div>
+    <div class="header">Home</div>
     <div id="feed"></div>
   </div>
 
   <div class="right-sidebar">
-    <input type="text" placeholder="Search..." style="width:100%; padding:10px; border-radius:20px; background:var(--panel-bg); border:none; color:white;">
+    <input id="search" class="search-bar" placeholder="Search people or posts..." />
+    <div id="trending-list" class="trending-box" style="background:var(--panel-bg); padding:15px; border-radius:16px;">
+      <h3>Trending</h3>
+    </div>
   </div>
 </div>
 
+<div class="fab" id="openModal">+</div>
+
 <div class="modal" id="detailModal">
   <div class="modal-box">
-    <div class="modal-header">
-      <strong>Post</strong>
-      <div id="closeDetail" style="cursor:pointer">✕</div>
-    </div>
-    
-    <div class="modal-body" id="detailScrollBody">
-      <div id="detailContent"></div>
-      <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
-      <div id="commentsList"></div>
-    </div>
+    <div id="closeDetail" style="position:absolute; right:20px; top:15px; cursor:pointer; font-size:20px;">✕</div>
+    <div id="detailContent"></div>
+  </div>
+</div>
 
-    <div class="comment-input-area">
-      <input type="text" id="commentText" class="comment-input" placeholder="Post your reply">
-      <button id="submitComment" style="background:var(--accent); border:none; color:white; padding:5px 15px; border-radius:20px; font-weight:bold; cursor:pointer;">Reply</button>
-    </div>
+<div class="modal" id="postModal">
+  <div class="modal-box">
+    <textarea id="postText" placeholder="What's happening?" style="width:100%; height:150px; background:transparent; color:white; border:none; font-size:18px; outline:none; resize:none;"></textarea>
+    <button id="submitPost" style="float:right; background:var(--accent); border:none; padding:8px 20px; border-radius:20px; color:white; font-weight:bold; cursor:pointer;">Post</button>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
@@ -124,101 +131,116 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 let currentUser = null;
-let activePostId = null;
+let allPosts = [];
 
-// --- LOAD POSTS ---
+// --- POST RENDERING ---
+function renderPost(post, id) {
+  const handle = post.username.toLowerCase().replace(/\s/g, '');
+  const rank = post.rank || "Member";
+  
+  return `
+    <div class="post" onclick="openDetail('${id}')">
+      <img src="${post.userProfilePic || 'https://via.placeholder.com/50'}" class="post-avatar">
+      <div class="post-body">
+        <div class="post-header">
+          <strong>${post.username}</strong>
+          <span class="rank-badge">${rank}</span>
+          <span class="handle">@${handle}</span>
+        </div>
+        <div class="post-text">${post.content}</div>
+        ${post.imageURL ? `<img src="${post.imageURL}" class="post-image">` : ""}
+      </div>
+    </div>
+  `;
+}
+
+// --- DETAIL VIEW FUNCTION ---
+window.openDetail = async (id) => {
+  const post = allPosts.find(p => p.id === id);
+  if (!post) return;
+
+  const handle = post.username.toLowerCase().replace(/\s/g, '');
+  const detailModal = document.getElementById("detailModal");
+  const container = document.getElementById("detailContent");
+
+  container.innerHTML = `
+    <div style="display:flex; gap:15px; align-items:center; margin-bottom:20px;">
+        <img src="${post.userProfilePic}" style="width:60px; height:60px; border-radius:50%;">
+        <div>
+            <h2 style="margin:0;">${post.username} <span class="rank-badge">${post.rank || 'Member'}</span></h2>
+            <p class="handle">@${handle}</p>
+        </div>
+    </div>
+    <p style="font-size:22px; line-height:1.4; margin-bottom:20px;">${post.content}</p>
+    ${post.imageURL ? `<img src="${post.imageURL}" style="width:100%; border-radius:16px; border:1px solid var(--border);">` : ""}
+    <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
+    <div style="color:var(--text-muted);">Posted on ${post.timestamp?.toDate().toLocaleString() || 'Just now'}</div>
+  `;
+  
+  detailModal.style.display = "flex";
+};
+
+// --- SEARCH ENGINE ---
+document.getElementById("search").oninput = (e) => {
+  const query = e.target.value.toLowerCase();
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "";
+
+  allPosts.filter(p => {
+    const handle = `@${p.username.toLowerCase().replace(/\s/g, '')}`;
+    const name = p.username.toLowerCase();
+    const text = p.content.toLowerCase();
+    
+    // If query starts with @, search strictly by handle
+    if (query.startsWith("@")) {
+        return handle.includes(query);
+    }
+    // Otherwise search text and names
+    return text.includes(query) || name.includes(query);
+  }).forEach(p => {
+    feed.innerHTML += renderPost(p, p.id);
+  });
+};
+
+// --- FEED LOGIC ---
 function startFeed() {
   const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
   onSnapshot(q, (snap) => {
+    allPosts = snap.docs.map(d => ({id: d.id, ...d.data()}));
     const feed = document.getElementById("feed");
     feed.innerHTML = "";
-    snap.forEach(d => {
-      const p = d.data();
-      feed.innerHTML += `
-        <div class="post" onclick="openDetail('${d.id}')">
-          <img src="${p.userProfilePic}" class="post-avatar">
-          <div class="post-body">
-            <strong>${p.username}</strong>
-            <div class="post-text">${p.content}</div>
-            ${p.imageURL ? `<img src="${p.imageURL}" class="post-image">` : ""}
-          </div>
-        </div>`;
-    });
+    allPosts.forEach(p => feed.innerHTML += renderPost(p, p.id));
   });
 }
 
-// --- OPEN DETAIL & START COMMENT LISTENER ---
-window.openDetail = async (id) => {
-  activePostId = id;
-  const postSnap = await getDoc(doc(db, "posts", id));
-  const post = postSnap.data();
-  
-  document.getElementById("detailContent").innerHTML = `
-    <div style="display:flex; gap:12px; margin-bottom:15px;">
-      <img src="${post.userProfilePic}" style="width:48px; height:48px; border-radius:50%;">
-      <strong>${post.username}</strong>
-    </div>
-    <p style="font-size:18px; margin-bottom:15px;">${post.content}</p>
-    ${post.imageURL ? `<img src="${post.imageURL}" style="width:100%; border-radius:12px;">` : ""}
-  `;
-
-  // Listen for comments in real-time
-  const q = query(collection(db, "posts", id, "comments"), orderBy("timestamp", "asc"));
-  onSnapshot(q, (snap) => {
-    const list = document.getElementById("commentsList");
-    list.innerHTML = snap.empty ? `<p style="color:var(--text-muted)">No comments yet.</p>` : "";
-    snap.forEach(d => {
-      const c = d.data();
-      list.innerHTML += `
-        <div class="comment-item">
-          <img src="${c.pfp || 'https://via.placeholder.com/30'}" class="comment-avatar">
-          <div>
-            <strong>${c.username}</strong>
-            <div style="font-size:14px;">${c.text}</div>
-          </div>
-        </div>`;
-    });
-  });
-
-  document.getElementById("detailModal").style.display = "flex";
-};
-
-// --- POST A COMMENT ---
-document.getElementById("submitComment").onclick = async () => {
-  const text = document.getElementById("commentText").value;
-  if(!text || !activePostId) return;
-
-  const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-  const userData = userDoc.data();
-
-  await addDoc(collection(db, "posts", activePostId, "comments"), {
-    text: text,
-    username: userData.name,
-    pfp: userData.pfp,
-    timestamp: serverTimestamp()
-  });
-
-  document.getElementById("commentText").value = "";
-};
-
-// --- AUTH ---
-onAuthStateChanged(auth, u => {
-  if(u) {
-    currentUser = u;
+// --- APP INITIALIZATION ---
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-container").style.display = "flex";
+    document.getElementById("openModal").style.display = "flex";
+    
+    // Load User Sidebar
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+        document.getElementById("username").textContent = userDoc.data().name;
+        document.getElementById("pfp").src = userDoc.data().pfp || "https://via.placeholder.com/50";
+        document.getElementById("rank").textContent = userDoc.data().rank || "Member";
+    }
     startFeed();
+  } else {
+    document.getElementById("auth-container").style.display = "flex";
+    document.getElementById("app-container").style.display = "none";
   }
 });
 
-// Demo Login (Since you likely have an account)
-window.login = () => {
-    const email = prompt("Email?");
-    const pass = prompt("Password?");
-    signInWithEmailAndPassword(auth, email, pass);
-};
-
+// Basic UI Toggles
+document.getElementById("loginBtn").onclick = () => signInWithEmailAndPassword(auth, email.value, password.value);
+document.getElementById("logoutBtn").onclick = () => signOut(auth);
+document.getElementById("openModal").onclick = () => document.getElementById("postModal").style.display = "flex";
 document.getElementById("closeDetail").onclick = () => document.getElementById("detailModal").style.display = "none";
+window.onclick = (e) => { if(e.target.className === 'modal') e.target.style.display = "none"; };
 </script>
 </body>
 </html>
