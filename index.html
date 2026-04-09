@@ -134,6 +134,7 @@
   .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #202327; color: #8ed1ff; font-size: 11px; font-weight: 800; letter-spacing: 0.01em; white-space: nowrap; }
   .badge.soft { color: var(--text-muted); background: rgba(255,255,255,0.04); }
   .badge.success { color: var(--success); }
+  .badge:hover:not(.soft):not(.success) { background: rgba(29, 155, 240, 0.15); }
   .tag-link { color: #8ed1ff; font-weight: 700; text-decoration: none; }
   .tag-link:hover { text-decoration: underline; }
 
@@ -158,7 +159,7 @@
   .profile-top { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
   .profile-copy h2 { margin: 0; font-size: 26px; }
   .profile-copy p { margin: 8px 0 0; color: var(--text-muted); }
-  .status-line { margin-top: 14px; color: var(--text-muted); font-style: italic; }
+  .status-line { margin-top: 14px; color: var(--text-main); font-style: italic; }
 
   .hidden { display: none !important; }
   
@@ -255,6 +256,22 @@
 
 <button class="fab" id="openPostModal" type="button">+</button>
 
+<div class="modal" id="createPostModal">
+  <div class="modal-box" style="width: min(100%, 500px);">
+    <div class="modal-head">
+      <strong>Create Post</strong>
+      <button class="icon-btn close-modal" type="button" id="closePostModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="createPostForm" style="display: grid; gap: 14px;">
+        <textarea id="postContent" class="field" placeholder="What's happening? Use #tags to join trends!" rows="4" required style="resize: vertical;"></textarea>
+        <input id="postImage" class="field" type="url" placeholder="Attach an Image URL (optional)" />
+        <button type="submit" class="btn-primary" id="submitPostBtn">Publish Post</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="profileModal">
   <div class="modal-box">
     <div class="modal-head">
@@ -270,7 +287,10 @@
           <div id="profRank" class="badge" style="margin-top: 10px;">Rank</div>
         </div>
       </div>
-      <div class="status-line" id="profStatus"></div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <div class="status-line" id="profStatus"></div>
+        <button class="badge hidden" id="editStatusBtn" type="button" style="cursor: pointer; border: 1px solid var(--border);">✎ Edit</button>
+      </div>
       <hr style="border:none; border-top:1px solid var(--border-soft); margin:20px 0;" />
       <h3 style="margin: 0 0 14px;">Recent Posts</h3>
       <div id="userPosts"></div>
@@ -292,7 +312,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, setDoc, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
@@ -340,7 +360,15 @@ const els = {
   openMyProfile: document.getElementById("openMyProfile"),
   logoutBtn: document.getElementById("logoutBtn"),
   openPostModal: document.getElementById("openPostModal"),
-  refreshFeedBtn: document.getElementById("refreshFeedBtn")
+  refreshFeedBtn: document.getElementById("refreshFeedBtn"),
+  // New elements
+  createPostModal: document.getElementById("createPostModal"),
+  createPostForm: document.getElementById("createPostForm"),
+  postContent: document.getElementById("postContent"),
+  postImage: document.getElementById("postImage"),
+  submitPostBtn: document.getElementById("submitPostBtn"),
+  closePostModal: document.getElementById("closePostModal"),
+  editStatusBtn: document.getElementById("editStatusBtn")
 };
 
 let allPosts = [];
@@ -485,7 +513,14 @@ async function viewProfile(uid) {
     els.profPfp.src = data.pfp || "https://via.placeholder.com/100";
     els.profRank.textContent = data.rank || "Member";
     els.profRank.className = `badge ${data.rank === "Member" || !data.rank ? "soft" : ""}`;
-    els.profStatus.textContent = data.status || "";
+    els.profStatus.textContent = `"${data.status || "Hello, world!"}"`;
+
+    // Show or hide the edit status button based on ownership
+    if (currentUser && uid === currentUser.uid) {
+      els.editStatusBtn.classList.remove("hidden");
+    } else {
+      els.editStatusBtn.classList.add("hidden");
+    }
     
     const userPosts = allPosts.filter(post => post.userId === uid);
     els.userPosts.innerHTML = "";
@@ -495,8 +530,70 @@ async function viewProfile(uid) {
   } catch (error) { console.error(error); }
 }
 
-function closeModal() { els.profileModal.style.display = "none"; }
+function closeModal() { 
+  els.profileModal.style.display = "none"; 
+  els.createPostModal.style.display = "none";
+}
 function setAuthStatus(msg, isError = false) { els.authStatus.textContent = msg; els.authStatus.style.color = isError ? "#ff7aa8" : "var(--text-muted)"; }
+
+
+// --- NEW COMPOSER & STATUS LOGIC ---
+
+// Open the post composer modal
+els.openPostModal.addEventListener("click", () => {
+  els.createPostModal.style.display = "flex";
+  els.postContent.focus();
+});
+
+// Handle submitting a new post to Firestore
+els.createPostForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+  els.submitPostBtn.disabled = true;
+  els.submitPostBtn.textContent = "Publishing...";
+
+  try {
+    await addDoc(collection(db, "posts"), {
+      userId: currentUser.uid,
+      username: els.myUsername.textContent,
+      userProfilePic: els.myPfp.src,
+      rank: "Member",
+      content: els.postContent.value.trim(),
+      imageURL: els.postImage.value.trim(),
+      timestamp: new Date().toISOString()
+    });
+    
+    // Reset and close
+    els.createPostForm.reset();
+    closeModal();
+  } catch (error) {
+    console.error("Failed to create post:", error);
+    alert("Could not publish post. Check console.");
+  } finally {
+    els.submitPostBtn.disabled = false;
+    els.submitPostBtn.textContent = "Publish Post";
+  }
+});
+
+// Edit profile status
+els.editStatusBtn.addEventListener("click", async () => {
+  if (!currentUser) return;
+  const currentStatus = els.profStatus.textContent.replace(/"/g, ''); // Strip visual quotes
+  const newStatus = prompt("Update your profile status:", currentStatus);
+  
+  if (newStatus !== null && newStatus.trim() !== currentStatus) {
+    try {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        status: newStatus.trim()
+      });
+      els.profStatus.textContent = `"${newStatus.trim()}"`;
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("Failed to update status.");
+    }
+  }
+});
+
 
 // --- AUTHENTICATION LOGIC ---
 
@@ -543,16 +640,20 @@ els.navHome.addEventListener("click", showHome);
 els.navTrending.addEventListener("click", showTrendingPage);
 els.openMyProfile.addEventListener("click", () => { if (currentUser) viewProfile(currentUser.uid); });
 els.refreshFeedBtn.addEventListener("click", () => currentView === "trending" ? showTrendingPage() : showHome());
-els.openPostModal.addEventListener("click", () => alert("Add your create-post modal here."));
+
 els.search.addEventListener("input", () => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => currentView === "trending" ? showTrendingPage() : showHome(), 100);
 });
+
+// Modal close logic
 els.profileModal.addEventListener("click", (e) => { if (e.target === els.profileModal) closeModal(); });
+els.createPostModal.addEventListener("click", (e) => { if (e.target === els.createPostModal) closeModal(); });
 document.querySelectorAll(".close-modal").forEach(btn => btn.addEventListener("click", closeModal));
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
 
-// --- FINISHED FIREBASE INITIALIZATION & SYNC ---
+
+// --- FIREBASE INITIALIZATION & SYNC ---
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
