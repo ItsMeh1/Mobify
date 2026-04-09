@@ -18,189 +18,56 @@
 
   * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-  body {
-    background: var(--bg);
-    color: var(--text-main);
-    display: flex;
-    justify-content: center;
-    height: 100vh;
-    overflow: hidden;
-  }
+  body { background: var(--bg); color: var(--text-main); display: flex; justify-content: center; height: 100vh; overflow: hidden; }
 
   /* --- AUTH SCREEN --- */
-  #auth-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    width: 100%;
-    background: var(--bg);
-    z-index: 100;
+  #auth-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100%; background: var(--bg); z-index: 100; }
+  .auth-box { background: var(--panel-bg); padding: 40px; border-radius: 16px; border: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; }
+  .auth-box h1 { font-size: 32px; margin-bottom: 20px; letter-spacing: -1px; }
+  .auth-box input[type="text"], .auth-box input[type="email"], .auth-box input[type="password"] {
+    width: 100%; padding: 15px; margin-bottom: 15px; background: var(--bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; font-size: 16px;
   }
-  
-  .auth-box {
-    background: var(--panel-bg);
-    padding: 40px;
-    border-radius: 16px;
-    border: 1px solid var(--border);
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-  }
+  .file-label { display: block; margin-bottom: 15px; color: var(--accent); cursor: pointer; font-size: 14px; }
 
-  .auth-box h1 { font-size: 32px; margin-bottom: 30px; letter-spacing: -1px; }
-
-  .auth-box input {
-    width: 100%; padding: 15px; margin-bottom: 15px;
-    background: var(--bg); color: var(--text-main);
-    border: 1px solid var(--border); border-radius: 8px; font-size: 16px;
-  }
-  
-  .auth-box input:focus { outline: none; border-color: var(--accent); }
-
-  .btn-primary {
-    background: var(--accent); color: white; border: none; font-weight: bold;
-    padding: 15px; border-radius: 30px; width: 100%; font-size: 16px;
-    cursor: pointer; transition: 0.2s; margin-bottom: 10px;
-  }
-  
+  .btn-primary { background: var(--accent); color: white; border: none; font-weight: bold; padding: 15px; border-radius: 30px; width: 100%; font-size: 16px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
   .btn-primary:hover { background: var(--accent-hover); }
-  
-  .btn-outline {
-    background: transparent; color: var(--accent); border: 1px solid var(--accent);
-    font-weight: bold; padding: 15px; border-radius: 30px; width: 100%; 
-    font-size: 16px; cursor: pointer; transition: 0.2s;
-  }
-  
-  .btn-outline:hover { background: rgba(29, 155, 240, 0.1); }
+  .btn-outline { background: transparent; color: var(--accent); border: 1px solid var(--accent); font-weight: bold; padding: 15px; border-radius: 30px; width: 100%; font-size: 16px; cursor: pointer; transition: 0.2s; }
 
   /* --- MAIN APP --- */
-  #app-container {
-    display: none;
-    width: 100%;
-    max-width: 1200px;
-    height: 100vh;
-  }
-
-  /* Sidebar */
-  .sidebar {
-    width: 275px;
-    border-right: 1px solid var(--border);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-  }
-
+  #app-container { display: none; width: 100%; max-width: 1200px; height: 100vh; }
+  .sidebar { width: 275px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
   .logo { font-size: 28px; font-weight: 800; padding: 10px; margin-bottom: 20px; letter-spacing: -1px;}
-
-  .nav-item {
-    font-size: 20px; padding: 12px 20px; border-radius: 30px;
-    cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px;
-    font-weight: 500; margin-bottom: 5px;
-  }
-  
+  .nav-item { font-size: 20px; padding: 12px 20px; border-radius: 30px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px; font-weight: 500; margin-bottom: 5px; }
   .nav-item:hover { background: rgba(231, 233, 234, 0.1); }
-
-  .search-bar {
-    width: 100%; padding: 12px 20px; border-radius: 30px; border: none;
-    background: var(--panel-bg); color: var(--text-main); margin-bottom: 20px;
-    border: 1px solid transparent; outline: none;
-  }
-  
-  .search-bar:focus { border-color: var(--accent); background: var(--bg); }
-
-  .profile-card {
-    display: flex; align-items: center; gap: 10px; padding: 10px;
-    border-radius: 30px; cursor: pointer; transition: 0.2s;
-  }
-  
-  .profile-card:hover { background: rgba(231, 233, 234, 0.1); }
-
+  .search-bar { width: 100%; padding: 12px 20px; border-radius: 30px; border: none; background: var(--panel-bg); color: var(--text-main); margin-bottom: 20px; border: 1px solid transparent; outline: none; }
+  .profile-card { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 30px; cursor: pointer; transition: 0.2s; }
   .profile-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--border); }
-  .user-info h3 { font-size: 15px; }
-  .user-info p { font-size: 15px; color: var(--text-muted); }
-
-  /* Main Feed */
-  .main {
-    flex: 1; border-right: 1px solid var(--border);
-    overflow-y: auto; scrollbar-width: none; /* Hide scrollbar Firefox */
-  }
   
-  .main::-webkit-scrollbar { display: none; /* Hide scrollbar Chrome */ }
+  .main { flex: 1; border-right: 1px solid var(--border); overflow-y: auto; scrollbar-width: none; }
+  .main::-webkit-scrollbar { display: none; }
+  .header { backdrop-filter: blur(12px); background: rgba(0, 0, 0, 0.65); position: sticky; top: 0; padding: 15px 20px; z-index: 10; border-bottom: 1px solid var(--border); font-size: 20px; font-weight: 700; }
 
-  .header {
-    backdrop-filter: blur(12px); background: rgba(0, 0, 0, 0.65);
-    position: sticky; top: 0; padding: 15px 20px; z-index: 10;
-    border-bottom: 1px solid var(--border); font-size: 20px; font-weight: 700;
-  }
-
-  /* Post */
-  .post { padding: 20px; border-bottom: 1px solid var(--border); display: flex; gap: 15px; transition: background 0.2s; }
-  .post:hover { background: rgba(255, 255, 255, 0.03); }
-  
+  .post { padding: 20px; border-bottom: 1px solid var(--border); display: flex; gap: 15px; }
   .post-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-  
   .post-body { flex: 1; }
   .post-header { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
-  .post-header strong { font-size: 15px; }
-  .post-header span { color: var(--text-muted); font-size: 15px; }
-  
   .post-text { font-size: 15px; line-height: 1.5; margin-bottom: 10px; white-space: pre-wrap; }
-  .post-image { width: 100%; border-radius: 16px; margin-top: 10px; border: 1px solid var(--border); }
+  .post-image { width: 100%; border-radius: 16px; margin-top: 10px; border: 1px solid var(--border); max-height: 500px; object-fit: cover;}
 
-  /* Actions */
   .actions { display: flex; gap: 40px; margin-top: 15px; color: var(--text-muted); }
   .action-btn { display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; font-size: 14px;}
-  .action-btn:hover { color: var(--accent); }
-  .action-btn.dislike:hover { color: var(--danger); }
 
-  /* Right Sidebar */
   .right-sidebar { width: 350px; padding: 20px; }
   .trending-box { background: var(--panel-bg); border-radius: 16px; padding: 15px; }
-  .trending-box h2 { font-size: 20px; margin-bottom: 15px; }
-  .trend-item { margin-bottom: 15px; cursor:pointer; }
+  .trend-item { margin-bottom: 15px; }
   .trend-item p { color: var(--text-muted); font-size: 13px; }
-  .trend-item strong { font-size: 15px; }
 
-  /* FAB & Modal */
-  .fab {
-    position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
-    border-radius: 50%; background: var(--accent); color: white; display: none;
-    align-items: center; justify-content: center; font-size: 28px; cursor: pointer;
-    box-shadow: 0 4px 15px rgba(29, 155, 240, 0.4); transition: 0.2s; z-index: 50;
-  }
-  .fab:hover { background: var(--accent-hover); transform: scale(1.05); }
-
-  .modal {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(91, 112, 131, 0.4); display: none;
-    align-items: flex-start; justify-content: center; z-index: 200;
-    padding-top: 50px;
-  }
-
-  .modal-box {
-    background: var(--bg); padding: 20px; border-radius: 16px;
-    width: 100%; max-width: 600px; box-shadow: 0 0 20px rgba(255,255,255,0.1);
-  }
-
-  .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
-  .close-modal { cursor: pointer; font-size: 20px; font-weight: bold; }
+  .fab { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; display: none; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; z-index: 50; }
+  .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(91, 112, 131, 0.4); display: none; align-items: flex-start; justify-content: center; z-index: 200; padding-top: 50px; }
+  .modal-box { background: var(--bg); padding: 20px; border-radius: 16px; width: 100%; max-width: 600px; }
+  .modal textarea { width: 100%; height: 100px; background: transparent; color: var(--text-main); border: none; font-size: 20px; outline: none; resize: none; }
   
-  .modal textarea {
-    width: 100%; height: 100px; background: transparent; color: var(--text-main);
-    border: none; font-size: 20px; outline: none; resize: none; margin-bottom: 15px;
-  }
-  .modal input {
-    width: 100%; padding: 10px; background: transparent; border: none;
-    border-bottom: 1px solid var(--border); color: var(--accent); margin-bottom: 20px; outline: none;
-  }
-
-  .post-btn-small { background: var(--accent); color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-  .post-btn-small:hover { background: var(--accent-hover); }
-
+  #imagePreview { max-width: 100px; border-radius: 8px; display: none; margin-bottom: 10px; }
 </style>
 </head>
 
@@ -211,6 +78,10 @@
     <h1>Mobify</h1>
     <input id="email" placeholder="Email address" type="email" />
     <input id="password" type="password" placeholder="Password" />
+    <label class="file-label">
+      📸 Upload Profile Picture
+      <input type="file" id="authPfpInput" hidden accept="image/*">
+    </label>
     <button id="loginBtn" class="btn-primary">Log in</button>
     <button id="signupBtn" class="btn-outline">Create account</button>
   </div>
@@ -222,12 +93,10 @@
       <div class="logo">Mobify</div>
       <div class="nav-item">🏠 Home</div>
       <div class="nav-item">🔥 Trending</div>
-      <div class="nav-item">👤 Profile</div>
       <div class="nav-item" id="logoutBtn">🚪 Logout</div>
     </div>
-    
     <div class="profile-card">
-      <img id="pfp" class="profile-pic" src="https://via.placeholder.com/50">
+      <img id="pfp" class="profile-pic" src="">
       <div class="user-info">
         <h3 id="username">User</h3>
         <p id="rank">@member</p>
@@ -244,9 +113,7 @@
     <input id="search" class="search-bar" placeholder="Search Mobify..." />
     <div class="trending-box">
       <h2>What's happening</h2>
-      <div id="trending-list">
-        <div class="trend-item"><p>Loading trends...</p></div>
-      </div>
+      <div id="trending-list"></div>
     </div>
   </div>
 </div>
@@ -255,25 +122,23 @@
 
 <div class="modal" id="modal">
   <div class="modal-box">
-    <div class="modal-header">
-      <div class="close-modal" id="closeModal">✕</div>
-      <button id="postBtn" class="post-btn-small">Post</button>
+    <div style="display:flex; justify-content: space-between; margin-bottom: 10px;">
+      <div id="closeModal" style="cursor:pointer">✕</div>
+      <button id="postBtn" class="btn-primary" style="width:auto; padding: 5px 20px;">Post</button>
     </div>
     <textarea id="postText" placeholder="What's happening?"></textarea>
-    <input id="imageURL" placeholder="Add image URL (optional)">
+    <img id="imagePreview">
+    <label class="file-label">
+      🖼️ Add Image
+      <input type="file" id="postImageInput" hidden accept="image/*">
+    </label>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import {
-  getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, signOut
-} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import {
-  getFirestore, collection, addDoc, onSnapshot, updateDoc, doc,
-  arrayUnion, arrayRemove, serverTimestamp, setDoc, getDoc, query, orderBy
-} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, onSnapshot, updateDoc, doc, arrayUnion, arrayRemove, serverTimestamp, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
@@ -287,220 +152,131 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
 let currentUser = null;
+let currentPostBase64 = "";
 
-// DOM Elements
-const authContainer = document.getElementById("auth-container");
-const appContainer = document.getElementById("app-container");
-const fab = document.getElementById("openModal");
-const modal = document.getElementById("modal");
+// Helper: Convert File to Base64 (with simple compression)
+const toBase64 = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+});
 
-// --- 1. UPGRADED PROFILE LOADER ---
 async function loadUserProfile(user) {
-  const ref = doc(db, "users", user.uid);
-  const snap = await getDoc(ref);
-
-  // Fallback data based on their email if they don't have a name set
+  const snap = await getDoc(doc(db, "users", user.uid));
   let name = user.email.split('@')[0];
-  let pfpUrl = "https://ui-avatars.com/api/?name=" + name + "&background=random";
-
-  if (snap.exists()) {
-    const data = snap.data();
-    name = data.name || name;
-    pfpUrl = data.pfp || pfpUrl;
-  } else {
-    // SELF-HEALING: If an old user logs in and doesn't have a database profile, create one now!
-    await setDoc(ref, {
-      name: name,
-      email: user.email,
-      rank: "Member",
-      pfp: ""
-    });
-  }
-
-  // Update the DOM
-  document.getElementById("username").textContent = name;
-  document.getElementById("rank").textContent = "@" + name.toLowerCase().replace(/\s/g, '');
+  let pfp = `https://ui-avatars.com/api/?name=${name}`;
   
-  // Add an error fallback just in case the UI-avatar image fails to load
-  const pfpImg = document.getElementById("pfp");
-  pfpImg.src = pfpUrl;
-  pfpImg.onerror = () => { pfpImg.src = "https://via.placeholder.com/50"; };
+  if (snap.exists()) {
+    name = snap.data().name || name;
+    pfp = snap.data().pfp || pfp;
+  }
+  document.getElementById("username").textContent = name;
+  document.getElementById("pfp").src = pfp;
+  document.getElementById("rank").textContent = "@" + name.toLowerCase();
 }
 
-
-// --- 2. UPGRADED FEED & TRENDING ENGINE ---
 function updateTrending(counts) {
-  const trendingContainer = document.getElementById("trending-list");
-  trendingContainer.innerHTML = "";
-
-  // Sort the hashtags from highest count to lowest, and grab the top 5
-  const sortedTags = Object.keys(counts)
-    .sort((a, b) => counts[b] - counts[a])
-    .slice(0, 5);
-
-  if (sortedTags.length === 0) {
-    trendingContainer.innerHTML = `<div class="trend-item"><p style="color: var(--text-muted); font-size: 14px;">No hashtags yet. Try posting something with a #hashtag!</p></div>`;
-    return;
-  }
-
-  // Generate HTML for each trending tag
-  sortedTags.forEach(tag => {
-    const count = counts[tag];
-    trendingContainer.innerHTML += `
-      <div class="trend-item">
-        <p>Trending</p>
-        <strong>${tag}</strong>
-        <p style="color: var(--text-muted); font-size: 12px; margin-top: 3px;">${count} post${count > 1 ? 's' : ''}</p>
-      </div>
-    `;
+  const list = document.getElementById("trending-list");
+  list.innerHTML = "";
+  Object.keys(counts).sort((a,b) => counts[b] - counts[a]).slice(0,5).forEach(tag => {
+    list.innerHTML += `<div class="trend-item"><p>Trending</p><strong>${tag}</strong><p>${counts[tag]} posts</p></div>`;
   });
 }
 
-/* Render Post Template */
 function render(post, id) {
-  const likes = post.likes?.length || 0;
-  const dislikes = post.dislikes?.length || 0;
-  const profileImg = post.userProfilePic || "https://ui-avatars.com/api/?name=" + post.username + "&background=random";
-
   return `
   <div class="post">
-    <img src="${profileImg}" class="post-avatar">
+    <img src="${post.userProfilePic || ''}" class="post-avatar">
     <div class="post-body">
-      <div class="post-header">
-        <strong>${post.username}</strong>
-        <span>@${post.username.toLowerCase().replace(/\s/g, '')}</span>
-      </div>
+      <div class="post-header"><strong>${post.username}</strong></div>
       <div class="post-text">${post.content}</div>
       ${post.imageURL ? `<img src="${post.imageURL}" class="post-image">` : ""}
       <div class="actions">
-        <div class="action-btn" onclick="like('${id}')">❤️ ${likes}</div>
-        <div class="action-btn dislike" onclick="dislike('${id}')">👎 ${dislikes}</div>
+        <div class="action-btn" onclick="like('${id}')">❤️ ${post.likes?.length || 0}</div>
+        <div class="action-btn" onclick="dislike('${id}')">👎 ${post.dislikes?.length || 0}</div>
       </div>
     </div>
   </div>`;
 }
 
-/* Realtime Feed */
 function startFeed() {
-  // Using query to properly order posts by newest first
   const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-
   onSnapshot(q, (snap) => {
     const feed = document.getElementById("feed");
+    const counts = {};
     feed.innerHTML = "";
     snap.forEach(docSnap => {
-      feed.innerHTML += render(docSnap.data(), docSnap.id);
+      const data = docSnap.data();
+      feed.innerHTML += render(data, docSnap.id);
+      (data.content.match(/#[\w]+/g) || []).forEach(tag => counts[tag] = (counts[tag] || 0) + 1);
     });
+    updateTrending(counts);
   });
 }
 
-/* Like / Dislike (Global window bindings for inline HTML onClick) */
-window.like = async (id) => {
-  if(!currentUser) return;
-  await updateDoc(doc(db, "posts", id), {
-    likes: arrayUnion(currentUser.uid),
-    dislikes: arrayRemove(currentUser.uid)
-  });
+// Global Actions
+window.like = id => updateDoc(doc(db, "posts", id), { likes: arrayUnion(currentUser.uid), dislikes: arrayRemove(currentUser.uid) });
+window.dislike = id => updateDoc(doc(db, "posts", id), { dislikes: arrayUnion(currentUser.uid), likes: arrayRemove(currentUser.uid) });
+
+// Post Logic
+document.getElementById("postImageInput").onchange = async (e) => {
+  currentPostBase64 = await toBase64(e.target.files[0]);
+  document.getElementById("imagePreview").src = currentPostBase64;
+  document.getElementById("imagePreview").style.display = "block";
 };
 
-window.dislike = async (id) => {
-  if(!currentUser) return;
-  await updateDoc(doc(db, "posts", id), {
-    dislikes: arrayUnion(currentUser.uid),
-    likes: arrayRemove(currentUser.uid)
-  });
-};
-
-/* Create Post */
 document.getElementById("postBtn").onclick = async () => {
-  const textVal = document.getElementById("postText").value;
-  const imgVal = document.getElementById("imageURL").value;
+  const text = document.getElementById("postText").value;
+  if(!text && !currentPostBase64) return;
+  const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+  const userData = userSnap.data();
   
-  if(!textVal && !imgVal) return; // Prevent empty posts
-
-  try {
-    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-    const userData = userDoc.exists() ? userDoc.data() : { name: "Unknown", pfp: "" };
-
-    await addDoc(collection(db, "posts"), {
-      content: textVal,
-      imageURL: imgVal,
-      username: userData.name,
-      userProfilePic: userData.pfp || "",
-      userID: currentUser.uid,
-      likes: [],
-      dislikes: [],
-      timestamp: serverTimestamp() // Relies on Firestore for time
-    });
-
-    // Reset Modal
-    document.getElementById("postText").value = "";
-    document.getElementById("imageURL").value = "";
-    modal.style.display = "none";
-  } catch (error) {
-    console.error("Error creating post: ", error);
-  }
-};
-
-/* Modal Toggle */
-fab.onclick = () => modal.style.display = "flex";
-document.getElementById("closeModal").onclick = () => modal.style.display = "none";
-
-/* Search Filter */
-document.getElementById("search").oninput = (e) => {
-  const val = e.target.value.toLowerCase();
-  document.querySelectorAll(".post").forEach(p => {
-    p.style.display = p.innerText.toLowerCase().includes(val) ? "flex" : "none";
+  await addDoc(collection(db, "posts"), {
+    content: text,
+    imageURL: currentPostBase64,
+    username: userData.name,
+    userProfilePic: userData.pfp,
+    timestamp: serverTimestamp(),
+    likes: [], dislikes: []
   });
+  
+  document.getElementById("modal").style.display = "none";
+  document.getElementById("postText").value = "";
+  currentPostBase64 = "";
+  document.getElementById("imagePreview").style.display = "none";
 };
 
-/* AUTHENTICATION LOGIC */
+// Auth
 document.getElementById("signupBtn").onclick = async () => {
   const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const pass = document.getElementById("password").value;
+  const file = document.getElementById("authPfpInput").files[0];
+  let pfpBase64 = "";
+  if(file) pfpBase64 = await toBase64(file);
+
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await setDoc(doc(db, "users", cred.user.uid), {
       name: email.split("@")[0],
-      email: email,
-      rank: "Member",
-      pfp: ""
+      pfp: pfpBase64,
+      email: email
     });
-  } catch (err) { alert(err.message); }
+  } catch (e) { alert(e.message); }
 };
 
-document.getElementById("loginBtn").onclick = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-  } catch (err) { alert(err.message); }
-};
+document.getElementById("loginBtn").onclick = () => signInWithEmailAndPassword(auth, email.value, password.value);
+document.getElementById("logoutBtn").onclick = () => signOut(auth);
+document.getElementById("openModal").onclick = () => document.getElementById("modal").style.display = "flex";
+document.getElementById("closeModal").onclick = () => document.getElementById("modal").style.display = "none";
 
-document.getElementById("logoutBtn").onclick = () => {
-  signOut(auth);
-};
-
-/* Auth State Observer */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    // Show Login Screen, Hide App
-    authContainer.style.display = "flex";
-    appContainer.style.display = "none";
-    fab.style.display = "none";
-    currentUser = null;
-  } else {
-    // Show App, Hide Login Screen
-    authContainer.style.display = "none";
-    appContainer.style.display = "flex";
-    fab.style.display = "flex";
-    currentUser = user;
-
-    await loadUserProfile(user);
-    startFeed();
-  }
+onAuthStateChanged(auth, u => {
+  currentUser = u;
+  document.getElementById("auth-container").style.display = u ? "none" : "flex";
+  document.getElementById("app-container").style.display = u ? "flex" : "none";
+  document.getElementById("openModal").style.display = u ? "flex" : "none";
+  if(u) { loadUserProfile(u); startFeed(); }
 });
 </script>
 </body>
