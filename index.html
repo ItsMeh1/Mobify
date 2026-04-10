@@ -43,7 +43,39 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+/* --- TOAST NOTIFICATIONS --- */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+  pointer-events: none;
+}
 
+.toast {
+  background: var(--panel-bg-2);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 12px 24px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-color: var(--success); color: var(--success); }
+.toast.error { border-color: var(--danger); color: var(--danger); }
   button, input, textarea { font: inherit; }
   button { border: 0; background: none; color: inherit; cursor: pointer; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -307,7 +339,7 @@
     </div>
   </div>
 </div>
-
+<div id="toastContainer" class="toast-container"></div>
 <template id="postTemplate">
   <article class="post" tabindex="0">
     <img class="post-avatar" alt="Post author avatar" />
@@ -337,6 +369,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// 1. UPDATED ELS OBJECT
 const els = {
   authContainer: document.getElementById("auth-container"),
   appContainer: document.getElementById("app-container"),
@@ -371,15 +404,109 @@ const els = {
   logoutBtn: document.getElementById("logoutBtn"),
   openPostModal: document.getElementById("openPostModal"),
   refreshFeedBtn: document.getElementById("refreshFeedBtn"),
-  // New elements
   createPostModal: document.getElementById("createPostModal"),
   createPostForm: document.getElementById("createPostForm"),
   postContent: document.getElementById("postContent"),
-  postImage: document.getElementById("postImage"),
   submitPostBtn: document.getElementById("submitPostBtn"),
   closePostModal: document.getElementById("closePostModal"),
-  editStatusBtn: document.getElementById("editStatusBtn")
+  editStatusBtn: document.getElementById("editStatusBtn"),
+  
+  // NEW: Correct Elements for the Image Uploader
+  postImageFile: document.getElementById("postImageFile"),
+  imagePreviewContainer: document.getElementById("imagePreviewContainer"),
+  imagePreview: document.getElementById("imagePreview"),
+  removeImage: document.getElementById("removeImage")
 };
+
+// 2. NEW TOAST NOTIFICATION FUNCTION
+function showToast(message, type = "success") {
+  const container = document.getElementById("toastContainer");
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.innerHTML = type === "error" ? `⚠️ ${escapeHTML(message)}` : `✅ ${escapeHTML(message)}`;
+  container.appendChild(toast);
+
+  // Trigger animation
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300); // Wait for CSS transition
+  }, 3000);
+}
+
+// 3. BASE64 IMAGE UPLOAD LOGIC
+let selectedBase64 = "";
+
+els.postImageFile.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 1048576) {
+    showToast("Image is too large! Max size is 1MB.", "error"); // Replaced alert!
+    els.postImageFile.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    selectedBase64 = event.target.result;
+    els.imagePreview.src = selectedBase64;
+    els.imagePreviewContainer.classList.remove("hidden");
+  };
+  reader.readAsDataURL(file);
+});
+
+els.removeImage.addEventListener("click", () => {
+  selectedBase64 = "";
+  els.postImageFile.value = "";
+  els.imagePreviewContainer.classList.add("hidden");
+});
+
+// 4. FIXED POST SUBMISSION LOGIC
+els.openPostModal.addEventListener("click", () => {
+  els.createPostModal.style.display = "flex";
+  els.postContent.focus();
+});
+
+els.createPostForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUser) return;
+  
+  els.submitPostBtn.disabled = true;
+  els.submitPostBtn.textContent = "Publishing...";
+
+  try {
+    await addDoc(collection(db, "posts"), {
+      userId: currentUser.uid,
+      username: els.myUsername.textContent,
+      userProfilePic: els.myPfp.src,
+      rank: "Member",
+      content: els.postContent.value.trim(),
+      imageURL: selectedBase64, // Now uses the Base64 string!
+      timestamp: new Date().toISOString()
+    });
+    
+    // Reset and close
+    els.createPostForm.reset();
+    selectedBase64 = "";
+    els.imagePreviewContainer.classList.add("hidden");
+    closeModal();
+    
+    // Success Notification!
+    showToast("Post published successfully!"); 
+    
+  } catch (error) {
+    console.error("Failed to create post:", error);
+    showToast("Could not publish post. The image might be too large.", "error"); // Replaced alert!
+  } finally {
+    els.submitPostBtn.disabled = false;
+    els.submitPostBtn.textContent = "Publish Post";
+  }
+});
 
 let allPosts = [];
 let currentUser = null;
