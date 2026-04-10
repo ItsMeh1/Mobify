@@ -724,10 +724,14 @@ els.editStatusBtn.addEventListener("click", async () => {
         status: newStatus.trim()
       });
       els.profStatus.textContent = `"${newStatus.trim()}"`;
-    } catch (error) {
-      console.error("Error updating status:", error);
-      alert("Failed to update status.");
-    }
+    // Find this inside your editStatusBtn logic:
+} catch (error) {
+  console.error("Error updating status:", error);
+  showToast("Failed to update status.", "error"); // Use toast instead of alert()
+} else {
+  // You can also add a success message when it works:
+  showToast("Profile status updated!");
+}
   }
 });
 
