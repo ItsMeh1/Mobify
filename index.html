@@ -369,7 +369,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 1. UPDATED ELS OBJECT
 const els = {
   authContainer: document.getElementById("auth-container"),
   appContainer: document.getElementById("app-container"),
@@ -410,433 +409,179 @@ const els = {
   submitPostBtn: document.getElementById("submitPostBtn"),
   closePostModal: document.getElementById("closePostModal"),
   editStatusBtn: document.getElementById("editStatusBtn"),
-  
-  // NEW: Correct Elements for the Image Uploader
   postImageFile: document.getElementById("postImageFile"),
   imagePreviewContainer: document.getElementById("imagePreviewContainer"),
   imagePreview: document.getElementById("imagePreview"),
   removeImage: document.getElementById("removeImage")
 };
 
-// 2. NEW TOAST NOTIFICATION FUNCTION
+let allPosts = [];
+let currentUser = null;
+let currentView = "home";
+let currentTagFilter = null;
+let isLoginMode = true;
+let selectedBase64 = "";
+
+// --- UTILITIES ---
+
+function escapeHTML(value = "") {
+  return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
+
 function showToast(message, type = "success") {
   const container = document.getElementById("toastContainer");
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
   toast.innerHTML = type === "error" ? `⚠️ ${escapeHTML(message)}` : `✅ ${escapeHTML(message)}`;
   container.appendChild(toast);
-
-  // Trigger animation
-  requestAnimationFrame(() => {
-    toast.classList.add("show");
-  });
-
-  // Remove after 3 seconds
+  requestAnimationFrame(() => toast.classList.add("show"));
   setTimeout(() => {
     toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300); // Wait for CSS transition
+    setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
 
-// 3. BASE64 IMAGE UPLOAD LOGIC
-let selectedBase64 = "";
-
-els.postImageFile.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  if (file.size > 1048576) {
-    showToast("Image is too large! Max size is 1MB.", "error"); // Replaced alert!
-    els.postImageFile.value = "";
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    selectedBase64 = event.target.result;
-    els.imagePreview.src = selectedBase64;
-    els.imagePreviewContainer.classList.remove("hidden");
-  };
-  reader.readAsDataURL(file);
-});
-
-els.removeImage.addEventListener("click", () => {
-  selectedBase64 = "";
-  els.postImageFile.value = "";
-  els.imagePreviewContainer.classList.add("hidden");
-});
-
-// 4. FIXED POST SUBMISSION LOGIC
-els.openPostModal.addEventListener("click", () => {
-  els.createPostModal.style.display = "flex";
-  els.postContent.focus();
-});
-
-els.createPostForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (!currentUser) return;
-  
-  els.submitPostBtn.disabled = true;
-  els.submitPostBtn.textContent = "Publishing...";
-
-  try {
-    await addDoc(collection(db, "posts"), {
-      userId: currentUser.uid,
-      username: els.myUsername.textContent,
-      userProfilePic: els.myPfp.src,
-      rank: "Member",
-      content: els.postContent.value.trim(),
-      imageURL: selectedBase64, // Now uses the Base64 string!
-      timestamp: new Date().toISOString()
-    });
-    
-    // Reset and close
-    els.createPostForm.reset();
-    selectedBase64 = "";
-    els.imagePreviewContainer.classList.add("hidden");
-    closeModal();
-    
-    // Success Notification!
-    showToast("Post published successfully!"); 
-    
-  } catch (error) {
-    console.error("Failed to create post:", error);
-    showToast("Could not publish post. The image might be too large.", "error"); // Replaced alert!
-  } finally {
-    els.submitPostBtn.disabled = false;
-    els.submitPostBtn.textContent = "Publish Post";
-  }
-});
-
-let allPosts = [];
-let currentUser = null;
-let currentView = "home";
-let currentTagFilter = null;
-let unsubscribePosts = null;
-let searchTimer = null;
-let isLoginMode = true;
-
-function escapeHTML(value = "") {
-  return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+function getHandle(name = "user") { 
+  return `@${String(name).toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9_]/g, "") || "user"}`; 
 }
-function normalizeText(value = "") { return String(value).toLowerCase().trim(); }
-function getHandle(name = "user") { const cleaned = String(name).toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9_]/g, ""); return cleaned ? `@${cleaned}` : "@user"; }
 
 function formatTime(timestamp) {
   if (!timestamp) return "";
-  try {
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
-  } catch { return ""; }
+  const date = new Date(timestamp);
+  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
 }
 
-function extractTags(text = "") { return (String(text).match(/#[\w]+/g) || []); }
-function renderHashtagLinks(text = "") { return escapeHTML(text).replace(/(#[\w]+)/g, '<a class="tag-link" href="#" data-tag="$1">$1</a>'); }
+// --- CORE FUNCTIONS ---
 
 function buildPostElement(post) {
   const template = document.getElementById("postTemplate");
   const node = template.content.firstElementChild.cloneNode(true);
-  const username = post.username || "Unknown";
-  const handle = getHandle(username);
-  const rank = post.rank || "Member";
   const avatar = node.querySelector(".post-avatar");
   const header = node.querySelector(".post-header");
   const body = node.querySelector(".post-body");
   const media = node.querySelector(".post-media");
 
   avatar.src = post.userProfilePic || "https://via.placeholder.com/50";
-  const time = formatTime(post.timestamp);
-  header.innerHTML = `<span class="post-name">${escapeHTML(username)}</span><span class="post-handle">${escapeHTML(handle)}</span><span class="badge ${rank === "Member" ? "soft" : ""}">${escapeHTML(rank)}</span>${time ? `<span class="post-time">• ${escapeHTML(time)}</span>` : ""}`;
-  body.innerHTML = renderHashtagLinks(post.content || "");
+  header.innerHTML = `<span class="post-name">${escapeHTML(post.username)}</span><span class="post-handle">${getHandle(post.username)}</span><span class="badge ${post.rank === "Member" ? "soft" : ""}">${escapeHTML(post.rank || "Member")}</span><span class="post-time">• ${formatTime(post.timestamp)}</span>`;
+  body.innerHTML = escapeHTML(post.content || "").replace(/(#[\w]+)/g, '<a class="tag-link" href="#" data-tag="$1">$1</a>');
 
   if (post.imageURL) { media.src = post.imageURL; media.classList.remove("hidden"); }
-  node.addEventListener("click", () => { if (post.userId) viewProfile(post.userId); });
-  node.querySelectorAll(".tag-link").forEach(link => {
-    link.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); applyTagFilter(link.dataset.tag); });
-  });
+  node.onclick = () => viewProfile(post.userId);
   return node;
 }
 
-function setActiveNav(view) {
-  [els.navHome, els.navTrending].forEach(btn => btn.classList.remove("active"));
-  if (view === "home") els.navHome.classList.add("active");
-  if (view === "trending") els.navTrending.classList.add("active");
-}
-
-function setMainView(title, subtitle, hintText) {
-  els.viewTitle.textContent = title;
-  els.viewSubtitle.textContent = subtitle;
-  els.composerHint.textContent = hintText;
-}
-
-function updateMiniTrending() {
-  const counts = {};
-  allPosts.forEach(post => { extractTags(post.content).forEach(tag => counts[tag] = (counts[tag] || 0) + 1); });
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
-  els.miniTrendingList.innerHTML = "";
-  if (!sorted.length) { els.miniTrendingList.innerHTML = `<div class="empty-state" style="padding: 8px 0 0; text-align:left;">No tags yet.</div>`; return; }
-  sorted.forEach(([tag, count]) => {
-    const btn = document.createElement("button");
-    btn.className = "mini-tag";
-    btn.innerHTML = `<strong>${escapeHTML(tag)}</strong><span>${count} posts</span>`;
-    btn.addEventListener("click", () => applyTagFilter(tag));
-    els.miniTrendingList.appendChild(btn);
-  });
-}
-
-function renderFeed(posts, options = {}) {
-  const { emptyMessage = "No posts found." } = options;
-  els.feed.innerHTML = "";
-  if (!posts.length) { els.feed.innerHTML = `<div class="empty-state">${escapeHTML(emptyMessage)}</div>`; return; }
-  const fragment = document.createDocumentFragment();
-  posts.forEach(post => fragment.appendChild(buildPostElement(post)));
-  els.feed.appendChild(fragment);
-}
-
-function getVisiblePosts() {
-  let posts = [...allPosts];
-  if (currentTagFilter) posts = posts.filter(p => extractTags(p.content).includes(currentTagFilter));
-  const searchValue = normalizeText(els.search.value);
-  if (searchValue) {
-    posts = posts.filter(p => {
-      const u = normalizeText(p.username); const h = normalizeText(getHandle(p.username)); const c = normalizeText(p.content);
-      return u.includes(searchValue) || h.includes(searchValue) || c.includes(searchValue);
-    });
-  }
-  return posts;
-}
-
-function showHome() {
-  currentView = "home"; currentTagFilter = null; setActiveNav("home");
-  setMainView("Home", "Latest posts from everyone", "Tap a post to open the author profile.");
-  renderFeed(getVisiblePosts(), { emptyMessage: "Nothing here yet." });
-}
-
-function showTrendingPage() {
-  currentView = "trending"; currentTagFilter = null; setActiveNav("trending");
-  setMainView("Trending Topics", "The most used hashtags right now", "Tap a tag to filter posts.");
-  const counts = {};
-  allPosts.forEach(post => extractTags(post.content).forEach(tag => counts[tag] = (counts[tag] || 0) + 1));
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  if (!sorted.length) { renderFeed([], { emptyMessage: "No trending tags yet." }); return; }
-  
-  els.feed.innerHTML = "";
-  const section = document.createElement("section");
-  section.innerHTML = `<div style="padding: 18px 18px 10px;"><span class="badge success">Live</span></div>`;
-  sorted.forEach(([tag, count]) => {
-    const row = document.createElement("button");
-    row.className = "post"; row.style.textAlign = "left";
-    row.innerHTML = `<div></div><div><div class="post-header"><span class="post-name">${escapeHTML(tag)}</span><span class="badge">${count} posts</span></div><div class="post-body" style="margin-top:8px; color: var(--text-muted);">View all posts with this tag.</div></div>`;
-    row.addEventListener("click", () => applyTagFilter(tag));
-    section.appendChild(row);
-  });
-  els.feed.appendChild(section);
-}
-
-function applyTagFilter(tag) {
-  currentView = "home"; currentTagFilter = tag; setActiveNav("home");
-  setMainView(`Posts tagged ${tag}`, `Filtered by ${tag}`, `Showing posts that include ${tag}.`);
-  renderFeed(getVisiblePosts(), { emptyMessage: `No posts found with ${tag}.` });
-}
-
 async function viewProfile(uid) {
-  try {
-    const snapshot = await getDoc(doc(db, "users", uid));
-    if (!snapshot.exists()) return;
-    const data = snapshot.data();
-    const name = data.name || "Unknown";
-    els.profName.textContent = name;
-    els.profHandle.textContent = getHandle(name);
-    els.profPfp.src = data.pfp || "https://via.placeholder.com/100";
-    els.profRank.textContent = data.rank || "Member";
-    els.profRank.className = `badge ${data.rank === "Member" || !data.rank ? "soft" : ""}`;
-    els.profStatus.textContent = `"${data.status || "Hello, world!"}"`;
-
-    // Show or hide the edit status button based on ownership
-    if (currentUser && uid === currentUser.uid) {
-      els.editStatusBtn.classList.remove("hidden");
-    } else {
-      els.editStatusBtn.classList.add("hidden");
-    }
-    
-    const userPosts = allPosts.filter(post => post.userId === uid);
-    els.userPosts.innerHTML = "";
-    if (!userPosts.length) els.userPosts.innerHTML = `<div class="empty-state" style="padding: 10px 0 0; text-align:left;">No recent posts.</div>`;
-    else userPosts.forEach(post => els.userPosts.appendChild(buildPostElement(post)));
-    els.profileModal.style.display = "flex";
-  } catch (error) { console.error(error); }
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) return;
+  const data = snap.data();
+  els.profName.textContent = data.name;
+  els.profHandle.textContent = getHandle(data.name);
+  els.profPfp.src = data.pfp || "https://via.placeholder.com/100";
+  els.profStatus.textContent = `"${data.status || "Hello!"}"`;
+  els.editStatusBtn.classList.toggle("hidden", uid !== currentUser?.uid);
+  
+  const uposts = allPosts.filter(p => p.userId === uid);
+  els.userPosts.innerHTML = uposts.length ? "" : "No posts yet.";
+  uposts.forEach(p => els.userPosts.appendChild(buildPostElement(p)));
+  els.profileModal.style.display = "flex";
 }
 
-function closeModal() { 
-  els.profileModal.style.display = "none"; 
+function closeModal() {
+  els.profileModal.style.display = "none";
   els.createPostModal.style.display = "none";
 }
-function setAuthStatus(msg, isError = false) { els.authStatus.textContent = msg; els.authStatus.style.color = isError ? "#ff7aa8" : "var(--text-muted)"; }
 
+// --- LISTENERS ---
 
-// --- NEW COMPOSER & STATUS LOGIC ---
+els.postImageFile.onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    selectedBase64 = ev.target.result;
+    els.imagePreview.src = selectedBase64;
+    els.imagePreviewContainer.classList.remove("hidden");
+  };
+  reader.readAsDataURL(file);
+};
 
-// Open the post composer modal
-els.openPostModal.addEventListener("click", () => {
-  els.createPostModal.style.display = "flex";
-  els.postContent.focus();
-});
-
-// Handle submitting a new post to Firestore
-els.createPostForm.addEventListener("submit", async (e) => {
+els.createPostForm.onsubmit = async (e) => {
   e.preventDefault();
-  if (!currentUser) return;
   els.submitPostBtn.disabled = true;
-  els.submitPostBtn.textContent = "Publishing...";
-
   try {
     await addDoc(collection(db, "posts"), {
       userId: currentUser.uid,
       username: els.myUsername.textContent,
       userProfilePic: els.myPfp.src,
-      rank: "Member",
       content: els.postContent.value.trim(),
-      imageURL: els.postImage.value.trim(),
+      imageURL: selectedBase64,
       timestamp: new Date().toISOString()
     });
-    
-    // Reset and close
     els.createPostForm.reset();
+    selectedBase64 = "";
+    els.imagePreviewContainer.classList.add("hidden");
     closeModal();
-  } catch (error) {
-    console.error("Failed to create post:", error);
-    alert("Could not publish post. Check console.");
-  } finally {
-    els.submitPostBtn.disabled = false;
-    els.submitPostBtn.textContent = "Publish Post";
+    showToast("Post Published!");
+  } catch (err) { showToast("Error posting", "error"); }
+  els.submitPostBtn.disabled = false;
+};
+
+els.editStatusBtn.onclick = async () => {
+  const next = prompt("New status:", els.profStatus.textContent.replace(/"/g, ''));
+  if (next) {
+    await updateDoc(doc(db, "users", currentUser.uid), { status: next });
+    els.profStatus.textContent = `"${next}"`;
+    showToast("Status updated!");
   }
-});
+};
 
-// Edit profile status
-els.editStatusBtn.addEventListener("click", async () => {
-  if (!currentUser) return;
-  const currentStatus = els.profStatus.textContent.replace(/"/g, ''); // Strip visual quotes
-  const newStatus = prompt("Update your profile status:", currentStatus);
-  
-  if (newStatus !== null && newStatus.trim() !== currentStatus) {
-    try {
-      await updateDoc(doc(db, "users", currentUser.uid), {
-        status: newStatus.trim()
-      });
-      els.profStatus.textContent = `"${newStatus.trim()}"`;
-    // Find this inside your editStatusBtn logic:
-} catch (error) {
-  console.error("Error updating status:", error);
-  showToast("Failed to update status.", "error"); // Use toast instead of alert()
-} else {
-  // You can also add a success message when it works:
-  showToast("Profile status updated!");
-}
-  }
-});
+els.logoutBtn.onclick = () => signOut(auth);
 
+document.querySelectorAll(".close-modal").forEach(b => b.onclick = closeModal);
+els.openPostModal.onclick = () => els.createPostModal.style.display = "flex";
 
-// --- AUTHENTICATION LOGIC ---
-
-els.toggleAuthBtn.addEventListener("click", () => {
-  isLoginMode = !isLoginMode;
-  els.username.classList.toggle("hidden", isLoginMode);
-  els.username.required = !isLoginMode;
-  els.authSubmitBtn.textContent = isLoginMode ? "Log in" : "Sign up";
-  els.toggleAuthBtn.textContent = isLoginMode ? "Need an account? Sign up" : "Already have an account? Log in";
-  els.authSubtitle.textContent = isLoginMode ? "Log in to browse posts, trends, and profiles." : "Create an account to join the community.";
-  setAuthStatus("");
-});
-
-els.authForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  setAuthStatus("");
-  els.authSubmitBtn.disabled = true;
-  els.authSubmitBtn.textContent = "Please wait...";
-
-  try {
-    if (isLoginMode) {
-      await signInWithEmailAndPassword(auth, els.email.value.trim(), els.password.value);
-    } else {
-      const userCredential = await createUserWithEmailAndPassword(auth, els.email.value.trim(), els.password.value);
-      // Create their user document in Firestore automatically upon sign-up
-      await setDoc(doc(db, "users", userCredential.user.uid), {
-        name: els.username.value.trim(),
-        pfp: "",
-        status: "Hello, world!",
-        rank: "Member",
-        createdAt: new Date().toISOString()
-      });
-    }
-  } catch (error) {
-    console.error(error);
-    setAuthStatus(error.message || "Authentication failed.", true);
-    els.authSubmitBtn.disabled = false;
-    els.authSubmitBtn.textContent = isLoginMode ? "Log in" : "Sign up";
-  }
-});
-
-els.logoutBtn.addEventListener("click", () => signOut(auth));
-els.navHome.addEventListener("click", showHome);
-els.navTrending.addEventListener("click", showTrendingPage);
-els.openMyProfile.addEventListener("click", () => { if (currentUser) viewProfile(currentUser.uid); });
-els.refreshFeedBtn.addEventListener("click", () => currentView === "trending" ? showTrendingPage() : showHome());
-
-els.search.addEventListener("input", () => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => currentView === "trending" ? showTrendingPage() : showHome(), 100);
-});
-
-// Modal close logic
-els.profileModal.addEventListener("click", (e) => { if (e.target === els.profileModal) closeModal(); });
-els.createPostModal.addEventListener("click", (e) => { if (e.target === els.createPostModal) closeModal(); });
-document.querySelectorAll(".close-modal").forEach(btn => btn.addEventListener("click", closeModal));
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
-
-
-// --- FIREBASE INITIALIZATION & SYNC ---
+// --- AUTH & DATA SYNC ---
 
 onAuthStateChanged(auth, async (user) => {
-  currentUser = user;
+  if (user) {
+    currentUser = user;
+    const uDoc = await getDoc(doc(db, "users", user.uid));
+    const data = uDoc.data();
+    els.myUsername.textContent = data?.name || "User";
+    els.myHandle.textContent = getHandle(data?.name);
+    els.myPfp.src = data?.pfp || "https://via.placeholder.com/50";
+    
+    els.authContainer.style.display = "none";
+    els.appContainer.style.display = "block";
 
-  if (!user) {
-    if (unsubscribePosts) { unsubscribePosts(); unsubscribePosts = null; }
+    onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snap) => {
+      allPosts = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      els.feed.innerHTML = "";
+      allPosts.forEach(p => els.feed.appendChild(buildPostElement(p)));
+    });
+  } else {
     els.authContainer.style.display = "flex";
     els.appContainer.style.display = "none";
-    els.openPostModal.style.display = "none";
-    setAuthStatus("");
-    els.authSubmitBtn.disabled = false;
-    els.authSubmitBtn.textContent = isLoginMode ? "Log in" : "Sign up";
-    return;
-  }
-
-  els.authContainer.style.display = "none";
-  els.appContainer.style.display = "block";
-  els.openPostModal.style.display = "inline-flex";
-
-  try {
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    if (userDoc.exists()) {
-      const data = userDoc.data();
-      const name = data.name || "Unknown";
-      els.myUsername.textContent = name;
-      els.myHandle.textContent = getHandle(name);
-      els.myPfp.src = data.pfp || "https://via.placeholder.com/50";
-    }
-
-    // Subscribe to Global Feed
-    unsubscribePosts = onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (snap) => {
-      allPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      updateMiniTrending();
-      
-      // Auto-refresh the current view seamlessly when new data comes in
-      if (currentView === "home") showHome();
-      else if (currentView === "trending") showTrendingPage();
-    });
-  } catch (error) {
-    console.error("Error fetching user data on auth state change:", error);
   }
 });
+
+els.authForm.onsubmit = async (e) => {
+  e.preventDefault();
+  const em = els.email.value, pw = els.password.value;
+  try {
+    if (isLoginMode) await signInWithEmailAndPassword(auth, em, pw);
+    else {
+      const res = await createUserWithEmailAndPassword(auth, em, pw);
+      await setDoc(doc(db, "users", res.user.uid), { name: els.username.value, status: "New here!", pfp: "" });
+    }
+  } catch (err) { showToast(err.message, "error"); }
+};
+
+els.toggleAuthBtn.onclick = () => {
+  isLoginMode = !isLoginMode;
+  els.username.classList.toggle("hidden", isLoginMode);
+  els.authSubmitBtn.textContent = isLoginMode ? "Log in" : "Sign up";
+};
 </script>
 </body>
 </html>
