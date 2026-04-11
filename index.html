@@ -247,6 +247,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/fireba
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, getDocs, setDoc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
+// Your Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
   authDomain: "mobify-5b3c9.firebaseapp.com",
@@ -260,11 +261,13 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Global State
 let allPosts = [];
 let selectedBase64 = "";
 let currentUserData = null;
+let viewingUid = null;
 
-// UI HELPERS
+// --- UI UTILITIES ---
 const getHandle = (n) => `@${(n || 'user').toLowerCase().replace(/\s+/g, '')}`;
 
 window.showToast = (msg, type = 'success') => {
@@ -273,16 +276,23 @@ window.showToast = (msg, type = 'success') => {
   toast.className = `toast ${type}`;
   toast.textContent = msg;
   container.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+  setTimeout(() => { 
+    toast.style.opacity = '0'; 
+    setTimeout(() => toast.remove(), 300); 
+  }, 3000);
 };
 
 window.closeModals = () => document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
 
-// POST RENDERING LOGIC
+// --- RENDERING CORE ---
+
 function generatePostHTML(post) {
   let badgeHTML = "";
   if (post.userRole === "Owner") badgeHTML = `<span class="badge">Owner</span>`;
   else if (post.userRole === "Admin") badgeHTML = `<span class="badge admin">Admin</span>`;
+
+  // Highlight hashtags
+  const content = (post.content || "").replace(/(#\w+)/g, '<span style="color:var(--accent)">$1</span>');
 
   return `
     <img class="avatar" src="${post.userProfilePic || 'https://ui-avatars.com/api/?name='+post.username}" />
@@ -292,7 +302,7 @@ function generatePostHTML(post) {
         ${badgeHTML}
         <span class="post-handle">${getHandle(post.username)}</span>
       </div>
-      <div class="post-body">${(post.content || "").replace(/(#\w+)/g, '<span style="color:var(--accent)">$1</span>')}</div>
+      <div class="post-body">${content}</div>
       ${post.imageURL ? `<img class="post-media" src="${post.imageURL}" />` : ''}
     </div>
   `;
@@ -301,7 +311,11 @@ function generatePostHTML(post) {
 function renderFeed() {
   const feed = document.getElementById("feed");
   const search = document.getElementById("searchInput").value.toLowerCase();
-  let filtered = allPosts.filter(p => (p.content || "").toLowerCase().includes(search) || (p.username || "").toLowerCase().includes(search));
+  
+  let filtered = allPosts.filter(p => 
+    (p.content || "").toLowerCase().includes(search) || 
+    (p.username || "").toLowerCase().includes(search)
+  );
   
   feed.innerHTML = filtered.length ? "" : '<div style="padding:40px; text-align:center; color:var(--muted)">No posts found</div>';
   
@@ -309,7 +323,9 @@ function renderFeed() {
     const div = document.createElement("div");
     div.className = "post";
     div.innerHTML = generatePostHTML(post);
-    div.onclick = (e) => { if(!e.target.closest('button')) viewProfile(post.userId); };
+    div.onclick = (e) => { 
+      if(!e.target.closest('button')) viewProfile(post.userId); 
+    };
     feed.appendChild(div);
   });
 }
@@ -327,34 +343,27 @@ function updateTrends() {
     const item = document.createElement("div");
     item.className = "trend-item";
     item.innerHTML = `<span class="trend-tag">${tag}</span><span class="trend-count">${count} posts</span>`;
-    item.onclick = () => { document.getElementById("searchInput").value = tag; renderFeed(); document.getElementById("searchAutocomplete").classList.add("hidden"); };
+    item.onclick = () => { 
+      document.getElementById("searchInput").value = tag; 
+      renderFeed(); 
+    };
     list.appendChild(item);
   });
 }
 
-// PREDICTIVE SEARCH & DEVELOPER BACKDOOR
-document.getElementById("searchInput").addEventListener("input", async (e) => {
-  const val = e.target.value;
-  
-  // Developer backdoor to instantly test admin panel
-  if (val === "/makeadmin" && auth.currentUser) {
-    e.target.value = "";
-    await updateDoc(doc(db, "users", auth.currentUser.uid), { role: "Owner" });
-    showToast("Cheat code activated! You are now an Owner.");
-    return;
-  }
-
+// --- SEARCH & AUTOCOMPLETE ---
+document.getElementById("searchInput").addEventListener("input", (e) => {
   renderFeed();
-  const lowerVal = val.toLowerCase();
+  const val = e.target.value.toLowerCase();
   const dropdown = document.getElementById("searchAutocomplete");
   
-  if (!lowerVal) { dropdown.classList.add("hidden"); return; }
+  if (!val) { dropdown.classList.add("hidden"); return; }
   
   let suggestions = new Set();
   allPosts.forEach(p => {
-    if ((p.username || "").toLowerCase().includes(lowerVal)) suggestions.add(`👤 ${p.username}`);
+    if ((p.username || "").toLowerCase().includes(val)) suggestions.add(`👤 ${p.username}`);
     const tags = (p.content || "").match(/#\w+/g) || [];
-    tags.forEach(t => { if (t.toLowerCase().includes(lowerVal)) suggestions.add(`🔥 ${t}`); });
+    tags.forEach(t => { if (t.toLowerCase().includes(val)) suggestions.add(`🔥 ${t}`); });
   });
 
   const html = Array.from(suggestions).slice(0, 5).map(s => {
@@ -377,10 +386,7 @@ document.getElementById("searchInput").addEventListener("input", async (e) => {
   }
 });
 
-document.addEventListener("click", (e) => { if(!e.target.closest('.search-wrapper')) document.getElementById("searchAutocomplete").classList.add("hidden"); });
-
-// PROFILE MODAL (FIXED)
-let viewingUid = null;
+// --- PROFILE LOGIC (FIXED) ---
 async function viewProfile(uid) {
   try {
     viewingUid = uid;
@@ -388,13 +394,14 @@ async function viewProfile(uid) {
     if (!snap.exists()) return;
     const data = snap.data();
     
-    // Safely assign text without destroying the badge element
+    // UI Assignments
     document.getElementById("profNameText").textContent = data.name || "Unknown";
     document.getElementById("profHandle").textContent = getHandle(data.name);
     document.getElementById("profPfp").src = data.pfp || 'https://ui-avatars.com/api/?name='+(data.name || 'U');
     document.getElementById("profStatus").textContent = data.status || "No status set.";
     document.getElementById("profBio").textContent = data.bio || "";
     
+    // Badge Handling (The Fix)
     const badge = document.getElementById("profRoleBadge");
     if (data.role === "Owner" || data.role === "Admin") {
       badge.textContent = data.role;
@@ -433,18 +440,11 @@ async function viewProfile(uid) {
   }
 }
 
-document.getElementById("editProfileBtn").onclick = async () => {
-  const snap = await getDoc(doc(db, "users", viewingUid));
-  const data = snap.data();
-  document.getElementById("editStatusInput").value = data.status || "";
-  document.getElementById("editBioInput").value = data.bio || "";
+document.getElementById("editProfileBtn").onclick = () => {
+  document.getElementById("editStatusInput").value = document.getElementById("profStatus").textContent;
+  document.getElementById("editBioInput").value = document.getElementById("profBio").textContent;
   document.getElementById("profileDisplayView").classList.add("hidden");
   document.getElementById("profileEditView").classList.remove("hidden");
-};
-
-document.getElementById("cancelEditBtn").onclick = () => {
-  document.getElementById("profileDisplayView").classList.remove("hidden");
-  document.getElementById("profileEditView").classList.add("hidden");
 };
 
 document.getElementById("saveProfileBtn").onclick = async () => {
@@ -457,7 +457,12 @@ document.getElementById("saveProfileBtn").onclick = async () => {
   } catch (err) { showToast(err.message, "error"); }
 };
 
-// ADMIN PANEL
+document.getElementById("cancelEditBtn").onclick = () => {
+  document.getElementById("profileDisplayView").classList.remove("hidden");
+  document.getElementById("profileEditView").classList.add("hidden");
+};
+
+// --- ADMIN PANEL ---
 async function openAdminPanel() {
   const list = document.getElementById("adminUserList");
   list.innerHTML = "<p>Loading users...</p>";
@@ -469,7 +474,6 @@ async function openAdminPanel() {
     querySnapshot.forEach((docSnap) => {
       const u = docSnap.data();
       const uid = docSnap.id;
-      
       const row = document.createElement("div");
       row.className = "user-row";
       
@@ -483,7 +487,7 @@ async function openAdminPanel() {
         <div style="display:flex; align-items:center; gap:10px">
           <img src="${u.pfp || 'https://ui-avatars.com/api/?name='+u.name}" class="avatar small" />
           <div>
-            <div style="font-weight:bold; font-size:14px">${u.name} <span style="font-weight:normal; color:var(--muted)">${getHandle(u.name)}</span></div>
+            <div style="font-weight:bold; font-size:14px">${u.name}</div>
             <div style="font-size:12px; color:var(--accent)">Role: ${u.role || 'Member'}</div>
           </div>
         </div>
@@ -496,22 +500,16 @@ async function openAdminPanel() {
       btn.onclick = async (e) => {
         const targetUid = e.target.dataset.uid;
         const currentStatus = e.target.dataset.status === "true";
-        try {
-          await updateDoc(doc(db, "users", targetUid), { canPost: !currentStatus });
-          showToast(`User permissions updated.`);
-          openAdminPanel(); 
-        } catch(err) { showToast("Error updating user.", "error"); }
+        await updateDoc(doc(db, "users", targetUid), { canPost: !currentStatus });
+        showToast(`User permissions updated.`);
+        openAdminPanel(); 
       }
     });
-
-  } catch (err) {
-    list.innerHTML = `<p style="color:var(--danger)">Error loading users: ${err.message}</p>`;
-  }
+  } catch (err) { showToast("Error loading users.", "error"); }
 }
 document.getElementById("navAdminPanel").onclick = openAdminPanel;
 
-
-// AUTH & POSTING
+// --- AUTH & POSTING ---
 document.getElementById("toggleAuthBtn").onclick = () => {
   const isLogin = document.getElementById("username").classList.toggle("hidden");
   document.getElementById("authSubmitBtn").textContent = isLogin ? "Log In" : "Sign Up";
@@ -527,27 +525,24 @@ document.getElementById("authForm").onsubmit = async (e) => {
   try {
     if (isSignUp) {
       const res = await createUserWithEmailAndPassword(auth, email, pass);
-      await setDoc(doc(db, "users", res.user.uid), { name, status: "Just joined!", bio: "", role: "Member", canPost: true, pfp: "" });
-      showToast("Account created successfully!");
+      await setDoc(doc(db, "users", res.user.uid), { 
+        name, status: "Just joined!", bio: "", role: "Member", canPost: true, pfp: "" 
+      });
+      showToast("Account created!");
     } else {
       await signInWithEmailAndPassword(auth, email, pass);
-      showToast("Welcome back!");
     }
   } catch (err) { showToast(err.message, "error"); }
 };
 
-document.getElementById("logoutBtn").onclick = () => { signOut(auth); showToast("Logged out"); };
+document.getElementById("logoutBtn").onclick = () => { signOut(auth); };
 document.getElementById("navMyProfile").onclick = () => viewProfile(auth.currentUser.uid);
-document.getElementById("btnHome").onclick = () => { document.getElementById("searchInput").value = ""; renderFeed(); };
+document.getElementById("btnHome").onclick = () => { 
+  document.getElementById("searchInput").value = ""; 
+  renderFeed(); 
+};
 
-document.getElementById("openPostModal").onclick = () => {
-  if (currentUserData && currentUserData.canPost === false) {
-    showToast("You have been restricted from posting by an admin.", "error");
-    return;
-  }
-  document.getElementById("createPostModal").style.display = "flex";
-}
-
+// Post Image Handling
 document.getElementById("postImageFile").onchange = (e) => {
   const file = e.target.files[0];
   if (file) {
@@ -561,13 +556,16 @@ document.getElementById("postImageFile").onchange = (e) => {
   }
 };
 
-document.getElementById("createPostForm").onsubmit = async (e) => {
-  e.preventDefault();
+document.getElementById("openPostModal").onclick = () => {
   if (currentUserData && currentUserData.canPost === false) {
-    showToast("You are not allowed to post.", "error");
+    showToast("You are muted and cannot post.", "error");
     return;
   }
+  document.getElementById("createPostModal").style.display = "flex";
+}
 
+document.getElementById("createPostForm").onsubmit = async (e) => {
+  e.preventDefault();
   const content = document.getElementById("postContent").value;
   if(!content && !selectedBase64) return;
   
@@ -576,7 +574,7 @@ document.getElementById("createPostForm").onsubmit = async (e) => {
       userId: auth.currentUser.uid,
       username: currentUserData.name || "User",
       userRole: currentUserData.role || "Member",
-      userProfilePic: document.getElementById("myPfp").src,
+      userProfilePic: currentUserData.pfp || "",
       content,
       imageURL: selectedBase64,
       timestamp: new Date().toISOString()
@@ -585,10 +583,11 @@ document.getElementById("createPostForm").onsubmit = async (e) => {
     selectedBase64 = "";
     document.getElementById("imagePreviewContainer").classList.add("hidden");
     closeModals();
-    showToast("Posted successfully!");
+    showToast("Posted!");
   } catch (err) { showToast(err.message, "error"); }
 };
 
+// --- APP INITIALIZATION ---
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     onSnapshot(doc(db, "users", user.uid), (snap) => {
@@ -598,11 +597,9 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("myHandle").textContent = getHandle(currentUserData.name || "user");
         document.getElementById("myPfp").src = currentUserData.pfp || 'https://ui-avatars.com/api/?name='+(currentUserData.name || 'U');
         
-        if(currentUserData.role === "Owner" || currentUserData.role === "Admin") {
-          document.getElementById("navAdminPanel").classList.remove("hidden");
-        } else {
-          document.getElementById("navAdminPanel").classList.add("hidden");
-        }
+        // Final Rank Check
+        const isAdmin = currentUserData.role === "Owner" || currentUserData.role === "Admin";
+        document.getElementById("navAdminPanel").classList.toggle("hidden", !isAdmin);
       }
     });
 
