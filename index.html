@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Mobify | v4.2</title>
+<title>Mobify | v4.3</title>
 <meta name="color-scheme" content="dark" />
 <style>
   :root {
@@ -15,6 +15,7 @@
     --muted: #71767b;
     --accent: #1d9bf0;
     --danger: #f91880;
+    --success: #00ba7c;
     --radius: 16px;
   }
 
@@ -41,7 +42,7 @@
   .nav-btn:hover { background: rgba(255,255,255,0.1); }
   .nav-btn.active { color: var(--accent); }
 
-  /* AVATARS (STRICT FIX) */
+  /* AVATARS */
   .avatar { 
     width: 48px !important; 
     height: 48px !important; 
@@ -64,10 +65,13 @@
   .post-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
   .post-name { font-weight: 800; }
   .post-handle { color: var(--muted); font-size: 14px; }
-  .post-body { line-height: 1.4; font-size: 15px; overflow-wrap: break-word; }
+  .badge { font-size: 10px; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; }
+  .badge.admin { background: var(--success); }
+  
+  .post-body { line-height: 1.4; font-size: 15px; overflow-wrap: break-word; white-space: pre-wrap; }
   .post-media { width: 100%; border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); max-height: 500px; object-fit: cover; }
 
-  /* RULES & TRENDS CARDS */
+  /* CARDS & SEARCH */
   .card { background: var(--panel); border-radius: var(--radius); padding: 18px; border: 1px solid var(--border); }
   .card h3 { margin: 0 0 15px; font-size: 18px; }
   .rule-item { font-size: 14px; color: var(--muted); margin-bottom: 8px; display: flex; gap: 8px; }
@@ -78,18 +82,38 @@
   .trend-tag { color: var(--accent); font-weight: 800; display: block; }
   .trend-count { font-size: 12px; color: var(--muted); }
 
-  /* MODALS (NON-GOOFY VERSION) */
+  .search-wrapper { position: relative; }
+  .autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; margin-top: 5px; overflow: hidden; z-index: 20; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+  .autocomplete-item { padding: 12px 15px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .autocomplete-item:hover { background: rgba(255,255,255,0.05); }
+
+  /* MODALS */
   .modal { position: fixed; inset: 0; background: rgba(91, 112, 131, 0.5); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; backdrop-filter: blur(4px); }
-  .modal-box { background: #000; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 500px; overflow: hidden; position: relative; }
+  .modal-box { background: #000; border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 550px; overflow: hidden; position: relative; max-height: 90vh; display: flex; flex-direction: column; }
   
-  .profile-banner { height: 120px; background: linear-gradient(45deg, #1d9bf0, #00ba7c); }
-  .profile-info { padding: 0 20px 20px; text-align: center; }
+  .profile-banner { height: 120px; background: linear-gradient(45deg, #1d9bf0, #00ba7c); flex-shrink: 0; }
+  .profile-info { padding: 0 20px 20px; text-align: center; border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .profile-pfp-wrapper { margin-top: -45px; margin-bottom: 10px; display: inline-block; position: relative; }
   
-  .input-field { width: 100%; padding: 12px; background: #000; border: 1px solid var(--border); border-radius: 10px; color: #fff; margin-bottom: 15px; font-family: inherit; }
+  .input-field { width: 100%; padding: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; color: #fff; margin-bottom: 15px; font-family: inherit; transition: 0.2s; }
+  .input-field:focus { border-color: var(--accent); outline: none; }
   .btn-primary { width: 100%; padding: 12px; background: var(--accent); border-radius: 99px; font-weight: 800; color: #fff; }
 
-  .fab { position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 50; }
+  .fab { display: none; position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 50; }
+
+  /* TOAST NOTIFICATIONS */
+  #toast-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+  .toast { background: var(--bg-elevated); border: 1px solid var(--border); color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); animation: slideIn 0.3s ease forwards; }
+  .toast.error { border-left: 4px solid var(--danger); }
+  .toast.success { border-left: 4px solid var(--success); }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ADMIN PANEL */
+  .user-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .user-row:last-child { border: 0; }
+  .toggle-btn { padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: bold; }
+  .toggle-btn.on { background: rgba(0, 186, 124, 0.2); color: var(--success); }
+  .toggle-btn.off { background: rgba(249, 24, 128, 0.2); color: var(--danger); }
 
   @media (max-width: 900px) {
     .right-sidebar { display: none; }
@@ -99,6 +123,8 @@
 </style>
 </head>
 <body>
+
+<div id="toast-container"></div>
 
 <div id="auth-container" style="display: flex; align-items: center; justify-content: center; height: 100vh;">
   <div class="card" style="width: 350px;">
@@ -113,13 +139,14 @@
   </div>
 </div>
 
-<div id="app-container" class="app-shell" style="display:none;">
+<div id="app-container" class="app-shell">
   <aside class="sidebar">
     <h2 style="margin-bottom:30px; padding-left:15px">Mobify</h2>
     <nav>
       <button class="nav-btn active" id="btnHome"><span>🏠</span> <span>Home</span></button>
       <button class="nav-btn" id="btnTrending"><span>🔥</span> <span>Trending</span></button>
       <button class="nav-btn" id="navMyProfile"><span>👤</span> <span>Profile</span></button>
+      <button class="nav-btn hidden" id="navAdminPanel" style="color:var(--success)"><span>🛡️</span> <span>Admin Panel</span></button>
       <button class="nav-btn" id="logoutBtn" style="color:var(--danger); margin-top:20px"><span>🚪</span> <span>Logout</span></button>
     </nav>
     <div style="margin-top:auto; padding:20px 0; display:flex; align-items:center; gap:12px; border-top:1px solid var(--border)">
@@ -137,7 +164,10 @@
   </main>
 
   <aside class="right-sidebar">
-    <input id="searchInput" class="input-field" type="search" placeholder="Search posts..." style="border-radius:99px" />
+    <div class="search-wrapper">
+      <input id="searchInput" class="input-field" type="search" placeholder="Search posts, tags, users..." style="border-radius:99px; margin:0;" autocomplete="off" />
+      <div id="searchAutocomplete" class="autocomplete-dropdown hidden"></div>
+    </div>
     
     <div class="card">
       <h3>📜 Rules</h3>
@@ -177,20 +207,42 @@
       <div class="profile-pfp-wrapper">
         <img id="profPfp" class="avatar large" style="border: 4px solid #000;" />
       </div>
-      <h2 id="profName" style="margin:0">Name</h2>
+      <h2 id="profName" style="margin:0">Name <span id="profRoleBadge" class="badge hidden"></span></h2>
       <p id="profHandle" style="color:var(--muted); margin:4px 0 12px">@handle</p>
-      <p id="profStatus" style="font-size:15px; line-height:1.4; margin-bottom:15px; color:var(--text)"></p>
-      <button id="editStatusBtn" class="hidden" style="color:var(--accent); font-size:13px; font-weight:bold; border:1px solid var(--border); padding:5px 15px; border-radius:99px">Edit Status</button>
+      
+      <div id="profileDisplayView">
+        <p id="profStatus" style="font-size:15px; font-weight:600; margin-bottom:5px; color:var(--text)"></p>
+        <p id="profBio" style="font-size:14px; color:var(--muted); margin-bottom:15px;"></p>
+        <button id="editProfileBtn" class="hidden" style="color:var(--accent); font-size:13px; font-weight:bold; border:1px solid var(--border); padding:5px 15px; border-radius:99px">Edit Profile</button>
+      </div>
+
+      <div id="profileEditView" class="hidden">
+        <input type="text" id="editStatusInput" class="input-field" placeholder="Set a status (e.g., Playing Minecraft)" style="padding:8px; margin-bottom:10px" />
+        <textarea id="editBioInput" class="input-field" placeholder="Write a short bio..." rows="3" style="padding:8px; resize:none; margin-bottom:10px"></textarea>
+        <div style="display:flex; gap:10px; justify-content:center">
+          <button id="saveProfileBtn" style="background:var(--accent); color:#fff; padding:6px 15px; border-radius:99px; font-size:13px; font-weight:bold">Save</button>
+          <button id="cancelEditBtn" style="color:var(--muted); font-size:13px">Cancel</button>
+        </div>
+      </div>
     </div>
-    <div id="userPosts" style="max-height:250px; overflow-y:auto; border-top:1px solid var(--border)"></div>
-    <button onclick="closeModals()" style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); width:30px; height:30px; border-radius:50%">✕</button>
+    <div id="userPosts" style="overflow-y:auto; flex:1"></div>
+    <button onclick="closeModals()" style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); width:30px; height:30px; border-radius:50%; color:#fff; font-weight:bold">✕</button>
+  </div>
+</div>
+
+<div class="modal" id="adminModal">
+  <div class="modal-box" style="padding: 20px;">
+    <h2 style="margin-top:0">🛡️ Admin Panel</h2>
+    <p style="color:var(--muted); font-size:14px; margin-top:-10px">Manage user permissions.</p>
+    <div id="adminUserList" style="max-height:400px; overflow-y:auto; margin-top:20px;"></div>
+    <button onclick="closeModals()" class="btn-primary" style="margin-top:20px; background:var(--panel)">Close</button>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, setDoc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, getDoc, getDocs, setDoc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
@@ -207,13 +259,45 @@ const db = getFirestore(app);
 
 let allPosts = [];
 let selectedBase64 = "";
+let currentUserData = null;
 
+// UI HELPERS
 const getHandle = (n) => `@${n.toLowerCase().replace(/\s+/g, '')}`;
+
+window.showToast = (msg, type = 'success') => {
+  const container = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+};
+
+window.closeModals = () => document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
+
+// POST RENDERING LOGIC (Shared between Feed and Profile)
+function generatePostHTML(post) {
+  let badgeHTML = "";
+  if (post.userRole === "Owner") badgeHTML = `<span class="badge">Owner</span>`;
+  else if (post.userRole === "Admin") badgeHTML = `<span class="badge admin">Admin</span>`;
+
+  return `
+    <img class="avatar" src="${post.userProfilePic || 'https://ui-avatars.com/api/?name='+post.username}" />
+    <div class="post-content">
+      <div class="post-header">
+        <span class="post-name">${post.username}</span> 
+        ${badgeHTML}
+        <span class="post-handle">${getHandle(post.username)}</span>
+      </div>
+      <div class="post-body">${post.content.replace(/(#\w+)/g, '<span style="color:var(--accent)">$1</span>')}</div>
+      ${post.imageURL ? `<img class="post-media" src="${post.imageURL}" />` : ''}
+    </div>
+  `;
+}
 
 function renderFeed() {
   const feed = document.getElementById("feed");
   const search = document.getElementById("searchInput").value.toLowerCase();
-  
   let filtered = allPosts.filter(p => p.content.toLowerCase().includes(search) || p.username.toLowerCase().includes(search));
   
   feed.innerHTML = filtered.length ? "" : '<div style="padding:40px; text-align:center; color:var(--muted)">No posts found</div>';
@@ -221,14 +305,7 @@ function renderFeed() {
   filtered.forEach(post => {
     const div = document.createElement("div");
     div.className = "post";
-    div.innerHTML = `
-      <img class="avatar" src="${post.userProfilePic || 'https://ui-avatars.com/api/?name='+post.username}" />
-      <div class="post-content">
-        <div class="post-header"><span class="post-name">${post.username}</span> <span class="post-handle">${getHandle(post.username)}</span></div>
-        <div class="post-body">${post.content.replace(/(#\w+)/g, '<span style="color:var(--accent)">$1</span>')}</div>
-        ${post.imageURL ? `<img class="post-media" src="${post.imageURL}" />` : ''}
-      </div>
-    `;
+    div.innerHTML = generatePostHTML(post);
     div.onclick = (e) => { if(!e.target.closest('button')) viewProfile(post.userId); };
     feed.appendChild(div);
   });
@@ -247,12 +324,51 @@ function updateTrends() {
     const item = document.createElement("div");
     item.className = "trend-item";
     item.innerHTML = `<span class="trend-tag">${tag}</span><span class="trend-count">${count} posts</span>`;
-    item.onclick = () => { document.getElementById("searchInput").value = tag; renderFeed(); };
+    item.onclick = () => { document.getElementById("searchInput").value = tag; renderFeed(); document.getElementById("searchAutocomplete").classList.add("hidden"); };
     list.appendChild(item);
   });
 }
 
+// PREDICTIVE SEARCH
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  renderFeed();
+  const val = e.target.value.toLowerCase();
+  const dropdown = document.getElementById("searchAutocomplete");
+  
+  if (!val) { dropdown.classList.add("hidden"); return; }
+  
+  let suggestions = new Set();
+  allPosts.forEach(p => {
+    if (p.username.toLowerCase().includes(val)) suggestions.add(`👤 ${p.username}`);
+    const tags = p.content.match(/#\w+/g) || [];
+    tags.forEach(t => { if (t.toLowerCase().includes(val)) suggestions.add(`🔥 ${t}`); });
+  });
+
+  const html = Array.from(suggestions).slice(0, 5).map(s => {
+    const cleanStr = s.split(" ")[1]; // remove emoji for search
+    return `<div class="autocomplete-item" data-val="${cleanStr}">${s}</div>`;
+  }).join('');
+
+  if(html) {
+    dropdown.innerHTML = html;
+    dropdown.classList.remove("hidden");
+    document.querySelectorAll(".autocomplete-item").forEach(item => {
+      item.onclick = () => {
+        document.getElementById("searchInput").value = item.dataset.val;
+        dropdown.classList.add("hidden");
+        renderFeed();
+      };
+    });
+  } else {
+    dropdown.classList.add("hidden");
+  }
+});
+document.addEventListener("click", (e) => { if(!e.target.closest('.search-wrapper')) document.getElementById("searchAutocomplete").classList.add("hidden"); });
+
+// PROFILE MODAL & INLINE EDITING
+let viewingUid = null;
 async function viewProfile(uid) {
+  viewingUid = uid;
   const snap = await getDoc(doc(db, "users", uid));
   if (!snap.exists()) return;
   const data = snap.data();
@@ -260,34 +376,125 @@ async function viewProfile(uid) {
   document.getElementById("profName").textContent = data.name;
   document.getElementById("profHandle").textContent = getHandle(data.name);
   document.getElementById("profPfp").src = data.pfp || 'https://ui-avatars.com/api/?name='+data.name;
-  document.getElementById("profStatus").textContent = data.status || "Hello! I'm on Mobify.";
+  document.getElementById("profStatus").textContent = data.status || "No status set.";
+  document.getElementById("profBio").textContent = data.bio || "";
   
-  const editBtn = document.getElementById("editStatusBtn");
-  editBtn.classList.toggle("hidden", uid !== auth.currentUser.uid);
-  editBtn.onclick = async () => {
-    const newStatus = prompt("Update your status:", data.status || "");
-    if (newStatus !== null) {
-      await updateDoc(doc(db, "users", uid), { status: newStatus });
-      viewProfile(uid); // Refresh modal
-    }
-  };
+  const badge = document.getElementById("profRoleBadge");
+  if (data.role === "Owner" || data.role === "Admin") {
+    badge.textContent = data.role;
+    badge.className = `badge ${data.role === 'Admin' ? 'admin' : ''}`;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+  
+  const isMe = auth.currentUser && uid === auth.currentUser.uid;
+  document.getElementById("editProfileBtn").classList.toggle("hidden", !isMe);
+  
+  // Reset edit views
+  document.getElementById("profileDisplayView").classList.remove("hidden");
+  document.getElementById("profileEditView").classList.add("hidden");
 
+  // Render User Posts (Mirroring main feed UI)
   const postContainer = document.getElementById("userPosts");
   postContainer.innerHTML = "";
-  allPosts.filter(p => p.userId === uid).forEach(p => {
-    const d = document.createElement("div");
-    d.style.padding = "12px 20px"; d.style.borderBottom = "1px solid var(--border)";
-    d.textContent = p.content;
-    postContainer.appendChild(d);
-  });
+  const userFilteredPosts = allPosts.filter(p => p.userId === uid);
+  
+  if(userFilteredPosts.length === 0) {
+    postContainer.innerHTML = '<div style="padding:30px; text-align:center; color:var(--muted)">No posts yet</div>';
+  } else {
+    userFilteredPosts.forEach(post => {
+      const d = document.createElement("div");
+      d.className = "post";
+      d.innerHTML = generatePostHTML(post);
+      postContainer.appendChild(d);
+    });
+  }
   
   document.getElementById("profileModal").style.display = "flex";
 }
 
-window.closeModals = () => document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
+document.getElementById("editProfileBtn").onclick = async () => {
+  const snap = await getDoc(doc(db, "users", viewingUid));
+  const data = snap.data();
+  document.getElementById("editStatusInput").value = data.status || "";
+  document.getElementById("editBioInput").value = data.bio || "";
+  document.getElementById("profileDisplayView").classList.add("hidden");
+  document.getElementById("profileEditView").classList.remove("hidden");
+};
 
-// EVENTS
-document.getElementById("searchInput").oninput = renderFeed;
+document.getElementById("cancelEditBtn").onclick = () => {
+  document.getElementById("profileDisplayView").classList.remove("hidden");
+  document.getElementById("profileEditView").classList.add("hidden");
+};
+
+document.getElementById("saveProfileBtn").onclick = async () => {
+  const newStatus = document.getElementById("editStatusInput").value.trim();
+  const newBio = document.getElementById("editBioInput").value.trim();
+  try {
+    await updateDoc(doc(db, "users", auth.currentUser.uid), { status: newStatus, bio: newBio });
+    showToast("Profile updated!");
+    viewProfile(auth.currentUser.uid); // reload
+  } catch (err) { showToast(err.message, "error"); }
+};
+
+// ADMIN PANEL
+async function openAdminPanel() {
+  const list = document.getElementById("adminUserList");
+  list.innerHTML = "<p>Loading users...</p>";
+  document.getElementById("adminModal").style.display = "flex";
+
+  try {
+    const querySnapshot = await getDocs(collection(db, "users"));
+    list.innerHTML = "";
+    querySnapshot.forEach((docSnap) => {
+      const u = docSnap.data();
+      const uid = docSnap.id;
+      
+      const row = document.createElement("div");
+      row.className = "user-row";
+      
+      let btnHtml = "";
+      // Admins can't edit Owners. Nobody can edit themselves in this view.
+      if (uid !== auth.currentUser.uid && !(currentUserData.role === 'Admin' && u.role === 'Owner')) {
+        const canPost = u.canPost !== false; // default true
+        btnHtml = `<button class="toggle-btn ${canPost ? 'on' : 'off'}" data-uid="${uid}" data-status="${canPost}">${canPost ? 'Can Post' : 'Muted'}</button>`;
+      }
+
+      row.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px">
+          <img src="${u.pfp || 'https://ui-avatars.com/api/?name='+u.name}" class="avatar small" />
+          <div>
+            <div style="font-weight:bold; font-size:14px">${u.name} <span style="font-weight:normal; color:var(--muted)">${getHandle(u.name)}</span></div>
+            <div style="font-size:12px; color:var(--accent)">Role: ${u.role}</div>
+          </div>
+        </div>
+        <div>${btnHtml}</div>
+      `;
+      list.appendChild(row);
+    });
+
+    // Attach listeners to toggle buttons
+    document.querySelectorAll(".toggle-btn").forEach(btn => {
+      btn.onclick = async (e) => {
+        const targetUid = e.target.dataset.uid;
+        const currentStatus = e.target.dataset.status === "true";
+        try {
+          await updateDoc(doc(db, "users", targetUid), { canPost: !currentStatus });
+          showToast(`User permissions updated.`);
+          openAdminPanel(); // refresh list
+        } catch(err) { showToast("Error updating user.", "error"); }
+      }
+    });
+
+  } catch (err) {
+    list.innerHTML = `<p style="color:var(--danger)">Error loading users: ${err.message}</p>`;
+  }
+}
+document.getElementById("navAdminPanel").onclick = openAdminPanel;
+
+
+// AUTH & POSTING
 document.getElementById("toggleAuthBtn").onclick = () => {
   const isLogin = document.getElementById("username").classList.toggle("hidden");
   document.getElementById("authSubmitBtn").textContent = isLogin ? "Log In" : "Sign Up";
@@ -303,17 +510,28 @@ document.getElementById("authForm").onsubmit = async (e) => {
   try {
     if (isSignUp) {
       const res = await createUserWithEmailAndPassword(auth, email, pass);
-      await setDoc(doc(db, "users", res.user.uid), { name, status: "Just joined!", pfp: "" });
+      // Determine if this is the first user/owner manually (For testing, if username is 4by4)
+      const role = name === "4by4" ? "Owner" : "Member"; 
+      await setDoc(doc(db, "users", res.user.uid), { name, status: "Just joined!", bio: "", role: role, canPost: true, pfp: "" });
+      showToast("Account created successfully!");
     } else {
       await signInWithEmailAndPassword(auth, email, pass);
+      showToast("Welcome back!");
     }
-  } catch (err) { alert(err.message); }
+  } catch (err) { showToast(err.message, "error"); }
 };
 
-document.getElementById("logoutBtn").onclick = () => signOut(auth);
+document.getElementById("logoutBtn").onclick = () => { signOut(auth); showToast("Logged out"); };
 document.getElementById("navMyProfile").onclick = () => viewProfile(auth.currentUser.uid);
 document.getElementById("btnHome").onclick = () => { document.getElementById("searchInput").value = ""; renderFeed(); };
-document.getElementById("openPostModal").onclick = () => document.getElementById("createPostModal").style.display = "flex";
+
+document.getElementById("openPostModal").onclick = () => {
+  if (currentUserData && currentUserData.canPost === false) {
+    showToast("You have been restricted from posting by an admin.", "error");
+    return;
+  }
+  document.getElementById("createPostModal").style.display = "flex";
+}
 
 document.getElementById("postImageFile").onchange = (e) => {
   const file = e.target.files[0];
@@ -330,31 +548,53 @@ document.getElementById("postImageFile").onchange = (e) => {
 
 document.getElementById("createPostForm").onsubmit = async (e) => {
   e.preventDefault();
+  if (currentUserData && currentUserData.canPost === false) {
+    showToast("You are not allowed to post.", "error");
+    return;
+  }
+
   const content = document.getElementById("postContent").value;
   if(!content && !selectedBase64) return;
-  await addDoc(collection(db, "posts"), {
-    userId: auth.currentUser.uid,
-    username: document.getElementById("myUsername").textContent,
-    userProfilePic: document.getElementById("myPfp").src,
-    content,
-    imageURL: selectedBase64,
-    timestamp: new Date().toISOString()
-  });
-  document.getElementById("createPostForm").reset();
-  selectedBase64 = "";
-  document.getElementById("imagePreviewContainer").classList.add("hidden");
-  closeModals();
+  
+  try {
+    await addDoc(collection(db, "posts"), {
+      userId: auth.currentUser.uid,
+      username: currentUserData.name,
+      userRole: currentUserData.role || "Member",
+      userProfilePic: document.getElementById("myPfp").src,
+      content,
+      imageURL: selectedBase64,
+      timestamp: new Date().toISOString()
+    });
+    document.getElementById("createPostForm").reset();
+    selectedBase64 = "";
+    document.getElementById("imagePreviewContainer").classList.add("hidden");
+    closeModals();
+    showToast("Posted successfully!");
+  } catch (err) { showToast(err.message, "error"); }
 };
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    const data = snap.data();
-    document.getElementById("myUsername").textContent = data?.name || "User";
-    document.getElementById("myHandle").textContent = getHandle(data?.name || "user");
-    document.getElementById("myPfp").src = data?.pfp || 'https://ui-avatars.com/api/?name='+(data?.name || 'U');
+    onSnapshot(doc(db, "users", user.uid), (snap) => {
+      if(snap.exists()) {
+        currentUserData = snap.data();
+        document.getElementById("myUsername").textContent = currentUserData.name || "User";
+        document.getElementById("myHandle").textContent = getHandle(currentUserData.name || "user");
+        document.getElementById("myPfp").src = currentUserData.pfp || 'https://ui-avatars.com/api/?name='+(currentUserData.name || 'U');
+        
+        // Show/hide admin panel based on role
+        if(currentUserData.role === "Owner" || currentUserData.role === "Admin") {
+          document.getElementById("navAdminPanel").classList.remove("hidden");
+        } else {
+          document.getElementById("navAdminPanel").classList.add("hidden");
+        }
+      }
+    });
+
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-container").style.display = "grid";
+    document.querySelector(".fab").style.display = "flex"; // Show add post button
 
     onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (s) => {
       allPosts = s.docs.map(d => ({id: d.id, ...d.data()}));
@@ -362,8 +602,10 @@ onAuthStateChanged(auth, async (user) => {
       updateTrends();
     });
   } else {
+    currentUserData = null;
     document.getElementById("auth-container").style.display = "flex";
     document.getElementById("app-container").style.display = "none";
+    document.querySelector(".fab").style.display = "none"; // Hide add post button
   }
 });
 </script>
