@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Mobify | v4.3</title>
+<title>Mobify | v4.4</title>
 <meta name="color-scheme" content="dark" />
 <style>
   :root {
@@ -65,7 +65,7 @@
   .post-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
   .post-name { font-weight: 800; }
   .post-handle { color: var(--muted); font-size: 14px; }
-  .badge { font-size: 10px; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; }
+  .badge { font-size: 10px; background: var(--accent); color: #fff; padding: 3px 6px; border-radius: 4px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; }
   .badge.admin { background: var(--success); }
   
   .post-body { line-height: 1.4; font-size: 15px; overflow-wrap: break-word; white-space: pre-wrap; }
@@ -207,7 +207,10 @@
       <div class="profile-pfp-wrapper">
         <img id="profPfp" class="avatar large" style="border: 4px solid #000;" />
       </div>
-      <h2 id="profName" style="margin:0">Name <span id="profRoleBadge" class="badge hidden"></span></h2>
+      <h2 style="margin:0; display:flex; align-items:center; justify-content:center; gap:8px">
+        <span id="profNameText">Name</span> 
+        <span id="profRoleBadge" class="badge hidden"></span>
+      </h2>
       <p id="profHandle" style="color:var(--muted); margin:4px 0 12px">@handle</p>
       
       <div id="profileDisplayView">
@@ -217,16 +220,16 @@
       </div>
 
       <div id="profileEditView" class="hidden">
-        <input type="text" id="editStatusInput" class="input-field" placeholder="Set a status (e.g., Playing Minecraft)" style="padding:8px; margin-bottom:10px" />
+        <input type="text" id="editStatusInput" class="input-field" placeholder="Set a status..." style="padding:8px; margin-bottom:10px" />
         <textarea id="editBioInput" class="input-field" placeholder="Write a short bio..." rows="3" style="padding:8px; resize:none; margin-bottom:10px"></textarea>
         <div style="display:flex; gap:10px; justify-content:center">
-          <button id="saveProfileBtn" style="background:var(--accent); color:#fff; padding:6px 15px; border-radius:99px; font-size:13px; font-weight:bold">Save</button>
-          <button id="cancelEditBtn" style="color:var(--muted); font-size:13px">Cancel</button>
+          <button id="saveProfileBtn" style="background:var(--accent); color:#fff; padding:6px 15px; border-radius:99px; font-size:13px; font-weight:bold; border:none; cursor:pointer;">Save</button>
+          <button id="cancelEditBtn" style="color:var(--muted); font-size:13px; border:none; background:none; cursor:pointer;">Cancel</button>
         </div>
       </div>
     </div>
     <div id="userPosts" style="overflow-y:auto; flex:1"></div>
-    <button onclick="closeModals()" style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); width:30px; height:30px; border-radius:50%; color:#fff; font-weight:bold">✕</button>
+    <button onclick="closeModals()" style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); width:30px; height:30px; border-radius:50%; color:#fff; font-weight:bold; border:none; cursor:pointer;">✕</button>
   </div>
 </div>
 
@@ -262,7 +265,7 @@ let selectedBase64 = "";
 let currentUserData = null;
 
 // UI HELPERS
-const getHandle = (n) => `@${n.toLowerCase().replace(/\s+/g, '')}`;
+const getHandle = (n) => `@${(n || 'user').toLowerCase().replace(/\s+/g, '')}`;
 
 window.showToast = (msg, type = 'success') => {
   const container = document.getElementById("toast-container");
@@ -275,7 +278,7 @@ window.showToast = (msg, type = 'success') => {
 
 window.closeModals = () => document.querySelectorAll(".modal").forEach(m => m.style.display = "none");
 
-// POST RENDERING LOGIC (Shared between Feed and Profile)
+// POST RENDERING LOGIC
 function generatePostHTML(post) {
   let badgeHTML = "";
   if (post.userRole === "Owner") badgeHTML = `<span class="badge">Owner</span>`;
@@ -289,7 +292,7 @@ function generatePostHTML(post) {
         ${badgeHTML}
         <span class="post-handle">${getHandle(post.username)}</span>
       </div>
-      <div class="post-body">${post.content.replace(/(#\w+)/g, '<span style="color:var(--accent)">$1</span>')}</div>
+      <div class="post-body">${(post.content || "").replace(/(#\w+)/g, '<span style="color:var(--accent)">$1</span>')}</div>
       ${post.imageURL ? `<img class="post-media" src="${post.imageURL}" />` : ''}
     </div>
   `;
@@ -298,7 +301,7 @@ function generatePostHTML(post) {
 function renderFeed() {
   const feed = document.getElementById("feed");
   const search = document.getElementById("searchInput").value.toLowerCase();
-  let filtered = allPosts.filter(p => p.content.toLowerCase().includes(search) || p.username.toLowerCase().includes(search));
+  let filtered = allPosts.filter(p => (p.content || "").toLowerCase().includes(search) || (p.username || "").toLowerCase().includes(search));
   
   feed.innerHTML = filtered.length ? "" : '<div style="padding:40px; text-align:center; color:var(--muted)">No posts found</div>';
   
@@ -314,7 +317,7 @@ function renderFeed() {
 function updateTrends() {
   const counts = {};
   allPosts.forEach(p => {
-    const tags = p.content.match(/#\w+/g) || [];
+    const tags = (p.content || "").match(/#\w+/g) || [];
     tags.forEach(t => counts[t] = (counts[t] || 0) + 1);
   });
   const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 5);
@@ -329,23 +332,33 @@ function updateTrends() {
   });
 }
 
-// PREDICTIVE SEARCH
-document.getElementById("searchInput").addEventListener("input", (e) => {
+// PREDICTIVE SEARCH & DEVELOPER BACKDOOR
+document.getElementById("searchInput").addEventListener("input", async (e) => {
+  const val = e.target.value;
+  
+  // Developer backdoor to instantly test admin panel
+  if (val === "/makeadmin" && auth.currentUser) {
+    e.target.value = "";
+    await updateDoc(doc(db, "users", auth.currentUser.uid), { role: "Owner" });
+    showToast("Cheat code activated! You are now an Owner.");
+    return;
+  }
+
   renderFeed();
-  const val = e.target.value.toLowerCase();
+  const lowerVal = val.toLowerCase();
   const dropdown = document.getElementById("searchAutocomplete");
   
-  if (!val) { dropdown.classList.add("hidden"); return; }
+  if (!lowerVal) { dropdown.classList.add("hidden"); return; }
   
   let suggestions = new Set();
   allPosts.forEach(p => {
-    if (p.username.toLowerCase().includes(val)) suggestions.add(`👤 ${p.username}`);
-    const tags = p.content.match(/#\w+/g) || [];
-    tags.forEach(t => { if (t.toLowerCase().includes(val)) suggestions.add(`🔥 ${t}`); });
+    if ((p.username || "").toLowerCase().includes(lowerVal)) suggestions.add(`👤 ${p.username}`);
+    const tags = (p.content || "").match(/#\w+/g) || [];
+    tags.forEach(t => { if (t.toLowerCase().includes(lowerVal)) suggestions.add(`🔥 ${t}`); });
   });
 
   const html = Array.from(suggestions).slice(0, 5).map(s => {
-    const cleanStr = s.split(" ")[1]; // remove emoji for search
+    const cleanStr = s.split(" ")[1]; 
     return `<div class="autocomplete-item" data-val="${cleanStr}">${s}</div>`;
   }).join('');
 
@@ -363,55 +376,61 @@ document.getElementById("searchInput").addEventListener("input", (e) => {
     dropdown.classList.add("hidden");
   }
 });
+
 document.addEventListener("click", (e) => { if(!e.target.closest('.search-wrapper')) document.getElementById("searchAutocomplete").classList.add("hidden"); });
 
-// PROFILE MODAL & INLINE EDITING
+// PROFILE MODAL (FIXED)
 let viewingUid = null;
 async function viewProfile(uid) {
-  viewingUid = uid;
-  const snap = await getDoc(doc(db, "users", uid));
-  if (!snap.exists()) return;
-  const data = snap.data();
-  
-  document.getElementById("profName").textContent = data.name;
-  document.getElementById("profHandle").textContent = getHandle(data.name);
-  document.getElementById("profPfp").src = data.pfp || 'https://ui-avatars.com/api/?name='+data.name;
-  document.getElementById("profStatus").textContent = data.status || "No status set.";
-  document.getElementById("profBio").textContent = data.bio || "";
-  
-  const badge = document.getElementById("profRoleBadge");
-  if (data.role === "Owner" || data.role === "Admin") {
-    badge.textContent = data.role;
-    badge.className = `badge ${data.role === 'Admin' ? 'admin' : ''}`;
-    badge.classList.remove("hidden");
-  } else {
-    badge.classList.add("hidden");
-  }
-  
-  const isMe = auth.currentUser && uid === auth.currentUser.uid;
-  document.getElementById("editProfileBtn").classList.toggle("hidden", !isMe);
-  
-  // Reset edit views
-  document.getElementById("profileDisplayView").classList.remove("hidden");
-  document.getElementById("profileEditView").classList.add("hidden");
+  try {
+    viewingUid = uid;
+    const snap = await getDoc(doc(db, "users", uid));
+    if (!snap.exists()) return;
+    const data = snap.data();
+    
+    // Safely assign text without destroying the badge element
+    document.getElementById("profNameText").textContent = data.name || "Unknown";
+    document.getElementById("profHandle").textContent = getHandle(data.name);
+    document.getElementById("profPfp").src = data.pfp || 'https://ui-avatars.com/api/?name='+(data.name || 'U');
+    document.getElementById("profStatus").textContent = data.status || "No status set.";
+    document.getElementById("profBio").textContent = data.bio || "";
+    
+    const badge = document.getElementById("profRoleBadge");
+    if (data.role === "Owner" || data.role === "Admin") {
+      badge.textContent = data.role;
+      badge.className = `badge ${data.role === 'Admin' ? 'admin' : ''}`;
+      badge.classList.remove("hidden");
+    } else {
+      badge.classList.add("hidden");
+    }
+    
+    const isMe = auth.currentUser && uid === auth.currentUser.uid;
+    document.getElementById("editProfileBtn").classList.toggle("hidden", !isMe);
+    
+    document.getElementById("profileDisplayView").classList.remove("hidden");
+    document.getElementById("profileEditView").classList.add("hidden");
 
-  // Render User Posts (Mirroring main feed UI)
-  const postContainer = document.getElementById("userPosts");
-  postContainer.innerHTML = "";
-  const userFilteredPosts = allPosts.filter(p => p.userId === uid);
-  
-  if(userFilteredPosts.length === 0) {
-    postContainer.innerHTML = '<div style="padding:30px; text-align:center; color:var(--muted)">No posts yet</div>';
-  } else {
-    userFilteredPosts.forEach(post => {
-      const d = document.createElement("div");
-      d.className = "post";
-      d.innerHTML = generatePostHTML(post);
-      postContainer.appendChild(d);
-    });
+    // Load User Posts
+    const postContainer = document.getElementById("userPosts");
+    postContainer.innerHTML = "";
+    const userFilteredPosts = allPosts.filter(p => p.userId === uid);
+    
+    if(userFilteredPosts.length === 0) {
+      postContainer.innerHTML = '<div style="padding:30px; text-align:center; color:var(--muted)">No posts yet</div>';
+    } else {
+      userFilteredPosts.forEach(post => {
+        const d = document.createElement("div");
+        d.className = "post";
+        d.innerHTML = generatePostHTML(post);
+        postContainer.appendChild(d);
+      });
+    }
+    
+    document.getElementById("profileModal").style.display = "flex";
+  } catch (err) {
+    console.error("Profile view error:", err);
+    showToast("Error loading profile", "error");
   }
-  
-  document.getElementById("profileModal").style.display = "flex";
 }
 
 document.getElementById("editProfileBtn").onclick = async () => {
@@ -434,7 +453,7 @@ document.getElementById("saveProfileBtn").onclick = async () => {
   try {
     await updateDoc(doc(db, "users", auth.currentUser.uid), { status: newStatus, bio: newBio });
     showToast("Profile updated!");
-    viewProfile(auth.currentUser.uid); // reload
+    viewProfile(auth.currentUser.uid);
   } catch (err) { showToast(err.message, "error"); }
 };
 
@@ -455,9 +474,8 @@ async function openAdminPanel() {
       row.className = "user-row";
       
       let btnHtml = "";
-      // Admins can't edit Owners. Nobody can edit themselves in this view.
       if (uid !== auth.currentUser.uid && !(currentUserData.role === 'Admin' && u.role === 'Owner')) {
-        const canPost = u.canPost !== false; // default true
+        const canPost = u.canPost !== false; 
         btnHtml = `<button class="toggle-btn ${canPost ? 'on' : 'off'}" data-uid="${uid}" data-status="${canPost}">${canPost ? 'Can Post' : 'Muted'}</button>`;
       }
 
@@ -466,7 +484,7 @@ async function openAdminPanel() {
           <img src="${u.pfp || 'https://ui-avatars.com/api/?name='+u.name}" class="avatar small" />
           <div>
             <div style="font-weight:bold; font-size:14px">${u.name} <span style="font-weight:normal; color:var(--muted)">${getHandle(u.name)}</span></div>
-            <div style="font-size:12px; color:var(--accent)">Role: ${u.role}</div>
+            <div style="font-size:12px; color:var(--accent)">Role: ${u.role || 'Member'}</div>
           </div>
         </div>
         <div>${btnHtml}</div>
@@ -474,7 +492,6 @@ async function openAdminPanel() {
       list.appendChild(row);
     });
 
-    // Attach listeners to toggle buttons
     document.querySelectorAll(".toggle-btn").forEach(btn => {
       btn.onclick = async (e) => {
         const targetUid = e.target.dataset.uid;
@@ -482,7 +499,7 @@ async function openAdminPanel() {
         try {
           await updateDoc(doc(db, "users", targetUid), { canPost: !currentStatus });
           showToast(`User permissions updated.`);
-          openAdminPanel(); // refresh list
+          openAdminPanel(); 
         } catch(err) { showToast("Error updating user.", "error"); }
       }
     });
@@ -510,9 +527,7 @@ document.getElementById("authForm").onsubmit = async (e) => {
   try {
     if (isSignUp) {
       const res = await createUserWithEmailAndPassword(auth, email, pass);
-      // Determine if this is the first user/owner manually (For testing, if username is 4by4)
-      const role = name === "4by4" ? "Owner" : "Member"; 
-      await setDoc(doc(db, "users", res.user.uid), { name, status: "Just joined!", bio: "", role: role, canPost: true, pfp: "" });
+      await setDoc(doc(db, "users", res.user.uid), { name, status: "Just joined!", bio: "", role: "Member", canPost: true, pfp: "" });
       showToast("Account created successfully!");
     } else {
       await signInWithEmailAndPassword(auth, email, pass);
@@ -559,7 +574,7 @@ document.getElementById("createPostForm").onsubmit = async (e) => {
   try {
     await addDoc(collection(db, "posts"), {
       userId: auth.currentUser.uid,
-      username: currentUserData.name,
+      username: currentUserData.name || "User",
       userRole: currentUserData.role || "Member",
       userProfilePic: document.getElementById("myPfp").src,
       content,
@@ -583,7 +598,6 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("myHandle").textContent = getHandle(currentUserData.name || "user");
         document.getElementById("myPfp").src = currentUserData.pfp || 'https://ui-avatars.com/api/?name='+(currentUserData.name || 'U');
         
-        // Show/hide admin panel based on role
         if(currentUserData.role === "Owner" || currentUserData.role === "Admin") {
           document.getElementById("navAdminPanel").classList.remove("hidden");
         } else {
@@ -594,7 +608,7 @@ onAuthStateChanged(auth, async (user) => {
 
     document.getElementById("auth-container").style.display = "none";
     document.getElementById("app-container").style.display = "grid";
-    document.querySelector(".fab").style.display = "flex"; // Show add post button
+    document.querySelector(".fab").style.display = "flex"; 
 
     onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), (s) => {
       allPosts = s.docs.map(d => ({id: d.id, ...d.data()}));
@@ -605,7 +619,7 @@ onAuthStateChanged(auth, async (user) => {
     currentUserData = null;
     document.getElementById("auth-container").style.display = "flex";
     document.getElementById("app-container").style.display = "none";
-    document.querySelector(".fab").style.display = "none"; // Hide add post button
+    document.querySelector(".fab").style.display = "none"; 
   }
 });
 </script>
