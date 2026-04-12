@@ -663,7 +663,8 @@
     <button onclick="closeModals()" class="btn-primary" style="margin-top:20px; background:linear-gradient(180deg, #232833, #1a1f27); box-shadow:none;">Close</button>
   </div>
 </div>
-
+  
+<script src="https://unpkg.com/lucide@latest"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
@@ -715,6 +716,14 @@ const getTagsFromText = (text) => (String(text ?? "").match(/#\w+/g) || []).map(
 
 const avatarUrlForName = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'U')}`;
 
+function debounce(fn, delay = 250) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+}
+  
 window.showToast = (msg, type = 'success') => {
   const container = document.getElementById("toast-container");
   const toast = document.createElement("div");
@@ -754,19 +763,92 @@ function generatePostHTML(post) {
   const content = highlightHashtags(post.content || "");
 
   return `
-    <img class="avatar" src="${escapeHTML(post.userProfilePic || avatarUrlForName(post.username))}" alt="${safeUser}" />
-    <div class="post-content">
-      <div class="post-header">
-        <span class="post-name">${safeUser}</span> 
-        ${badgeHTML}
-        <span class="post-handle">${escapeHTML(getHandle(post.username))}</span>
-      </div>
-      <div class="post-body">${content}</div>
-      ${post.imageURL ? `<img class="post-media" src="${escapeHTML(post.imageURL)}" alt="Post image" />` : ''}
-    </div>
+    <div class="post-actions" style="display:flex; gap:16px; margin-top:10px;">
+  <button onclick="likePost('${post.id}')">
+    <i data-lucide="heart"></i> ${post.likes?.length || 0}
+  </button>
+
+  <button onclick="dislikePost('${post.id}')">
+    <i data-lucide="thumbs-down"></i> ${post.dislikes?.length || 0}
+  </button>
+
+  <button onclick="toggleComments('${post.id}')">
+    <i data-lucide="message-circle"></i>
+  </button>
+</div>
+
+<div id="comments-${post.id}" class="hidden" style="margin-top:10px;">
+  <div id="comments-list-${post.id}"></div>
+  <input placeholder="Write a comment..." 
+    onkeydown="if(event.key==='Enter') addComment('${post.id}', this.value, this)" 
+    class="input-field" />
+</div>
   `;
 }
 
+window.likePost = async (postId) => {
+  const ref = doc(db, "posts", postId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  let likes = data.likes || [];
+  let dislikes = data.dislikes || [];
+
+  likes = likes.includes(auth.currentUser.uid)
+    ? likes.filter(id => id !== auth.currentUser.uid)
+    : [...likes, auth.currentUser.uid];
+
+  dislikes = dislikes.filter(id => id !== auth.currentUser.uid);
+
+  await updateDoc(ref, { likes, dislikes });
+};
+
+window.dislikePost = async (postId) => {
+  const ref = doc(db, "posts", postId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  let likes = data.likes || [];
+  let dislikes = data.dislikes || [];
+
+  dislikes = dislikes.includes(auth.currentUser.uid)
+    ? dislikes.filter(id => id !== auth.currentUser.uid)
+    : [...dislikes, auth.currentUser.uid];
+
+  likes = likes.filter(id => id !== auth.currentUser.uid);
+
+  await updateDoc(ref, { likes, dislikes });
+};
+
+
+window.toggleComments = async (postId) => {
+  const el = document.getElementById(`comments-${postId}`);
+  el.classList.toggle("hidden");
+
+  if (!el.classList.contains("hidden")) {
+    const snap = await getDocs(collection(db, "posts", postId, "comments"));
+    const list = document.getElementById(`comments-list-${postId}`);
+
+    list.innerHTML = snap.docs.map(d => {
+      const c = d.data();
+      return `<div style="margin-bottom:6px;"><b>${escapeHTML(c.user)}</b>: ${escapeHTML(c.text)}</div>`;
+    }).join("");
+  }
+};
+
+window.addComment = async (postId, text, input) => {
+  if (!text.trim()) return;
+
+  await addDoc(collection(db, "posts", postId, "comments"), {
+    user: currentUserData.name,
+    text,
+    timestamp: new Date()
+  });
+
+  input.value = "";
+  toggleComments(postId);
+};
+  
 function scorePost(post, rawQuery) {
   const q = normalizeText(rawQuery);
   if (!q) return 1;
@@ -864,7 +946,7 @@ function updateTrends() {
     list.appendChild(item);
   });
 }
-
+ 
 // --- SEARCH & AUTOCOMPLETE ---
 function buildSearchSuggestions(val) {
   const query = normalizeText(val);
