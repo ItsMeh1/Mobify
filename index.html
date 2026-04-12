@@ -1029,7 +1029,7 @@ document.getElementById("searchInput").addEventListener("input", (e) => {
 
   dropdown.innerHTML = suggestions.map(s => `
     <div class="autocomplete-item" data-kind="${escapeHTML(s.kind)}" data-val="${escapeHTML(s.value)}">
-      <span class      <span class="autocomplete-kind">${s.kind}</span>
+      <span class="autocomplete-kind">${s.kind}</span>
       <span class="autocomplete-text">${escapeHTML(s.label)}</span>
     </div>
   `).join("");
