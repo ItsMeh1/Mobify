@@ -3,26 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mobify | v5.0</title>
+  <title>Mobify | v5.1</title>
   <meta name="color-scheme" content="dark" />
   <style>
     :root {
-      --bg: #050607;
-      --bg-elevated: #0b0c0f;
-      --panel: #111318;
-      --panel-2: #161a21;
-      --border: #272b31;
-      --border-2: #343a42;
-      --text: #eef1f4;
-      --muted: #8a9099;
+      --bg: #030407;
+      --glass: rgba(15, 18, 25, 0.7);
+      --glass-heavy: rgba(10, 12, 18, 0.9);
+      --border: rgba(255, 255, 255, 0.1);
+      --border-bright: rgba(255, 255, 255, 0.18);
+      --text: #f0f2f5;
+      --muted: #94a3b8;
       --accent: #1d9bf0;
-      --accent-hover: #1a8cd8;
-      --accent-2: #2dd4bf;
+      --accent-glow: rgba(29, 155, 240, 0.3);
       --danger: #f91880;
       --success: #00ba7c;
       --warning: #f59e0b;
-      --radius: 18px;
-      --shadow: 0 18px 50px rgba(0,0,0,0.35);
+      --radius-lg: 24px;
+      --radius-md: 16px;
     }
 
     * { box-sizing: border-box; }
@@ -31,217 +29,274 @@
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
-      background:
-        radial-gradient(circle at top left, rgba(29,155,240,0.12), transparent 28%),
-        radial-gradient(circle at top right, rgba(45,212,191,0.08), transparent 26%),
-        linear-gradient(180deg, #050607, #030405 70%);
+      background: 
+        radial-gradient(circle at 0% 0%, rgba(29,155,240,0.15) 0%, transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(45,212,191,0.1) 0%, transparent 40%),
+        #050609;
+    }
+
+    /* GLASSMORPHISM UTILS */
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
     }
 
     .hidden { display: none !important; }
-    button, select { border: 0; background: none; color: inherit; cursor: pointer; transition: 0.2s; font: inherit; }
-    
+    button { border: 0; background: none; color: inherit; cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); font: inherit; }
+    button:hover { filter: brightness(1.2); }
+
     /* LAYOUT */
     .app-shell {
       display: none;
       width: 100%;
       height: 100vh;
-      max-width: 1350px;
+      max-width: 1300px;
       margin: 0 auto;
-      grid-template-columns: 275px minmax(0, 1fr) 360px;
+      grid-template-columns: 260px 1fr 340px;
     }
 
     .sidebar, .right-sidebar {
-      padding: 18px;
+      padding: 24px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      background: rgba(10, 12, 16, 0.65);
+      gap: 12px;
       border-right: 1px solid var(--border);
     }
     .right-sidebar { border-right: 0; border-left: 1px solid var(--border); }
 
-    .brand { font-size: 28px; letter-spacing: -0.04em; margin-bottom: 10px; padding: 0 12px; }
-    .nav-btn { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 18px; border-radius: 999px; font-size: 18px; font-weight: 650; }
-    .nav-btn:hover { background: rgba(255,255,255,0.06); }
-    .nav-btn.active { color: var(--accent); }
+    .brand { font-size: 32px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 20px; color: #fff; }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+      border-radius: 99px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .nav-btn.active { color: var(--accent); background: var(--accent-glow); }
 
     /* FEED */
-    .main { overflow-y: auto; border-right: 1px solid var(--border); background: rgba(0,0,0,0.12); }
-    .main-header { position: sticky; top: 0; z-index: 10; background: rgba(4, 5, 7, 0.85); backdrop-filter: blur(16px); padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .main { overflow-y: auto; border-right: 1px solid var(--border); background: rgba(0,0,0,0.2); position: relative; }
+    .main-header {
+      position: sticky; top: 0; z-index: 50;
+      padding: 16px 24px;
+      background: rgba(5, 7, 10, 0.6);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
 
     /* POSTS */
-    .post { display: flex; gap: 12px; padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); transition: 0.15s; }
+    .post { display: flex; gap: 14px; padding: 20px; border-bottom: 1px solid var(--border); transition: 0.2s; }
     .post:hover { background: rgba(255,255,255,0.02); }
-    .avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #222; border: 1px solid var(--border); }
+    .avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: #222; flex-shrink: 0; border: 1px solid var(--border-bright); }
     .post-content { flex: 1; min-width: 0; }
-    .post-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
-    .post-name { font-weight: 800; cursor: pointer; }
-    .post-handle { color: var(--muted); font-size: 13px; }
-    .post-body { line-height: 1.5; font-size: 15px; white-space: pre-wrap; margin-bottom: 10px; }
-    .post-media { width: 100%; border-radius: 16px; border: 1px solid var(--border); margin-top: 8px; max-height: 500px; object-fit: cover; }
+    .post-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+    .post-name { font-weight: 800; cursor: pointer; color: #fff; }
+    .post-handle { color: var(--muted); font-size: 14px; }
+    .post-body { line-height: 1.6; font-size: 15px; white-space: pre-wrap; margin-bottom: 12px; }
+    .post-media { width: 100%; border-radius: 20px; border: 1px solid var(--border); margin-top: 10px; max-height: 520px; object-fit: cover; }
 
-    /* INTERACTIONS */
-    .post-actions { display: flex; gap: 24px; margin-top: 12px; color: var(--muted); }
-    .action-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; transition: 0.2s; }
-    .action-btn:hover { color: var(--accent); }
-    .action-btn.liked { color: var(--accent); font-weight: bold; }
-    .action-btn.disliked { color: var(--danger); font-weight: bold; }
-
-    /* COMMENTS SECTION */
-    .comments-container { margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); }
-    .comment { display: flex; gap: 10px; margin-bottom: 12px; font-size: 14px; }
-    .comment-avatar { width: 32px; height: 32px; border-radius: 50%; }
-    .comment-input-area { display: flex; gap: 10px; margin-top: 10px; }
-    .comment-input { flex: 1; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 20px; padding: 8px 15px; color: #fff; }
-
-    /* MODALS */
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
-    .modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 24px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; padding: 25px; }
-    
     /* BADGES */
-    .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 800; }
-    .badge-owner { background: #ffd700; color: #000; }
+    .badge { 
+      font-size: 10px; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; font-weight: 900; 
+      letter-spacing: 0.5px;
+    }
+    .badge-owner { background: linear-gradient(45deg, #f59e0b, #fbbf24); color: #000; box-shadow: 0 0 10px rgba(245,158,11,0.3); }
     .badge-admin { background: var(--success); color: #fff; }
     .badge-custom { background: var(--accent); color: #fff; }
+    .badge-muted { background: var(--danger); color: #fff; }
+
+    /* INTERACTIONS */
+    .post-actions { display: flex; gap: 30px; margin-top: 15px; }
+    .action-btn { 
+      display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; 
+      padding: 6px 12px; border-radius: 99px; transition: 0.2s;
+    }
+    .action-btn:hover { background: rgba(29, 155, 240, 0.1); color: var(--accent); }
+    .action-btn.liked { color: var(--accent); font-weight: bold; }
+    .action-btn.disliked { color: var(--danger); }
+
+    /* COMMENTS */
+    .comments-section { 
+      margin-top: 15px; padding: 15px; border-radius: 16px; background: rgba(0,0,0,0.2); 
+      border: 1px solid var(--border);
+    }
+    .comment { display: flex; gap: 12px; margin-bottom: 16px; }
+    .comment-pfp { width: 32px; height: 32px; border-radius: 50%; }
+    .comment-input-wrap { display: flex; gap: 10px; margin-top: 12px; }
+    .comment-input { 
+      flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border); 
+      padding: 10px 16px; border-radius: 99px; color: #fff; font-size: 14px;
+    }
+
+    /* MODALS */
+    .modal { 
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); 
+      backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; 
+    }
+    .modal-box { 
+      background: var(--glass-heavy); border: 1px solid var(--border-bright); 
+      border-radius: var(--radius-lg); width: 90%; max-width: 580px; max-height: 85vh; 
+      overflow-y: auto; position: relative; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
 
     /* INPUTS */
-    .input-field { width: 100%; padding: 12px 16px; background: #12141a; border: 1px solid var(--border); border-radius: 12px; color: #fff; margin-bottom: 15px; }
-    .btn-primary { width: 100%; padding: 12px; background: var(--accent); border-radius: 99px; font-weight: 700; color: #fff; }
-    .btn-primary:hover { background: var(--accent-hover); }
+    .input-field { 
+      width: 100%; padding: 14px 18px; background: rgba(0,0,0,0.3); 
+      border: 1px solid var(--border); border-radius: 14px; color: #fff; margin-bottom: 16px;
+    }
+    .input-field:focus { border-color: var(--accent); outline: none; background: rgba(0,0,0,0.5); }
+    
+    .btn-primary { 
+      width: 100%; padding: 14px; background: var(--accent); border-radius: 99px; 
+      font-weight: 700; color: #fff; font-size: 16px; box-shadow: 0 8px 20px var(--accent-glow);
+    }
 
-    /* ADMIN LIST */
-    .user-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border); }
-    .rank-select { background: #222; border: 1px solid #444; border-radius: 4px; padding: 4px; font-size: 12px; }
+    /* ADMIN PANEL GLASS UI */
+    .admin-card {
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: 16px; margin-bottom: 12px; padding: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .rank-select {
+      background: #111; color: #fff; border: 1px solid var(--border);
+      padding: 6px 12px; border-radius: 8px; font-size: 13px;
+    }
 
     /* TOAST */
-    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-    .toast { background: #111; color: #fff; padding: 12px 20px; border-radius: 10px; border-left: 4px solid var(--accent); animation: slide 0.3s ease; }
-    @keyframes slide { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: var(--glass-heavy); backdrop-filter: blur(10px); color: #fff; padding: 12px 24px; border-radius: 99px; border: 1px solid var(--border-bright); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
 
-    .pfp-picker { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
-    .pfp-preview { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; margin-bottom: 10px; }
+    .pfp-picker { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; }
+    .pfp-preview { width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--accent); object-fit: cover; margin-bottom: 12px; box-shadow: 0 0 20px var(--accent-glow); }
   </style>
 </head>
 <body>
 
 <div id="toast-container"></div>
 
-<!-- AUTH CONTAINER -->
-<div id="auth-container" style="display: flex; align-items: center; justify-content: center; height: 100vh;">
-  <div class="modal-box" style="max-width: 400px;">
-    <h2 id="authTitle" style="text-align: center; font-size: 32px;">Mobify 5.0</h2>
-    <p style="text-align: center; color: var(--muted); margin-top: -10px;">Welcome back.</p>
+<!-- AUTH -->
+<div id="auth-container" style="display: flex; align-items: center; justify-content: center; height: 100vh; padding: 20px;">
+  <div class="modal-box" style="max-width: 420px; border: 1px solid var(--accent-glow);">
+    <h2 id="authTitle" style="text-align: center; font-size: 36px; margin-bottom: 8px;">Mobify 5.0</h2>
+    <p id="authSubtitle" style="text-align: center; color: var(--muted); margin-bottom: 30px;">The future of social is clear.</p>
     
     <div id="signupPfpArea" class="hidden pfp-picker">
       <img id="signupPfpPreview" src="https://ui-avatars.com/api/?name=User" class="pfp-preview">
       <input type="file" id="signupPfpInput" accept="image/*" class="hidden">
-      <button type="button" onclick="document.getElementById('signupPfpInput').click()" style="color: var(--accent); font-size: 14px;">Choose Profile Picture</button>
+      <button type="button" onclick="document.getElementById('signupPfpInput').click()" style="color: var(--accent); font-weight: 600;">Upload Profile Picture</button>
     </div>
 
     <form id="authForm">
       <input id="authName" class="input-field hidden" type="text" placeholder="Full Name" />
-      <input id="authEmail" class="input-field" type="email" placeholder="Email" required />
+      <input id="authEmail" class="input-field" type="email" placeholder="Email Address" required />
       <input id="authPass" class="input-field" type="password" placeholder="Password" required />
-      <button type="submit" id="authBtn" class="btn-primary">Log In</button>
-      <button type="button" id="toggleAuth" style="width:100%; margin-top:15px; font-size:13px; color:var(--muted)">New here? <span style="color:var(--accent)">Sign Up</span></button>
+      <button type="submit" id="authBtn" class="btn-primary">Sign In</button>
+      <button type="button" id="toggleAuth" style="width:100%; margin-top:20px; font-size:14px; color:var(--muted)">Don't have an account? <span style="color:var(--accent); font-weight: 700;">Join Mobify</span></button>
     </form>
   </div>
 </div>
 
-<!-- APP CONTAINER -->
+<!-- MAIN APP -->
 <div id="app-container" class="app-shell">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="brand">Mobify</div>
     <nav>
-      <button class="nav-btn active" onclick="showView('home')"><span>🏠</span> <span>Home</span></button>
-      <button class="nav-btn" onclick="showView('trending')"><span>🔥</span> <span>Trending</span></button>
-      <button class="nav-btn" onclick="openMyProfile()"><span>👤</span> <span>Profile</span></button>
-      <button class="nav-btn hidden" id="adminBtn" onclick="openAdminPanel()"><span>🛡️</span> <span>Admin Panel</span></button>
-      <button class="nav-btn" onclick="logout()" style="color: var(--danger); margin-top: 20px;"><span>🚪</span> <span>Logout</span></button>
+      <button class="nav-btn active" id="navHome"><span>🏠</span> <span>Home</span></button>
+      <button class="nav-btn" id="navTrending"><span>🔥</span> <span>Trending</span></button>
+      <button class="nav-btn" id="navProfileBtn"><span>👤</span> <span>Profile</span></button>
+      <button class="nav-btn hidden" id="adminBtn"><span>🛡️</span> <span>Control Panel</span></button>
+      <button class="nav-btn" id="logoutBtn" style="color: var(--danger); margin-top: 30px;"><span>🚪</span> <span>Sign Out</span></button>
     </nav>
-    <div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-top: 1px solid var(--border);">
-      <img id="mySidebarPfp" class="avatar" src="">
+    <div style="margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 16px; border-radius: 20px; background: rgba(255,255,255,0.03); border: 1px solid var(--border);">
+      <img id="mySidePfp" class="avatar" style="width: 40px; height: 40px;">
       <div style="overflow: hidden;">
-        <div id="mySidebarName" style="font-weight: bold; text-overflow: ellipsis; overflow: hidden;">User</div>
-        <div id="mySidebarHandle" style="color: var(--muted); font-size: 12px;">@handle</div>
+        <div id="mySideName" style="font-weight: 800; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">User</div>
+        <div id="mySideHandle" style="color: var(--muted); font-size: 12px;">@handle</div>
       </div>
     </div>
   </aside>
 
-  <!-- Main Feed -->
   <main class="main">
     <div class="main-header">
-      <h2 id="viewTitle">Home</h2>
+      <h2 id="viewTitle" style="margin:0; font-size: 20px; font-weight: 900;">Home</h2>
     </div>
     <div id="feed"></div>
   </main>
 
-  <!-- Right Sidebar -->
   <aside class="right-sidebar">
-    <input type="text" class="input-field" placeholder="Search Mobify..." style="border-radius: 99px;">
-    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 18px; border: 1px solid var(--border);">
-      <h3 style="margin-top: 0;">What's happening</h3>
-      <div id="trends"></div>
+    <div class="glass" style="padding: 20px; border-radius: var(--radius-lg);">
+      <h3 style="margin-top:0">Search</h3>
+      <input type="text" class="input-field" placeholder="Tags, users, posts..." style="border-radius: 99px; margin-bottom: 0;">
+    </div>
+    <div class="glass" style="padding: 20px; border-radius: var(--radius-lg); margin-top: 20px;">
+      <h3 style="margin-top: 0;">Trends</h3>
+      <div id="trendsList" style="display: flex; flex-direction: column; gap: 12px;"></div>
     </div>
   </aside>
 </div>
 
-<!-- FAB -->
-<button class="nav-btn" id="fab" onclick="openPostModal()" style="position:fixed; bottom:25px; right:25px; width:60px; height:60px; border-radius:50%; background:var(--accent); display:none; justify-content:center; box-shadow:0 10px 30px rgba(0,0,0,0.5); z-index:100; font-size:24px; color:#fff;">+</button>
-
 <!-- POST MODAL -->
+<button class="nav-btn" id="fab" style="position:fixed; bottom:30px; right:30px; width:64px; height:64px; border-radius:50%; background:var(--accent); display:none; align-items:center; justify-content:center; box-shadow: 0 10px 40px var(--accent-glow); z-index:100; font-size:28px; color:#fff;">+</button>
+
 <div class="modal" id="postModal">
   <div class="modal-box">
-    <h3>Create Post</h3>
-    <textarea id="postText" class="input-field" rows="4" placeholder="What's on your mind?" style="resize: none;"></textarea>
-    <div id="postImagePreview" class="hidden" style="position: relative;">
-      <img id="previewImg" style="width: 100%; border-radius: 12px; margin-bottom: 10px;">
-      <button onclick="clearPostImage()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 50%;">✕</button>
+    <h2 style="margin-top: 0;">Create Post</h2>
+    <textarea id="postText" class="input-field" rows="5" placeholder="What's happening?" style="resize: none;"></textarea>
+    <div id="postImgPreviewArea" class="hidden" style="position: relative; margin-bottom: 16px;">
+      <img id="postPreviewImg" style="width: 100%; border-radius: 16px; border: 1px solid var(--border-bright);">
+      <button onclick="clearPostImage()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); width:32px; height:32px; border-radius: 50%;">✕</button>
     </div>
-    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-      <button onclick="document.getElementById('postFileInput').click()" style="color: var(--accent); font-size: 14px;">🖼️ Add Image</button>
+    <div style="display: flex; gap: 16px; margin-bottom: 24px;">
+      <button id="addImgBtn" style="color: var(--accent); font-weight: 700; font-size: 14px;">🖼️ Add Media</button>
       <input type="file" id="postFileInput" accept="image/*" class="hidden">
     </div>
-    <button onclick="submitPost()" class="btn-primary">Post</button>
-    <button onclick="closeModals()" class="btn-primary" style="background: transparent; border: 1px solid var(--border); margin-top: 8px;">Cancel</button>
+    <button id="submitPostBtn" class="btn-primary">Post to Mobify</button>
+    <button onclick="closeModals()" style="width:100%; margin-top:12px; font-size: 14px; color: var(--muted);">Cancel</button>
   </div>
 </div>
 
 <!-- PROFILE MODAL -->
 <div class="modal" id="profileModal">
-  <div class="modal-box" style="padding: 0; overflow: hidden;">
-    <div style="height: 120px; background: linear-gradient(to right, #1d9bf0, #2dd4bf);"></div>
-    <div style="padding: 20px; text-align: center; position: relative;">
-      <img id="profilePfp" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--panel); margin-top: -60px; background: #222;">
-      <h2 id="profileName">Name</h2>
-      <div id="profileBadgeContainer"></div>
-      <p id="profileBio" style="color: var(--muted); font-size: 14px; margin: 10px 0;">No bio yet.</p>
-      <div id="profileStats" style="display: flex; justify-content: center; gap: 20px; font-size: 13px; color: var(--muted);">
-        <span><strong>0</strong> Posts</span>
-        <span><strong>0</strong> Likes</span>
+  <div class="modal-box" style="padding: 0; max-width: 620px;">
+    <div id="profBanner" style="height: 140px; background: linear-gradient(45deg, #1d9bf0, #00ba7c);"></div>
+    <div style="padding: 24px; text-align: center; position: relative;">
+      <img id="profPfp" src="" style="width: 120px; height: 120px; border-radius: 50%; border: 6px solid #0a0c12; margin-top: -80px; background: #222; object-fit: cover;">
+      <h2 id="profName" style="margin: 10px 0 2px; font-size: 24px; font-weight: 900;">Name</h2>
+      <div id="profBadgeSlot" style="margin-bottom: 12px;"></div>
+      <p id="profBio" style="color: var(--muted); font-size: 15px; max-width: 400px; margin: 0 auto 20px;">Bio</p>
+      
+      <div id="profStats" style="display: flex; justify-content: center; gap: 30px; padding: 15px 0; border-top: 1px solid var(--border);">
+        <div><strong style="color: #fff; font-size: 18px;" id="statPosts">0</strong> <span style="display:block; font-size:12px; color:var(--muted);">Posts</span></div>
+        <div><strong style="color: #fff; font-size: 18px;" id="statLikes">0</strong> <span style="display:block; font-size:12px; color:var(--muted);">Likes</span></div>
       </div>
-      <button id="editProfileBtn" class="hidden" style="margin-top: 15px; border: 1px solid var(--border); padding: 5px 15px; border-radius: 20px; font-size: 12px;">Edit Profile</button>
     </div>
-    <div id="profilePosts" style="max-height: 300px; overflow-y: auto;"></div>
-    <button onclick="closeModals()" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 50%;">✕</button>
+    <div id="profFeed" style="max-height: 400px; overflow-y: auto;"></div>
+    <button onclick="closeModals()" style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.5); width: 36px; height: 36px; border-radius: 50%;">✕</button>
   </div>
 </div>
 
 <!-- ADMIN MODAL -->
 <div class="modal" id="adminModal">
   <div class="modal-box">
-    <h2>🛡️ System Control</h2>
-    <div id="adminUserList"></div>
-    <button onclick="closeModals()" class="btn-primary" style="margin-top: 20px;">Close</button>
+    <h2 style="margin-top: 0; display: flex; align-items: center; gap: 10px;">🛡️ Control Center</h2>
+    <p style="color: var(--muted); font-size: 14px; margin-top: -10px; margin-bottom: 24px;">Manage user permissions and ranking tiers.</p>
+    <div id="adminUserList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    <button onclick="closeModals()" class="btn-primary" style="margin-top: 32px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); box-shadow: none;">Dismiss</button>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, orderBy, addDoc, arrayUnion, arrayRemove, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, orderBy, addDoc, arrayUnion, arrayRemove, limit } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
@@ -256,22 +311,32 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser = null;
-let currentRole = "Member";
-let selectedPostImage = "";
+let userProfile = null;
+let postImgBase64 = "";
 let signupPfpBase64 = "";
+let isLoginMode = true;
+
+// --- UTILS ---
+const showToast = (m) => {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerText = m;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+};
+
+const safeHandle = (name) => `@${(name || 'user').toLowerCase().replace(/\s/g, '')}`;
 
 // --- AUTH LOGIC ---
-const toggleAuth = document.getElementById('toggleAuth');
-let isLoggingIn = true;
-
-toggleAuth.onclick = () => {
-  isLoggingIn = !isLoggingIn;
-  document.getElementById('authTitle').innerText = isLoggingIn ? "Mobify 5.0" : "Join Mobify";
-  document.getElementById('authName').classList.toggle('hidden', isLoggingIn);
-  document.getElementById('signupPfpArea').classList.toggle('hidden', isLoggingIn);
-  document.getElementById('authBtn').innerText = isLoggingIn ? "Log In" : "Create Account";
-  toggleAuth.innerHTML = isLoggingIn ? 'New here? <span style="color:var(--accent)">Sign Up</span>' : 'Have an account? <span style="color:var(--accent)">Log In</span>';
+const toggleBtn = document.getElementById('toggleAuth');
+toggleBtn.onclick = () => {
+  isLoginMode = !isLoginMode;
+  document.getElementById('authTitle').innerText = isLoginMode ? "Mobify 5.0" : "Join Mobify";
+  document.getElementById('authName').classList.toggle('hidden', isLoginMode);
+  document.getElementById('signupPfpArea').classList.toggle('hidden', isLoginMode);
+  document.getElementById('authBtn').innerText = isLoginMode ? "Sign In" : "Create Account";
+  toggleBtn.innerHTML = isLoginMode ? 'Don\'t have an account? <span style="color:var(--accent); font-weight:700">Join Mobify</span>' : 'Have an account? <span style="color:var(--accent); font-weight:700">Sign In</span>';
 };
 
 document.getElementById('signupPfpInput').onchange = (e) => {
@@ -290,48 +355,43 @@ document.getElementById('authForm').onsubmit = async (e) => {
   e.preventDefault();
   const email = document.getElementById('authEmail').value;
   const pass = document.getElementById('authPass').value;
-  const name = document.getElementById('authName').value;
+  const name = document.getElementById('authName').value || "User";
 
   try {
-    if (isLoggingIn) {
+    if (isLoginMode) {
       await signInWithEmailAndPassword(auth, email, pass);
     } else {
       const res = await createUserWithEmailAndPassword(auth, email, pass);
       await setDoc(doc(db, "users", res.user.uid), {
-        name: name,
-        email: email,
+        name, email,
         pfp: signupPfpBase64 || `https://ui-avatars.com/api/?name=${name}`,
-        role: "Member",
-        muted: false,
-        bio: "Hey there! I'm using Mobify."
+        role: "Member", muted: false, bio: "Digital explorer on Mobify."
       });
     }
-  } catch (err) { alert(err.message); }
+  } catch (err) { showToast(err.message); }
 };
 
-window.logout = () => signOut(auth);
+document.getElementById('logoutBtn').onclick = () => signOut(auth);
 
-// --- APP INITIALIZATION ---
+// --- APP FLOW ---
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    currentUser = user;
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    const data = userDoc.data();
-    currentRole = data.role || "Member";
-
+    const snap = await getDoc(doc(db, "users", user.uid));
+    userProfile = snap.data() || {};
+    
     document.getElementById('auth-container').style.display = 'none';
     document.getElementById('app-container').style.display = 'grid';
     document.getElementById('fab').style.display = 'flex';
     
-    document.getElementById('mySidebarName').innerText = data.name;
-    document.getElementById('mySidebarHandle').innerText = "@" + data.name.toLowerCase().replace(/\s/g, '');
-    document.getElementById('mySidebarPfp').src = data.pfp;
+    document.getElementById('mySideName').innerText = userProfile.name || "User";
+    document.getElementById('mySideHandle').innerText = safeHandle(userProfile.name);
+    document.getElementById('mySidePfp').src = userProfile.pfp;
 
-    if (currentRole === "Admin" || currentRole === "Owner") {
+    if (userProfile.role === "Admin" || userProfile.role === "Owner") {
       document.getElementById('adminBtn').classList.remove('hidden');
     }
-
-    loadFeed();
+    
+    initFeed();
   } else {
     document.getElementById('auth-container').style.display = 'flex';
     document.getElementById('app-container').style.display = 'none';
@@ -339,62 +399,62 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// --- FEED & POSTING ---
-function loadFeed() {
+// --- FEED & POSTS ---
+function initFeed() {
   const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
   onSnapshot(q, (snapshot) => {
     const feed = document.getElementById('feed');
     feed.innerHTML = "";
     snapshot.forEach(docSnap => {
-      const post = docSnap.data();
-      feed.appendChild(createPostElement(docSnap.id, post));
+      feed.appendChild(renderPost(docSnap.id, docSnap.data()));
     });
-  });
+  }, (err) => console.error(err));
 }
 
-function createPostElement(postId, post) {
+function renderPost(postId, data) {
   const div = document.createElement('div');
   div.className = 'post';
   
-  const isLiked = post.likes?.includes(auth.currentUser.uid);
-  const isDisliked = post.dislikes?.includes(auth.currentUser.uid);
+  const uid = auth.currentUser?.uid;
+  const isLiked = data.likes?.includes(uid);
+  const isDisliked = data.dislikes?.includes(uid);
 
   div.innerHTML = `
-    <img class="avatar" src="${post.authorPfp}" onclick="viewProfile('${post.authorId}')">
+    <img class="avatar" src="${data.authorPfp}" onclick="window.viewUserProfile('${data.authorId}')">
     <div class="post-content">
       <div class="post-header">
-        <span class="post-name" onclick="viewProfile('${post.authorId}')">${post.authorName}</span>
-        ${getBadge(post.authorRole)}
-        <span class="post-handle">@${post.authorName.toLowerCase().replace(/\s/g, '')}</span>
+        <span class="post-name" onclick="window.viewUserProfile('${data.authorId}')">${data.authorName || 'User'}</span>
+        ${getBadgeHTML(data.authorRole, data.authorMuted)}
+        <span class="post-handle">${safeHandle(data.authorName)}</span>
       </div>
-      <div class="post-body">${post.text}</div>
-      ${post.image ? `<img src="${post.image}" class="post-media">` : ""}
+      <div class="post-body">${data.text || ''}</div>
+      ${data.image ? `<img src="${data.image}" class="post-media">` : ""}
       <div class="post-actions">
-        <div class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleInteract('${postId}', 'likes')">
-          👍 <span>${post.likes?.length || 0}</span>
-        </div>
-        <div class="action-btn ${isDisliked ? 'disliked' : ''}" onclick="toggleInteract('${postId}', 'dislikes')">
-          👎 <span>${post.dislikes?.length || 0}</span>
-        </div>
-        <div class="action-btn" onclick="toggleComments('${postId}')">
-          💬 <span>${post.comments?.length || 0}</span>
-        </div>
+        <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="window.interact('${postId}', 'likes')">
+          👍 ${data.likes?.length || 0}
+        </button>
+        <button class="action-btn ${isDisliked ? 'disliked' : ''}" onclick="window.interact('${postId}', 'dislikes')">
+          👎 ${data.dislikes?.length || 0}
+        </button>
+        <button class="action-btn" onclick="document.getElementById('coms-${postId}').classList.toggle('hidden')">
+          💬 ${data.comments?.length || 0}
+        </button>
       </div>
-      <div id="comments-${postId}" class="comments-container hidden">
-        <div class="comment-list">
-          ${(post.comments || []).map(c => `
+      <div id="coms-${postId}" class="comments-section hidden">
+        <div id="list-${postId}">
+          ${(data.comments || []).map(c => `
             <div class="comment">
-              <img src="${c.pfp}" class="comment-avatar">
+              <img src="${c.pfp}" class="comment-pfp">
               <div>
-                <strong>${c.name}</strong>
-                <div>${c.text}</div>
+                <strong style="font-size:13px">${c.name}</strong>
+                <div style="font-size:13px; color:var(--muted)">${c.text}</div>
               </div>
             </div>
           `).join('')}
         </div>
-        <div class="comment-input-area">
-          <input type="text" class="comment-input" placeholder="Write a comment..." id="input-${postId}">
-          <button onclick="submitComment('${postId}')" style="color:var(--accent)">Send</button>
+        <div class="comment-input-wrap">
+          <input type="text" class="comment-input" placeholder="Reply..." id="in-${postId}">
+          <button onclick="window.postComment('${postId}')" style="color:var(--accent); font-weight:700">Send</button>
         </div>
       </div>
     </div>
@@ -402,191 +462,157 @@ function createPostElement(postId, post) {
   return div;
 }
 
-function getBadge(role) {
+function getBadgeHTML(role, muted) {
   if (role === "Owner") return `<span class="badge badge-owner">Owner</span>`;
+  if (muted) return `<span class="badge badge-muted">Muted</span>`;
   if (role === "Admin") return `<span class="badge badge-admin">Admin</span>`;
   if (role && role !== "Member") return `<span class="badge badge-custom">${role}</span>`;
   return "";
 }
 
-// --- INTERACTIONS ---
-window.toggleInteract = async (postId, type) => {
-  const ref = doc(db, "posts", postId);
+// --- GLOBAL ACTIONS ---
+window.interact = async (pid, type) => {
+  const ref = doc(db, "posts", pid);
   const snap = await getDoc(ref);
-  const data = snap.data();
+  const d = snap.data();
   const uid = auth.currentUser.uid;
-
-  const opposite = type === 'likes' ? 'dislikes' : 'likes';
+  const opp = type === 'likes' ? 'dislikes' : 'likes';
   
-  if (data[type]?.includes(uid)) {
+  if (d[type]?.includes(uid)) {
     await updateDoc(ref, { [type]: arrayRemove(uid) });
   } else {
-    await updateDoc(ref, { 
-      [type]: arrayUnion(uid),
-      [opposite]: arrayRemove(uid) 
-    });
+    await updateDoc(ref, { [type]: arrayUnion(uid), [opp]: arrayRemove(uid) });
   }
 };
 
-window.toggleComments = (postId) => {
-  document.getElementById(`comments-${postId}`).classList.toggle('hidden');
-};
-
-window.submitComment = async (postId) => {
-  const input = document.getElementById(`input-${postId}`);
-  const text = input.value.trim();
-  if(!text) return;
-
-  const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-  const userData = userDoc.data();
-
-  await updateDoc(doc(db, "posts", postId), {
+window.postComment = async (pid) => {
+  const inp = document.getElementById(`in-${pid}`);
+  const val = inp.value.trim();
+  if(!val || userProfile.muted) return;
+  await updateDoc(doc(db, "posts", pid), {
     comments: arrayUnion({
-      uid: auth.currentUser.uid,
-      name: userData.name,
-      pfp: userData.pfp,
-      text: text,
-      time: Date.now()
+      uid: auth.currentUser.uid, name: userProfile.name,
+      pfp: userProfile.pfp, text: val, time: Date.now()
     })
   });
-  input.value = "";
+  inp.value = "";
+};
+
+window.viewUserProfile = async (uid) => {
+  const snap = await getDoc(doc(db, "users", uid));
+  const data = snap.data();
+  if(!data) return;
+  document.getElementById('profPfp').src = data.pfp;
+  document.getElementById('profName').innerText = data.name;
+  document.getElementById('profBio').innerText = data.bio;
+  document.getElementById('profBadgeSlot').innerHTML = getBadgeHTML(data.role, data.muted);
+  document.getElementById('profileModal').style.display = 'flex';
 };
 
 // --- POSTING ---
-window.openPostModal = () => document.getElementById('postModal').style.display = 'flex';
+document.getElementById('fab').onclick = () => document.getElementById('postModal').style.display = 'flex';
 window.closeModals = () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 
+document.getElementById('addImgBtn').onclick = () => document.getElementById('postFileInput').click();
 document.getElementById('postFileInput').onchange = (e) => {
   const file = e.target.files[0];
   if(file) {
     const reader = new FileReader();
     reader.onload = (ev) => {
-      selectedPostImage = ev.target.result;
-      document.getElementById('previewImg').src = selectedPostImage;
-      document.getElementById('postImagePreview').classList.remove('hidden');
+      postImgBase64 = ev.target.result;
+      document.getElementById('postPreviewImg').src = postImgBase64;
+      document.getElementById('postImgPreviewArea').classList.remove('hidden');
     };
     reader.readAsDataURL(file);
   }
 };
 
 window.clearPostImage = () => {
-  selectedPostImage = "";
-  document.getElementById('postImagePreview').classList.add('hidden');
+  postImgBase64 = "";
+  document.getElementById('postImgPreviewArea').classList.add('hidden');
 };
 
-window.submitPost = async () => {
+document.getElementById('submitPostBtn').onclick = async () => {
   const text = document.getElementById('postText').value.trim();
-  if(!text && !selectedPostImage) return;
-
-  const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-  const userData = userDoc.data();
-
-  if(userData.muted) {
-    alert("You are muted and cannot post.");
+  if(!text && !postImgBase64) return;
+  if(userProfile.muted) {
+    showToast("You are restricted from posting.");
     return;
   }
-
+  
   await addDoc(collection(db, "posts"), {
     authorId: auth.currentUser.uid,
-    authorName: userData.name,
-    authorPfp: userData.pfp,
-    authorRole: userData.role,
-    text: text,
-    image: selectedPostImage,
+    authorName: userProfile.name,
+    authorPfp: userProfile.pfp,
+    authorRole: userProfile.role,
+    authorMuted: userProfile.muted,
+    text, image: postImgBase64,
     timestamp: Date.now(),
-    likes: [],
-    dislikes: [],
-    comments: []
+    likes: [], dislikes: [], comments: []
   });
 
   document.getElementById('postText').value = "";
   clearPostImage();
   closeModals();
+  showToast("Shared to Mobify!");
 };
 
-// --- PROFILES ---
-window.viewProfile = async (uid) => {
-  const snap = await getDoc(doc(db, "users", uid));
-  const data = snap.data();
-  
-  document.getElementById('profilePfp').src = data.pfp;
-  document.getElementById('profileName').innerText = data.name;
-  document.getElementById('profileBio').innerText = data.bio || "No bio yet.";
-  document.getElementById('profileBadgeContainer').innerHTML = getBadge(data.role);
-  
-  document.getElementById('profileModal').style.display = 'flex';
-};
+// --- PROFILE NAVIGATION ---
+document.getElementById('navProfileBtn').onclick = () => window.viewUserProfile(auth.currentUser.uid);
 
-// --- ADMIN PANEL ---
-window.openAdminPanel = async () => {
-  if (currentRole !== "Admin" && currentRole !== "Owner") return;
-  
+// --- ADMIN CONTROL ---
+document.getElementById('adminBtn').onclick = async () => {
   const list = document.getElementById('adminUserList');
-  list.innerHTML = "Loading system users...";
+  list.innerHTML = "Accessing encrypted user logs...";
   document.getElementById('adminModal').style.display = 'flex';
 
-  const snapshot = await getDocs(collection(db, "users"));
+  const snap = await getDocs(collection(db, "users"));
   list.innerHTML = "";
-
-  snapshot.forEach(uDoc => {
+  snap.forEach(uDoc => {
     const u = uDoc.data();
     const uid = uDoc.id;
     const isOwner = u.role === "Owner";
     
-    const row = document.createElement('div');
-    row.className = 'user-row';
-    row.innerHTML = `
-      <div style="display:flex; align-items:center; gap:10px">
-        <img src="${u.pfp}" class="avatar small" style="width:30px; height:30px">
+    const card = document.createElement('div');
+    card.className = 'admin-card';
+    card.innerHTML = `
+      <div style="display:flex; align-items:center; gap:12px">
+        <img src="${u.pfp}" style="width:36px; height:36px; border-radius:50%">
         <div>
-          <div style="font-size:14px; font-weight:bold">${u.name}</div>
+          <div style="font-size:14px; font-weight:800">${u.name}</div>
           <div style="font-size:11px; color:var(--muted)">${u.role}</div>
         </div>
       </div>
-      <div style="display:flex; gap:8px;">
-        <select class="rank-select" onchange="changeRank('${uid}', this.value)" ${isOwner ? 'disabled' : ''}>
+      <div style="display:flex; gap:10px;">
+        <select class="rank-select" onchange="window.updateRank('${uid}', this.value)" ${isOwner ? 'disabled' : ''}>
           <option value="Member" ${u.role === 'Member' ? 'selected' : ''}>Member</option>
           <option value="Moderator" ${u.role === 'Moderator' ? 'selected' : ''}>Moderator</option>
           <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
           ${isOwner ? '<option value="Owner" selected>Owner</option>' : ''}
         </select>
-        <button onclick="toggleMute('${uid}', ${u.muted || false})" style="font-size:12px; color:${u.muted ? 'var(--success)' : 'var(--danger)'}">
-          ${isOwner ? '' : (u.muted ? 'Unmute' : 'Mute')}
-        </button>
+        ${!isOwner ? `
+          <button onclick="window.toggleUserMute('${uid}', ${u.muted})" style="color:${u.muted ? 'var(--success)' : 'var(--danger)'}; font-size:12px; font-weight:700">
+            ${u.muted ? 'UNMUTE' : 'MUTE'}
+          </button>
+        ` : ''}
       </div>
     `;
-    list.appendChild(row);
+    list.appendChild(card);
   });
 };
 
-window.changeRank = async (uid, newRank) => {
-  // Security: Owners can change anyone to Admin/Mod. Admins can change anyone (except Owners) to Admin/Mod.
-  const targetDoc = await getDoc(doc(db, "users", uid));
-  if(targetDoc.data().role === "Owner") {
-    alert("You cannot change the rank of the Owner.");
-    return;
-  }
-  await updateDoc(doc(db, "users", uid), { role: newRank });
-  showToast(`Rank updated to ${newRank}`);
+window.updateRank = async (uid, r) => {
+  const t = await getDoc(doc(db, "users", uid));
+  if(t.data().role === "Owner") return showToast("Permission Denied: Target is Owner.");
+  await updateDoc(doc(db, "users", uid), { role: r });
+  showToast(`Updated to ${r}`);
 };
 
-window.toggleMute = async (uid, currentMuted) => {
-  const targetDoc = await getDoc(doc(db, "users", uid));
-  if(targetDoc.data().role === "Owner") {
-    alert("Critical Security: Owner cannot be muted.");
-    return;
-  }
-  await updateDoc(doc(db, "users", uid), { muted: !currentMuted });
-  openAdminPanel(); // refresh
-};
-
-window.showToast = (msg) => {
-  const container = document.getElementById('toast-container');
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.innerText = msg;
-  container.appendChild(t);
-  setTimeout(() => t.remove(), 3000);
+window.toggleUserMute = async (uid, m) => {
+  const t = await getDoc(doc(db, "users", uid));
+  if(t.data().role === "Owner") return showToast("Critical Guard: Cannot mute Owner.");
+  await updateDoc(doc(db, "users", uid), { muted: !m });
+  document.getElementById('adminBtn').click(); // refresh list
 };
 
 </script>
