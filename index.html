@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mobify | v6.0 Ultra</title>
+  <title>Mobify | v6.1</title>
   <meta name="color-scheme" content="dark" />
   <style>
     :root {
@@ -29,7 +29,7 @@
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
-      background: 
+      background:
         radial-gradient(circle at 0% 0%, rgba(29,155,240,0.15) 0%, transparent 40%),
         radial-gradient(circle at 100% 100%, rgba(45,212,191,0.1) 0%, transparent 40%),
         #050609;
@@ -63,7 +63,6 @@
     .main { overflow-y: auto; border-right: 1px solid var(--border); background: rgba(0,0,0,0.1); position: relative; scroll-behavior: smooth; }
     .main-header { position: sticky; top: 0; z-index: 50; padding: 16px 24px; background: rgba(5, 7, 10, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
 
-    /* POST STYLES */
     .post { display: flex; gap: 14px; padding: 20px; border-bottom: 1px solid var(--border); transition: 0.2s; position: relative; }
     .post:hover { background: rgba(255,255,255,0.02); }
     .post.pinned { border: 1px solid var(--accent); background: rgba(29, 155, 240, 0.05); margin: 10px; border-radius: var(--radius-md); }
@@ -74,7 +73,7 @@
     .post-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
     .post-name { font-weight: 800; color: #fff; }
     .post-handle { color: var(--muted); font-size: 14px; }
-    .post-body { line-height: 1.6; font-size: 15px; white-space: pre-wrap; margin-bottom: 12px; }
+    .post-body { line-height: 1.6; font-size: 15px; white-space: pre-wrap; margin-bottom: 12px; word-break: break-word; }
     .post-media { width: 100%; border-radius: 20px; border: 1px solid var(--border); margin-top: 10px; max-height: 520px; object-fit: cover; }
 
     .badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; font-weight: 900; letter-spacing: 0.5px; }
@@ -88,31 +87,49 @@
     .action-btn.liked { color: var(--accent); }
     .action-btn.disliked { color: var(--danger); }
 
-    /* TRENDS */
     .trend-item { padding: 12px 16px; border-radius: 12px; transition: 0.2s; cursor: pointer; }
     .trend-item:hover { background: rgba(255,255,255,0.05); }
     .trend-name { font-weight: 800; color: #fff; display: block; }
     .trend-count { font-size: 12px; color: var(--muted); }
 
-    /* MODALS */
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
     .modal-box { background: var(--glass-heavy); border: 1px solid var(--border-bright); border-radius: var(--radius-lg); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative; }
 
-    .input-field { width: 100%; padding: 14px 18px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 14px; color: #fff; margin-bottom: 16px; font-size: 15px; }
+    .input-field { width: 100%; padding: 14px 18px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 14px; color: #fff; margin-bottom: 16px; font-size: 15px; outline: none; }
+    .input-field:focus { border-color: rgba(29,155,240,0.6); box-shadow: 0 0 0 3px rgba(29,155,240,0.12); }
     .btn-primary { width: 100%; padding: 14px; background: var(--accent); border-radius: 99px; font-weight: 700; color: #fff; font-size: 16px; box-shadow: 0 8px 20px var(--accent-glow); }
 
-    /* TOAST */
     #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
     .toast { background: var(--glass-heavy); backdrop-filter: blur(10px); color: #fff; padding: 12px 24px; border-radius: 99px; border: 1px solid var(--border-bright); font-weight: 600; }
 
-    .admin-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .admin-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .admin-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .admin-meta { display: flex; flex-direction: column; min-width: 0; }
+    .admin-name { font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .admin-email { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .admin-chip { font-size: 10px; font-weight: 900; letter-spacing: .5px; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,0.06); color: var(--muted); }
+    .admin-tools { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
+    .tool-btn { padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,0.06); color: #fff; font-size: 11px; font-weight: 800; }
+    .tool-btn.danger { color: var(--danger); }
+    .tool-btn.success { color: var(--success); }
+    .tool-btn.accent { color: var(--accent); }
+
+    .comment-shell { display:flex; gap:12px; margin-bottom: 14px; align-items:flex-start; }
+    .comment-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border-bright); background:#222; flex-shrink:0; }
+    .comment-card { flex:1; background: rgba(255,255,255,0.03); border:1px solid var(--border); border-radius: 16px; padding: 12px 14px; }
+    .comment-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+    .comment-name { font-weight:800; }
+    .comment-time { color: var(--muted); font-size: 12px; }
+    .comment-text { white-space: pre-wrap; line-height:1.45; word-break: break-word; }
+    .section-title { margin: 0 0 14px; font-size: 17px; }
+    .divider { border:0; border-top:1px solid var(--border); margin:24px 0; }
+    .tiny { font-size: 12px; color: var(--muted); }
   </style>
 </head>
 <body>
 
 <div id="toast-container"></div>
 
-<!-- AUTH -->
 <div id="auth-container" style="display: flex; align-items: center; justify-content: center; height: 100vh; padding: 20px;">
   <div class="modal-box" style="max-width: 400px;">
     <h2 id="authTitle" style="text-align: center; font-size: 32px; margin: 0 0 8px;">Mobify</h2>
@@ -132,13 +149,12 @@
   </div>
 </div>
 
-<!-- APP -->
 <div id="app-container" class="app-shell">
   <aside class="sidebar">
     <div class="brand">Mobify</div>
     <nav>
-      <button class="nav-btn active" onclick="location.reload()"><span>🏠</span> Home</button>
-      <button class="nav-btn" onclick="showToast('Trends updated!')"><span>🔥</span> Trending</button>
+      <button class="nav-btn active" id="homeBtn"><span>🏠</span> Home</button>
+      <button class="nav-btn" id="trendBtn"><span>🔥</span> Trending</button>
       <button class="nav-btn" id="navProfileBtn"><span>👤</span> Profile</button>
       <button class="nav-btn hidden" id="adminBtn"><span>🛡️</span> Admin</button>
       <button class="nav-btn" id="logoutBtn" style="color:var(--danger); margin-top:20px;"><span>🚪</span> Logout</button>
@@ -167,7 +183,6 @@
   </aside>
 </div>
 
-<!-- POST MODAL -->
 <button id="fab" style="position:fixed; bottom:30px; right:30px; width:60px; height:60px; border-radius:50%; background:var(--accent); display:none; align-items:center; justify-content:center; box-shadow:0 10px 30px var(--accent-glow); z-index:100; font-size:24px; color:#fff;">+</button>
 
 <div class="modal" id="postModal">
@@ -187,7 +202,6 @@
   </div>
 </div>
 
-<!-- DETAIL MODAL -->
 <div class="modal" id="detailModal">
   <div class="modal-box" style="max-width:700px; padding:0; overflow:hidden;">
     <div id="detailContent" style="max-height:80vh; overflow-y:auto; padding:24px"></div>
@@ -195,27 +209,50 @@
   </div>
 </div>
 
-<!-- ADMIN MODAL -->
 <div class="modal" id="adminModal">
-  <div class="modal-box">
-    <h3 style="margin:0 0 20px;">🛡️ Control Panel</h3>
+  <div class="modal-box" style="max-width: 860px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; flex-wrap:wrap;">
+      <div>
+        <h3 style="margin:0 0 8px;">🛡️ Control Panel</h3>
+        <div class="tiny" id="adminSummary">Loading stats...</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; width:100%; max-width: 420px;">
+        <input id="adminSearch" class="input-field" placeholder="Search users or email" style="margin:0; flex:1; min-width: 220px;">
+        <select id="adminFilter" class="input-field" style="margin:0; width: 160px;">
+          <option value="all">All users</option>
+          <option value="muted">Muted only</option>
+          <option value="admins">Admins only</option>
+          <option value="owners">Owners only</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px;">
+      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Users</div><div id="statUsers" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
+      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Admins</div><div id="statAdmins" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
+      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Muted</div><div id="statMuted" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
+      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Posts</div><div id="statPosts" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
+    </div>
+    <div id="adminQuickActions" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 14px;">
+      <button class="tool-btn accent" id="refreshAdminBtn">Refresh</button>
+      <button class="tool-btn" id="muteAllBtn">Mute visible</button>
+      <button class="tool-btn" id="unmuteAllBtn">Unmute visible</button>
+    </div>
     <div id="adminUserList"></div>
     <button onclick="closeModals()" class="btn-primary" style="margin-top:20px; background:rgba(255,255,255,0.1)">Close</button>
   </div>
 </div>
 
-<!-- PROFILE MODAL -->
 <div class="modal" id="profileModal">
-    <div class="modal-box" style="padding: 0; max-width: 500px;">
-      <div style="height: 100px; background: var(--accent);"></div>
-      <div style="padding: 20px; text-align: center; position: relative;">
-        <img id="profPfp" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #050609; margin-top: -60px; object-fit: cover; background: #222;">
-        <h2 id="profName" style="margin: 10px 0 0;"></h2>
-        <div id="profBadgeSlot" style="margin-top: 4px;"></div>
-        <p id="profBio" style="color: var(--muted); margin: 12px 0;"></p>
-      </div>
-      <button onclick="closeModals()" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); width: 32px; height: 32px; border-radius: 50%;">✕</button>
+  <div class="modal-box" style="padding: 0; max-width: 500px;">
+    <div style="height: 100px; background: var(--accent);"></div>
+    <div style="padding: 20px; text-align: center; position: relative;">
+      <img id="profPfp" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #050609; margin-top: -60px; object-fit: cover; background: #222;">
+      <h2 id="profName" style="margin: 10px 0 0;"></h2>
+      <div id="profBadgeSlot" style="margin-top: 4px;"></div>
+      <p id="profBio" style="color: var(--muted); margin: 12px 0;"></p>
     </div>
+    <button onclick="closeModals()" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); width: 32px; height: 32px; border-radius: 50%;">✕</button>
+  </div>
 </div>
 
 <script type="module">
@@ -240,98 +277,188 @@ let userProfile = null;
 let postImgBase64 = "";
 let signupPfpBase64 = "";
 let isLoginMode = true;
+let adminUsersCache = [];
+let adminPostsCount = 0;
+let feedUnsubscribe = null;
 
 const showToast = (m) => {
   const c = document.getElementById('toast-container');
-  const t = document.createElement('div'); t.className = 'toast'; t.innerText = m;
-  c.appendChild(t); setTimeout(() => t.remove(), 3000);
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerText = m;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
 };
 
 const safeHandle = (n) => `@${(n || 'user').toLowerCase().replace(/\s/g, '')}`;
+const escapeHTML = (str = '') => String(str)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
 
-// --- AUTH ---
+const fallbackPfp = (name = 'User', seed = 'user') => {
+  const safeSeed = encodeURIComponent((name || seed || 'user').toString());
+  return `https://ui-avatars.com/api/?name=${safeSeed}&background=1d9bf0&color=fff&bold=true`;
+};
+
+const getPfpSrc = (pfp, name = 'User', seed = 'user') => {
+  if (!pfp || !String(pfp).trim()) return fallbackPfp(name, seed);
+  return pfp;
+};
+
+const timeAgo = (timestamp) => {
+  if (!timestamp) return '';
+  const ms = Date.now() - Number(timestamp);
+  const s = Math.floor(ms / 1000);
+  if (s < 5) return 'just now';
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+};
+
+const getBadgeHTML = (r, m) => {
+  if (r === 'Owner') return `<span class="badge badge-owner">Owner</span>`;
+  if (m) return `<span class="badge badge-muted">Muted</span>`;
+  if (r === 'Admin') return `<span class="badge badge-admin">Admin</span>`;
+  return '';
+};
+
+const normalizeUser = (uid, data = {}) => ({
+  uid,
+  name: data.name || 'User',
+  email: data.email || '',
+  pfp: getPfpSrc(data.pfp, data.name || 'User', uid),
+  role: data.role || 'Member',
+  muted: !!data.muted,
+  bio: data.bio || 'Mobify Elite User'
+});
+
+// AUTH TOGGLE
+window.showToast = showToast;
 document.getElementById('toggleAuth').onclick = () => {
   isLoginMode = !isLoginMode;
-  document.getElementById('authTitle').innerText = isLoginMode ? "Mobify" : "Join Mobify";
+  document.getElementById('authTitle').innerText = isLoginMode ? 'Mobify' : 'Join Mobify';
   document.getElementById('authName').classList.toggle('hidden', isLoginMode);
   document.getElementById('signupPfpArea').classList.toggle('hidden', isLoginMode);
-  document.getElementById('authBtn').innerText = isLoginMode ? "Sign In" : "Create Account";
+  document.getElementById('authBtn').innerText = isLoginMode ? 'Sign In' : 'Create Account';
 };
 
 document.getElementById('signupPfpInput').onchange = (e) => {
   const f = e.target.files[0];
-  if(f) {
+  if (f) {
     const r = new FileReader();
-    r.onload = (ev) => { signupPfpBase64 = ev.target.result; document.getElementById('signupPfpPreview').src = signupPfpBase64; };
+    r.onload = (ev) => {
+      signupPfpBase64 = ev.target.result;
+      document.getElementById('signupPfpPreview').src = signupPfpBase64;
+    };
     r.readAsDataURL(f);
   }
 };
 
 document.getElementById('authForm').onsubmit = async (e) => {
   e.preventDefault();
-  const email = document.getElementById('authEmail').value, pass = document.getElementById('authPass').value;
+  const email = document.getElementById('authEmail').value;
+  const pass = document.getElementById('authPass').value;
   try {
-    if (isLoginMode) { await signInWithEmailAndPassword(auth, email, pass); }
-    else {
-      const name = document.getElementById('authName').value || "User";
+    if (isLoginMode) {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } else {
+      const name = document.getElementById('authName').value || 'User';
       const res = await createUserWithEmailAndPassword(auth, email, pass);
-      await setDoc(doc(db, "users", res.user.uid), {
-        name, email, pfp: signupPfpBase64 || `https://ui-avatars.com/api/?name=${name}`,
-        role: "Member", muted: false, bio: "Mobify Elite User"
+      await setDoc(doc(db, 'users', res.user.uid), {
+        name,
+        email,
+        pfp: signupPfpBase64 || fallbackPfp(name, res.user.uid),
+        role: 'Member',
+        muted: false,
+        bio: 'Mobify Elite User'
       });
     }
-  } catch (err) { showToast(err.message); }
+  } catch (err) {
+    showToast(err.message);
+  }
 };
 
 document.getElementById('logoutBtn').onclick = () => signOut(auth);
+document.getElementById('homeBtn').onclick = () => {
+  document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+document.getElementById('trendBtn').onclick = () => {
+  document.getElementById('trendsList').parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    userProfile = snap.data() || { name: 'User', role: 'Member', muted: false, pfp: '' };
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    userProfile = normalizeUser(user.uid, snap.exists() ? snap.data() : { name: user.displayName || 'User', email: user.email });
+
+    if (!snap.exists()) {
+      await setDoc(doc(db, 'users', user.uid), {
+        name: userProfile.name,
+        email: user.email || '',
+        pfp: userProfile.pfp,
+        role: 'Member',
+        muted: false,
+        bio: 'Mobify Elite User'
+      }, { merge: true });
+    }
+
     document.getElementById('auth-container').classList.add('hidden');
     document.getElementById('app-container').style.display = 'grid';
     document.getElementById('fab').style.display = 'flex';
     document.getElementById('mySideName').innerText = userProfile.name;
     document.getElementById('mySideHandle').innerText = safeHandle(userProfile.name);
-    document.getElementById('mySidePfp').src = userProfile.pfp;
-    if (userProfile.role === "Admin" || userProfile.role === "Owner") document.getElementById('adminBtn').classList.remove('hidden');
+    document.getElementById('mySidePfp').src = getPfpSrc(userProfile.pfp, userProfile.name, user.uid);
+    document.getElementById('mySidePfp').onerror = () => { document.getElementById('mySidePfp').src = fallbackPfp(userProfile.name, user.uid); };
+    if (userProfile.role === 'Admin' || userProfile.role === 'Owner') document.getElementById('adminBtn').classList.remove('hidden');
     initApp();
   } else {
+    userProfile = null;
     document.getElementById('auth-container').classList.remove('hidden');
     document.getElementById('app-container').style.display = 'none';
     document.getElementById('fab').style.display = 'none';
+    if (feedUnsubscribe) { feedUnsubscribe(); feedUnsubscribe = null; }
   }
 });
 
-// --- CORE LOGIC ---
+function renderTrendCounts(posts) {
+  const trends = {};
+  posts.forEach(data => {
+    const matches = data.text?.match(/#\w+/g);
+    if (matches) matches.forEach(t => trends[t] = (trends[t] || 0) + 1);
+  });
+  const tList = document.getElementById('trendsList');
+  tList.innerHTML = '';
+  Object.entries(trends).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([name, count]) => {
+    const div = document.createElement('div');
+    div.className = 'trend-item';
+    div.innerHTML = `<span class="trend-name">${escapeHTML(name)}</span><span class="trend-count">${count} posts</span>`;
+    tList.appendChild(div);
+  });
+  if (!Object.keys(trends).length) {
+    tList.innerHTML = '<div class="tiny">No trending tags yet.</div>';
+  }
+}
+
 function initApp() {
-  const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-  onSnapshot(q, (snapshot) => {
+  const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
+  if (feedUnsubscribe) feedUnsubscribe();
+  feedUnsubscribe = onSnapshot(q, (snapshot) => {
     const feed = document.getElementById('feed');
     const posts = [];
-    const trends = {};
-    
-    snapshot.forEach(d => {
-      const data = d.data();
-      posts.push({ id: d.id, ...data });
-      // Count Trends
-      const matches = data.text?.match(/#\w+/g);
-      if(matches) matches.forEach(t => trends[t] = (trends[t] || 0) + 1);
-    });
+    snapshot.forEach(d => posts.push({ id: d.id, ...d.data() }));
 
-    // Render Trends
-    const tList = document.getElementById('trendsList');
-    tList.innerHTML = "";
-    Object.entries(trends).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([name, count]) => {
-      const div = document.createElement('div');
-      div.className = "trend-item";
-      div.innerHTML = `<span class="trend-name">${name}</span><span class="trend-count">${count} posts</span>`;
-      tList.appendChild(div);
-    });
+    renderTrendCounts(posts);
+    adminPostsCount = posts.length;
+    updateAdminStats();
 
-    // Render Feed (Pinned first)
-    feed.innerHTML = "";
+    feed.innerHTML = '';
     posts.sort((a,b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).forEach(p => feed.appendChild(renderPost(p)));
   });
 }
@@ -341,22 +468,23 @@ function renderPost(p) {
   div.className = `post ${p.pinned ? 'pinned' : ''}`;
   const uid = auth.currentUser?.uid;
   const isLiked = p.likes?.includes(uid);
-  
+  const authorPfp = getPfpSrc(p.authorPfp, p.authorName, p.authorId);
+
   div.innerHTML = `
     ${p.pinned ? `<span class="pinned-label">📌 Pinned</span>` : ''}
-    <img class="avatar" src="${p.authorPfp}" onclick="window.viewUserProfile('${p.authorId}'); event.stopPropagation();">
+    <img class="avatar" src="${authorPfp}" alt="${escapeHTML(p.authorName || 'User')}" onerror="this.src='${fallbackPfp(p.authorName || 'User', p.authorId)}'" onclick="window.viewUserProfile('${p.authorId}'); event.stopPropagation();">
     <div class="post-content" onclick="window.showDetail('${p.id}')">
       <div class="post-header">
-        <span class="post-name">${p.authorName || 'User'}</span>
+        <span class="post-name">${escapeHTML(p.authorName || 'User')}</span>
         ${getBadgeHTML(p.authorRole, p.authorMuted)}
         <span class="post-handle">${safeHandle(p.authorName)}</span>
       </div>
-      <div class="post-body">${p.text || ''}</div>
-      ${p.image ? `<img src="${p.image}" class="post-media">` : ""}
+      <div class="post-body">${escapeHTML(p.text || '')}</div>
+      ${p.image ? `<img src="${p.image}" class="post-media" alt="post media">` : ''}
       <div class="post-actions">
         <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="window.interact('${p.id}', 'likes'); event.stopPropagation();">👍 ${p.likes?.length || 0}</button>
         <button class="action-btn" onclick="window.showDetail('${p.id}'); event.stopPropagation();">💬 ${p.comments?.length || 0}</button>
-        ${(userProfile.role === 'Admin' || userProfile.role === 'Owner') ? `
+        ${(userProfile?.role === 'Admin' || userProfile?.role === 'Owner') ? `
           <button class="action-btn" style="color:var(--accent)" onclick="window.togglePin('${p.id}', ${p.pinned}); event.stopPropagation();">📌 ${p.pinned ? 'Unpin' : 'Pin'}</button>
           <button class="action-btn" style="color:var(--danger)" onclick="window.deletePost('${p.id}'); event.stopPropagation();">🗑️</button>
         ` : ''}
@@ -366,142 +494,273 @@ function renderPost(p) {
   return div;
 }
 
-function getBadgeHTML(r, m) {
-  if (r === "Owner") return `<span class="badge badge-owner">Owner</span>`;
-  if (m) return `<span class="badge badge-muted">Muted</span>`;
-  if (r === "Admin") return `<span class="badge badge-admin">Admin</span>`;
-  return "";
-}
-
-// --- GLOBALS ---
 window.interact = async (pid, type) => {
-  const ref = doc(db, "posts", pid);
+  const ref = doc(db, 'posts', pid);
   const snap = await getDoc(ref);
   const uid = auth.currentUser.uid;
-  if(snap.data()[type]?.includes(uid)) await updateDoc(ref, { [type]: arrayRemove(uid) });
+  const current = snap.data()?.[type] || [];
+  if (current.includes(uid)) await updateDoc(ref, { [type]: arrayRemove(uid) });
   else await updateDoc(ref, { [type]: arrayUnion(uid) });
 };
 
 window.togglePin = async (pid, current) => {
-  await updateDoc(doc(db, "posts", pid), { pinned: !current });
-  showToast(current ? "Unpinned" : "Pinned to top!");
+  await updateDoc(doc(db, 'posts', pid), { pinned: !current });
+  showToast(current ? 'Unpinned' : 'Pinned to top!');
 };
 
 window.deletePost = async (pid) => {
-  if(confirm("Delete this post?")) {
-    // Note: We'd usually deleteDoc here, but for safety in this demo, let's just update text
-    await updateDoc(doc(db, "posts", pid), { text: "[This post was removed by staff]", image: null });
+  if (confirm('Delete this post?')) {
+    await updateDoc(doc(db, 'posts', pid), { text: '[This post was removed by staff]', image: null });
   }
 };
 
+function renderCommentCard(c) {
+  const commentPfp = getPfpSrc(c.pfp, c.name, c.uid);
+  return `
+    <div class="comment-shell">
+      <img class="comment-avatar" src="${commentPfp}" alt="${escapeHTML(c.name || 'User')}" onerror="this.src='${fallbackPfp(c.name || 'User', c.uid || 'comment')}'">
+      <div class="comment-card">
+        <div class="comment-top">
+          <span class="comment-name">${escapeHTML(c.name || 'User')}</span>
+          <span class="comment-time">${timeAgo(c.time)}</span>
+        </div>
+        <div class="comment-text">${escapeHTML(c.text || '')}</div>
+      </div>
+    </div>
+  `;
+}
+
 window.showDetail = async (pid) => {
-  const snap = await getDoc(doc(db, "posts", pid));
+  const snap = await getDoc(doc(db, 'posts', pid));
   const p = snap.data();
+  if (!p) return;
+
+  const authorPfp = getPfpSrc(p.authorPfp, p.authorName, p.authorId);
   const box = document.getElementById('detailContent');
+  const comments = (p.comments || []).slice().sort((a,b) => (a.time || 0) - (b.time || 0));
+
   box.innerHTML = `
     <div style="display:flex; gap:12px; align-items:center; margin-bottom:20px;">
-        <img src="${p.authorPfp}" style="width:50px; height:50px; border-radius:50%">
-        <div>
-            <div style="font-weight:800; font-size:18px;">${p.authorName}</div>
-            <div style="color:var(--muted)">${safeHandle(p.authorName)}</div>
-        </div>
+      <img src="${authorPfp}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:1px solid var(--border-bright)" onerror="this.src='${fallbackPfp(p.authorName || 'User', p.authorId)}'">
+      <div>
+        <div style="font-weight:800; font-size:18px;">${escapeHTML(p.authorName || 'User')}</div>
+        <div style="color:var(--muted)">${safeHandle(p.authorName)}</div>
+      </div>
     </div>
-    <div style="font-size:20px; line-height:1.5; margin-bottom:20px;">${p.text}</div>
-    ${p.image ? `<img src="${p.image}" style="width:100%; border-radius:16px; margin-bottom:20px;">` : ''}
-    <hr style="border:0; border-top:1px solid var(--border); margin:24px 0;">
-    <h4>Comments</h4>
-    <div id="detailComments">${(p.comments || []).map(c => `<div style="margin-bottom:12px;"><strong>${c.name}</strong>: ${c.text}</div>`).join('')}</div>
-    <div style="display:flex; gap:10px; margin-top:20px;">
-        <input id="detInp" class="input-field" style="margin:0" placeholder="Add a comment...">
-        <button onclick="window.postDetComment('${pid}')" class="btn-primary" style="width:auto; padding:0 20px;">Send</button>
+    <div style="font-size:20px; line-height:1.5; margin-bottom:20px; white-space:pre-wrap; word-break:break-word;">${escapeHTML(p.text || '')}</div>
+    ${p.image ? `<img src="${p.image}" style="width:100%; border-radius:16px; margin-bottom:20px; border:1px solid var(--border);" alt="post image">` : ''}
+    <hr class="divider">
+    <h4 class="section-title">Comments (${comments.length})</h4>
+    <div id="detailComments">${comments.length ? comments.map(renderCommentCard).join('') : '<div class="tiny">No comments yet. Be the first.</div>'}</div>
+    <div style="display:flex; gap:10px; margin-top:20px; align-items:flex-start;">
+      <input id="detInp" class="input-field" style="margin:0; flex:1;" placeholder="Add a comment...">
+      <button onclick="window.postDetComment('${pid}')" class="btn-primary" style="width:auto; padding:0 20px; height:48px;">Send</button>
     </div>
   `;
   document.getElementById('detailModal').style.display = 'flex';
 };
 
 window.postDetComment = async (pid) => {
-    const val = document.getElementById('detInp').value.trim();
-    if(!val) return;
-    await updateDoc(doc(db, "posts", pid), {
-        comments: arrayUnion({ uid: auth.currentUser.uid, name: userProfile.name, text: val, time: Date.now() })
-    });
-    window.showDetail(pid); // refresh view
+  const val = document.getElementById('detInp').value.trim();
+  if (!val) return;
+  if (!userProfile) return showToast('Profile is still loading.');
+  if (userProfile.muted) return showToast('You are restricted.');
+
+  await updateDoc(doc(db, 'posts', pid), {
+    comments: arrayUnion({
+      uid: auth.currentUser.uid,
+      name: userProfile.name,
+      pfp: userProfile.pfp || fallbackPfp(userProfile.name, auth.currentUser.uid),
+      text: val,
+      time: Date.now()
+    })
+  });
+  document.getElementById('detInp').value = '';
+  window.showDetail(pid);
 };
 
 window.viewUserProfile = async (uid) => {
-  const snap = await getDoc(doc(db, "users", uid));
-  const d = snap.data();
+  const snap = await getDoc(doc(db, 'users', uid));
+  const d = normalizeUser(uid, snap.data() || {});
   document.getElementById('profPfp').src = d.pfp;
+  document.getElementById('profPfp').onerror = () => { document.getElementById('profPfp').src = fallbackPfp(d.name, uid); };
   document.getElementById('profName').innerText = d.name;
   document.getElementById('profBio').innerText = d.bio;
   document.getElementById('profBadgeSlot').innerHTML = getBadgeHTML(d.role, d.muted);
   document.getElementById('profileModal').style.display = 'flex';
 };
 
-// --- POSTING ---
-document.getElementById('fab').onclick = () => document.getElementById('postModal').style.display = 'flex';
+// POSTING
 window.closeModals = () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-window.clearPostImage = () => { postImgBase64 = ""; document.getElementById('postImgPreviewArea').classList.add('hidden'); };
+window.clearPostImage = () => { postImgBase64 = ''; document.getElementById('postImgPreviewArea').classList.add('hidden'); };
+
+document.getElementById('fab').onclick = () => document.getElementById('postModal').style.display = 'flex';
 
 document.getElementById('postFileInput').onchange = (e) => {
   const f = e.target.files[0];
-  if(f) {
+  if (f) {
     const r = new FileReader();
-    r.onload = (ev) => { postImgBase64 = ev.target.result; document.getElementById('postPreviewImg').src = postImgBase64; document.getElementById('postImgPreviewArea').classList.remove('hidden'); };
+    r.onload = (ev) => {
+      postImgBase64 = ev.target.result;
+      document.getElementById('postPreviewImg').src = postImgBase64;
+      document.getElementById('postImgPreviewArea').classList.remove('hidden');
+    };
     r.readAsDataURL(f);
   }
 };
 
 document.getElementById('submitPostBtn').onclick = async () => {
   const text = document.getElementById('postText').value.trim();
-  if(!text && !postImgBase64) return;
-  if(!userProfile) return showToast("Syncing profile... wait 1s");
-  if(userProfile.muted) return showToast("You are restricted.");
+  if (!text && !postImgBase64) return;
+  if (!userProfile) return showToast('Syncing profile... wait a second.');
+  if (userProfile.muted) return showToast('You are restricted.');
 
-  await addDoc(collection(db, "posts"), {
+  await addDoc(collection(db, 'posts'), {
     authorId: auth.currentUser.uid,
     authorName: userProfile.name || 'User',
-    authorPfp: userProfile.pfp || '',
+    authorPfp: getPfpSrc(userProfile.pfp, userProfile.name, auth.currentUser.uid),
     authorRole: userProfile.role || 'Member',
     authorMuted: !!userProfile.muted,
-    text, image: postImgBase64, timestamp: Date.now(),
-    likes: [], comments: [], pinned: false
+    text,
+    image: postImgBase64,
+    timestamp: Date.now(),
+    likes: [],
+    comments: [],
+    pinned: false
   });
 
-  document.getElementById('postText').value = "";
+  document.getElementById('postText').value = '';
   clearPostImage();
   closeModals();
 };
 
-// --- ADMIN ---
-document.getElementById('navProfileBtn').onclick = () => window.viewUserProfile(auth.currentUser.uid);
-document.getElementById('adminBtn').onclick = async () => {
+// ADMIN PANEL
+const adminFilterEl = document.getElementById('adminFilter');
+const adminSearchEl = document.getElementById('adminSearch');
+
+function updateAdminStats() {
+  const users = adminUsersCache || [];
+  document.getElementById('statUsers').innerText = users.length;
+  document.getElementById('statAdmins').innerText = users.filter(u => u.role === 'Admin' || u.role === 'Owner').length;
+  document.getElementById('statMuted').innerText = users.filter(u => u.muted).length;
+  document.getElementById('statPosts').innerText = adminPostsCount;
+  document.getElementById('adminSummary').innerText = `${users.length} users • ${adminPostsCount} posts • ${users.filter(u => u.muted).length} muted`;
+}
+
+function renderAdminUsers(users) {
   const list = document.getElementById('adminUserList');
-  list.innerHTML = "Fetching...";
-  document.getElementById('adminModal').style.display = 'flex';
-  const snap = await getDocs(collection(db, "users"));
-  list.innerHTML = "";
-  snap.forEach(docS => {
-    const u = docS.data(), id = docS.id;
+  list.innerHTML = '';
+
+  if (!users.length) {
+    list.innerHTML = '<div class="tiny">No users match this filter.</div>';
+    return;
+  }
+
+  users.forEach(u => {
     const div = document.createElement('div');
     div.className = 'admin-card';
     div.innerHTML = `
-      <div style="display:flex; align-items:center; gap:8px">
-        <img src="${u.pfp}" style="width:30px; height:30px; border-radius:50%">
-        <div style="font-size:13px; font-weight:700">${u.name}</div>
+      <div class="admin-row">
+        <img src="${u.pfp}" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:1px solid var(--border-bright)" onerror="this.src='${fallbackPfp(u.name, u.uid)}'">
+        <div class="admin-meta">
+          <div class="admin-name">${escapeHTML(u.name)}</div>
+          <div class="admin-email">${escapeHTML(u.email || 'No email')}</div>
+        </div>
       </div>
-      <div>
-        <button onclick="window.toggleUserMute('${id}', ${u.muted})" style="color:${u.muted ? 'var(--success)' : 'var(--danger)'}; font-size:11px; font-weight:800">${u.muted ? 'UNMUTE' : 'MUTE'}</button>
+      <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+          <span class="admin-chip">${escapeHTML(u.role || 'Member')}</span>
+          ${u.muted ? '<span class="admin-chip" style="color:var(--danger)">Muted</span>' : ''}
+        </div>
+        <div class="admin-tools">
+          <button class="tool-btn accent" onclick="window.viewUserProfile('${u.uid}')">Profile</button>
+          <button class="tool-btn" onclick="window.promoteUser('${u.uid}', '${u.role || 'Member'}')">Role</button>
+          <button class="tool-btn ${u.muted ? 'success' : 'danger'}" onclick="window.toggleUserMute('${u.uid}', ${u.muted})">${u.muted ? 'Unmute' : 'Mute'}</button>
+        </div>
       </div>
     `;
     list.appendChild(div);
   });
+}
+
+async function refreshAdminPanel() {
+  const search = (adminSearchEl.value || '').trim().toLowerCase();
+  const filter = adminFilterEl.value;
+  const userSnap = await getDocs(collection(db, 'users'));
+  const users = [];
+  userSnap.forEach(docS => users.push(normalizeUser(docS.id, docS.data())));
+  adminUsersCache = users;
+
+  let filtered = users.filter(u => {
+    const hay = `${u.name} ${u.email} ${u.role} ${u.uid}`.toLowerCase();
+    if (search && !hay.includes(search)) return false;
+    if (filter === 'muted') return u.muted;
+    if (filter === 'admins') return u.role === 'Admin';
+    if (filter === 'owners') return u.role === 'Owner';
+    return true;
+  });
+
+  updateAdminStats();
+  renderAdminUsers(filtered);
+}
+
+document.getElementById('adminBtn').onclick = async () => {
+  document.getElementById('adminModal').style.display = 'flex';
+  document.getElementById('adminUserList').innerHTML = 'Fetching...';
+  await refreshAdminPanel();
+};
+
+document.getElementById('refreshAdminBtn').onclick = refreshAdminPanel;
+document.getElementById('adminSearch').oninput = refreshAdminPanel;
+document.getElementById('adminFilter').onchange = refreshAdminPanel;
+
+document.getElementById('muteAllBtn').onclick = async () => {
+  const visible = adminUsersCache.filter(u => {
+    const search = (adminSearchEl.value || '').trim().toLowerCase();
+    const filter = adminFilterEl.value;
+    const hay = `${u.name} ${u.email} ${u.role} ${u.uid}`.toLowerCase();
+    if (search && !hay.includes(search)) return false;
+    if (filter === 'muted') return u.muted;
+    if (filter === 'admins') return u.role === 'Admin';
+    if (filter === 'owners') return u.role === 'Owner';
+    return true;
+  });
+  if (!visible.length) return showToast('Nothing visible to mute.');
+  if (!confirm(`Mute ${visible.length} visible users?`)) return;
+  for (const u of visible) await updateDoc(doc(db, 'users', u.uid), { muted: true });
+  await refreshAdminPanel();
+};
+
+document.getElementById('unmuteAllBtn').onclick = async () => {
+  const visible = adminUsersCache.filter(u => {
+    const search = (adminSearchEl.value || '').trim().toLowerCase();
+    const filter = adminFilterEl.value;
+    const hay = `${u.name} ${u.email} ${u.role} ${u.uid}`.toLowerCase();
+    if (search && !hay.includes(search)) return false;
+    if (filter === 'muted') return u.muted;
+    if (filter === 'admins') return u.role === 'Admin';
+    if (filter === 'owners') return u.role === 'Owner';
+    return true;
+  });
+  if (!visible.length) return showToast('Nothing visible to unmute.');
+  if (!confirm(`Unmute ${visible.length} visible users?`)) return;
+  for (const u of visible) await updateDoc(doc(db, 'users', u.uid), { muted: false });
+  await refreshAdminPanel();
 };
 
 window.toggleUserMute = async (uid, m) => {
-    await updateDoc(doc(db, "users", uid), { muted: !m });
-    document.getElementById('adminBtn').click(); // refresh
+  await updateDoc(doc(db, 'users', uid), { muted: !m });
+  await refreshAdminPanel();
 };
+
+window.promoteUser = async (uid, currentRole) => {
+  const nextRole = currentRole === 'Owner' ? 'Admin' : currentRole === 'Admin' ? 'Member' : 'Admin';
+  await updateDoc(doc(db, 'users', uid), { role: nextRole });
+  showToast(`Role changed to ${nextRole}`);
+  await refreshAdminPanel();
+};
+
+document.getElementById('navProfileBtn').onclick = () => window.viewUserProfile(auth.currentUser.uid);
 
 </script>
 </body>
