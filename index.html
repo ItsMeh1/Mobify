@@ -346,7 +346,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+
 let userProfile = null;
+let isPosting = false;
 let postImgBase64 = "";
 let signupPfpBase64 = "";
 let editPfpBase64 = "";
@@ -848,34 +850,51 @@ document.getElementById('postFileInput').onchange = (e) => {
 };
 
 document.getElementById('submitPostBtn').onclick = async () => {
+  if (isPosting) return; // 🚫 block spam clicks
   if (!requireNotBanned()) return;
+
+  const btn = document.getElementById('submitPostBtn');
   const text = document.getElementById('postText').value.trim();
+
   if (!text && !postImgBase64) return;
   if (!userProfile) return showToast('Syncing profile... wait a second.');
   if (userProfile.muted) return showToast('You are muted.');
   if (userProfile.banned) return showToast('You are banned.');
 
-  await addDoc(collection(db, 'posts'), {
-    authorId: currentUid(),
-    authorName: userProfile.name || 'User',
-    authorPfp: myPfp(),
-    authorRole: userProfile.role || 'Member',
-    authorPriority: getPriority(userProfile),
-    authorMuted: !!userProfile.muted,
-    authorVerified: !!userProfile.verified,
-    authorBanned: !!userProfile.banned,
-    text,
-    image: postImgBase64,
-    timestamp: Date.now(),
-    views: 0,
-    likes: [],
-    comments: [],
-    pinned: false
-  });
+  try {
+    isPosting = true;
+    btn.disabled = true;
+    btn.innerText = "Posting...";
 
-  document.getElementById('postText').value = '';
-  clearPostImage();
-  closeModals();
+    await addDoc(collection(db, 'posts'), {
+      authorId: currentUid(),
+      authorName: userProfile.name || 'User',
+      authorPfp: myPfp(),
+      authorRole: userProfile.role || 'Member',
+      authorPriority: getPriority(userProfile),
+      authorMuted: !!userProfile.muted,
+      authorVerified: !!userProfile.verified,
+      authorBanned: !!userProfile.banned,
+      text,
+      image: postImgBase64,
+      timestamp: Date.now(),
+      views: 0,
+      likes: [],
+      comments: [],
+      pinned: false
+    });
+
+    document.getElementById('postText').value = '';
+    clearPostImage();
+    closeModals();
+
+  } catch (err) {
+    showToast(err.message);
+  } finally {
+    isPosting = false;
+    btn.disabled = false;
+    btn.innerText = "Post";
+  }
 };
 
 // ADMIN
