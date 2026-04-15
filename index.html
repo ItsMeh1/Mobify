@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mobify | v6.1</title>
+  <title>Mobify | v6.2</title>
   <meta name="color-scheme" content="dark" />
   <style>
     :root {
@@ -76,10 +76,13 @@
     .post-body { line-height: 1.6; font-size: 15px; white-space: pre-wrap; margin-bottom: 12px; word-break: break-word; }
     .post-media { width: 100%; border-radius: 20px; border: 1px solid var(--border); margin-top: 10px; max-height: 520px; object-fit: cover; }
 
-    .badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; font-weight: 900; letter-spacing: 0.5px; }
+    .badge { font-size: 10px; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; font-weight: 900; letter-spacing: 0.5px; }
     .badge-owner { background: linear-gradient(45deg, #f59e0b, #fbbf24); color: #000; }
     .badge-admin { background: var(--success); color: #fff; }
     .badge-muted { background: var(--danger); color: #fff; }
+    .badge-verified { background: linear-gradient(45deg, #3b82f6, #22c55e); color: #fff; }
+    .badge-banned { background: #ef4444; color: #fff; }
+    .badge-rank { background: rgba(255,255,255,0.08); color: #fff; }
 
     .post-actions { display: flex; gap: 20px; margin-top: 15px; flex-wrap: wrap; }
     .action-btn { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; padding: 6px 12px; border-radius: 99px; }
@@ -94,6 +97,7 @@
 
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
     .modal-box { background: var(--glass-heavy); border: 1px solid var(--border-bright); border-radius: var(--radius-lg); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative; }
+    .modal-box::-webkit-scrollbar { width: 8px; }
 
     .input-field { width: 100%; padding: 14px 18px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 14px; color: #fff; margin-bottom: 16px; font-size: 15px; outline: none; }
     .input-field:focus { border-color: rgba(29,155,240,0.6); box-shadow: 0 0 0 3px rgba(29,155,240,0.12); }
@@ -107,7 +111,6 @@
     .admin-meta { display: flex; flex-direction: column; min-width: 0; }
     .admin-name { font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .admin-email { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .admin-chip { font-size: 10px; font-weight: 900; letter-spacing: .5px; padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,0.06); color: var(--muted); }
     .admin-tools { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
     .tool-btn { padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,0.06); color: #fff; font-size: 11px; font-weight: 800; }
     .tool-btn.danger { color: var(--danger); }
@@ -124,6 +127,9 @@
     .section-title { margin: 0 0 14px; font-size: 17px; }
     .divider { border:0; border-top:1px solid var(--border); margin:24px 0; }
     .tiny { font-size: 12px; color: var(--muted); }
+    .profile-meta { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top: 10px; }
+    .profile-note { margin: 10px 0 0; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--muted); text-align:left; }
+    .profile-banner { height: 100px; background: var(--accent); }
   </style>
 </head>
 <body>
@@ -203,62 +209,129 @@
 </div>
 
 <div class="modal" id="detailModal">
-  <div class="modal-box" style="max-width:700px; padding:0; overflow:hidden;">
+  <div class="modal-box" style="max-width:760px; padding:0; overflow:hidden;">
     <div id="detailContent" style="max-height:80vh; overflow-y:auto; padding:24px"></div>
     <button onclick="closeModals()" style="position:absolute; top:12px; right:12px; background:rgba(0,0,0,0.5); width:32px; height:32px; border-radius:50%">✕</button>
   </div>
 </div>
 
-<div class="modal" id="adminModal">
-  <div class="modal-box" style="max-width: 860px;">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; flex-wrap:wrap;">
-      <div>
-        <h3 style="margin:0 0 8px;">🛡️ Control Panel</h3>
-        <div class="tiny" id="adminSummary">Loading stats...</div>
-      </div>
-      <div style="display:flex; gap:10px; flex-wrap:wrap; width:100%; max-width: 420px;">
-        <input id="adminSearch" class="input-field" placeholder="Search users or email" style="margin:0; flex:1; min-width: 220px;">
-        <select id="adminFilter" class="input-field" style="margin:0; width: 160px;">
-          <option value="all">All users</option>
-          <option value="muted">Muted only</option>
-          <option value="admins">Admins only</option>
-          <option value="owners">Owners only</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px;">
-      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Users</div><div id="statUsers" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
-      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Admins</div><div id="statAdmins" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
-      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Muted</div><div id="statMuted" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
-      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Posts</div><div id="statPosts" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
-    </div>
-    <div id="adminQuickActions" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 14px;">
-      <button class="tool-btn accent" id="refreshAdminBtn">Refresh</button>
-      <button class="tool-btn" id="muteAllBtn">Mute visible</button>
-      <button class="tool-btn" id="unmuteAllBtn">Unmute visible</button>
-    </div>
-    <div id="adminUserList"></div>
-    <button onclick="closeModals()" class="btn-primary" style="margin-top:20px; background:rgba(255,255,255,0.1)">Close</button>
-  </div>
-</div>
-
 <div class="modal" id="profileModal">
-  <div class="modal-box" style="padding: 0; max-width: 500px;">
-    <div style="height: 100px; background: var(--accent);"></div>
+  <div class="modal-box" style="padding: 0; max-width: 520px;">
+    <div class="profile-banner"></div>
     <div style="padding: 20px; text-align: center; position: relative;">
       <img id="profPfp" src="" style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid #050609; margin-top: -60px; object-fit: cover; background: #222;">
       <h2 id="profName" style="margin: 10px 0 0;"></h2>
-      <div id="profBadgeSlot" style="margin-top: 4px;"></div>
-      <p id="profBio" style="color: var(--muted); margin: 12px 0;"></p>
+      <div id="profBadgeSlot" class="profile-meta"></div>
+      <p id="profBio" style="color: var(--muted); margin: 12px 0 8px;"></p>
+      <div id="profStatus" style="font-size: 13px; color:#fff; opacity:.9; margin-bottom: 10px;"></div>
+      <div id="profNotice" class="profile-note hidden"></div>
+      <button id="profileEditBtn" class="btn-primary" style="margin-top:12px;">Edit Profile</button>
+      <button id="verifyRequestBtn" class="tool-btn accent" style="margin-top:10px; width:100%;">Request Verification</button>
     </div>
     <button onclick="closeModals()" style="position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.5); width: 32px; height: 32px; border-radius: 50%;">✕</button>
   </div>
 </div>
 
+<div class="modal" id="editProfileModal">
+  <div class="modal-box">
+    <h3 style="margin-top:0">Edit Profile</h3>
+    <input id="editName" class="input-field" placeholder="Name">
+    <textarea id="editBio" class="input-field" rows="3" placeholder="Bio" style="resize:none"></textarea>
+    <input id="editStatus" class="input-field" placeholder="Status">
+    <div style="margin-bottom: 12px;">
+      <div class="tiny" style="margin-bottom:8px;">Profile picture</div>
+      <input type="file" id="editPfpInput" accept="image/*" class="input-field" style="margin-bottom: 0;">
+    </div>
+    <div style="display:flex; gap:10px;">
+      <button id="saveProfileBtn" class="btn-primary" style="flex:1;">Save</button>
+      <button onclick="closeModals()" class="tool-btn" style="padding:14px 16px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="adminModal">
+  <div class="modal-box" style="max-width: 980px;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; flex-wrap:wrap;">
+      <div>
+        <h3 style="margin:0 0 8px;">🛡️ Control Panel</h3>
+        <div class="tiny" id="adminSummary">Loading stats...</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; width:100%; max-width: 520px;">
+        <input id="adminSearch" class="input-field" placeholder="Search users or email" style="margin:0; flex:1; min-width: 220px;">
+        <select id="adminFilter" class="input-field" style="margin:0; width: 180px;">
+          <option value="all">All users</option>
+          <option value="muted">Muted only</option>
+          <option value="banned">Banned only</option>
+          <option value="verified">Verified only</option>
+          <option value="requested">Verification requests</option>
+          <option value="staff">Staff / high rank</option>
+          <option value="owners">Owners only</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px;">
+      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Users</div><div id="statUsers" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
+      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Verified</div><div id="statVerified" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
+      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Banned</div><div id="statBanned" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
+      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Posts</div><div id="statPosts" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
+      <div class="glass" style="padding:14px; border-radius:16px;"><div class="tiny">Views</div><div id="statViews" style="font-size:22px; font-weight:900; margin-top:4px;">0</div></div>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 14px;">
+      <button class="tool-btn accent" id="refreshAdminBtn">Refresh</button>
+      <button class="tool-btn" id="muteAllBtn">Mute visible</button>
+      <button class="tool-btn" id="unmuteAllBtn">Unmute visible</button>
+      <button class="tool-btn danger" id="banAllBtn">Ban visible</button>
+      <button class="tool-btn success" id="unbanAllBtn">Unban visible</button>
+    </div>
+
+    <div class="glass" style="padding:16px; border-radius:16px; margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+        <div>
+          <div style="font-weight:900;">Custom rank editor</div>
+          <div class="tiny">Set any rank label and priority. Owner stays locked.</div>
+        </div>
+        <button class="tool-btn accent" id="customRankRefreshBtn">Reload ranks</button>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <input id="rankLabelInput" class="input-field" placeholder="Rank label e.g. Moderator" style="margin:0; flex:1; min-width: 220px;">
+        <input id="rankPriorityInput" class="input-field" placeholder="Priority e.g. 500" type="number" style="margin:0; width: 160px;">
+        <button id="createRankBtn" class="btn-primary" style="width:auto; padding:0 20px; height:48px;">Set Rank</button>
+      </div>
+    </div>
+
+    <div id="adminUserList"></div>
+    <button onclick="closeModals()" class="btn-primary" style="margin-top:20px; background:rgba(255,255,255,0.1)">Close</button>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, updateDoc, onSnapshot, query, orderBy, addDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  addDoc,
+  arrayUnion,
+  arrayRemove,
+  increment
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
@@ -276,10 +349,13 @@ const db = getFirestore(app);
 let userProfile = null;
 let postImgBase64 = "";
 let signupPfpBase64 = "";
+let editPfpBase64 = "";
 let isLoginMode = true;
 let adminUsersCache = [];
-let adminPostsCount = 0;
+let adminPostsCache = [];
 let feedUnsubscribe = null;
+let selectedProfileUid = null;
+let selectedPostId = null;
 
 const showToast = (m) => {
   const c = document.getElementById('toast-container');
@@ -290,7 +366,6 @@ const showToast = (m) => {
   setTimeout(() => t.remove(), 3000);
 };
 
-const safeHandle = (n) => `@${(n || 'user').toLowerCase().replace(/\s/g, '')}`;
 const escapeHTML = (str = '') => String(str)
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -298,16 +373,15 @@ const escapeHTML = (str = '') => String(str)
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
 
+const safeHandle = (n) => `@${(n || 'user').toLowerCase().replace(/\s/g, '')}`;
 const fallbackPfp = (name = 'User', seed = 'user') => {
   const safeSeed = encodeURIComponent((name || seed || 'user').toString());
   return `https://ui-avatars.com/api/?name=${safeSeed}&background=1d9bf0&color=fff&bold=true`;
 };
-
 const getPfpSrc = (pfp, name = 'User', seed = 'user') => {
   if (!pfp || !String(pfp).trim()) return fallbackPfp(name, seed);
   return pfp;
 };
-
 const timeAgo = (timestamp) => {
   if (!timestamp) return '';
   const ms = Date.now() - Number(timestamp);
@@ -321,27 +395,87 @@ const timeAgo = (timestamp) => {
   const d = Math.floor(h / 24);
   return `${d}d ago`;
 };
-
-const getBadgeHTML = (r, m) => {
-  if (r === 'Owner') return `<span class="badge badge-owner">Owner</span>`;
-  if (m) return `<span class="badge badge-muted">Muted</span>`;
-  if (r === 'Admin') return `<span class="badge badge-admin">Admin</span>`;
-  return '';
+const getPriority = (u) => Number(u?.rankPriority ?? 0);
+const isOwner = (u) => (u?.role === 'Owner') || getPriority(u) >= 1000;
+const isStaff = (u) => isOwner(u) || getPriority(u) >= 500;
+const canActOn = (target) => {
+  if (!userProfile || !target) return false;
+  if (isOwner(target)) return isOwner(userProfile);
+  return isStaff(userProfile) && getPriority(userProfile) > getPriority(target);
 };
-
+const canModerate = (target) => {
+  if (!userProfile || !target) return false;
+  if (isOwner(target)) return isOwner(userProfile);
+  return isStaff(userProfile) && getPriority(userProfile) > getPriority(target);
+};
+const postAnalytics = (p) => ({
+  likes: p.likes?.length || 0,
+  comments: p.comments?.length || 0,
+  views: p.views || 0
+});
+const getRankLabel = (u) => u?.role || 'Member';
+const badgeHTML = (u) => {
+  if (!u) return '';
+  const parts = [];
+  if (isOwner(u)) parts.push('<span class="badge badge-owner">Owner</span>');
+  else if (getPriority(u) >= 500) parts.push('<span class="badge badge-admin">Staff</span>');
+  else if (u.role && u.role !== 'Member') parts.push(`<span class="badge badge-rank">${escapeHTML(u.role)}</span>`);
+  if (u.verified) parts.push('<span class="badge badge-verified">Verified</span>');
+  if (u.muted) parts.push('<span class="badge badge-muted">Muted</span>');
+  if (u.banned) parts.push('<span class="badge badge-banned">Banned</span>');
+  return parts.join(' ');
+};
 const normalizeUser = (uid, data = {}) => ({
   uid,
   name: data.name || 'User',
   email: data.email || '',
   pfp: getPfpSrc(data.pfp, data.name || 'User', uid),
   role: data.role || 'Member',
+  rankPriority: Number(data.rankPriority ?? (data.role === 'Owner' ? 1000 : data.role === 'Admin' ? 500 : 0)),
   muted: !!data.muted,
-  bio: data.bio || 'Mobify Elite User'
+  banned: !!data.banned,
+  banReason: data.banReason || '',
+  verified: !!data.verified,
+  verifiedRequested: !!data.verifiedRequested,
+  bio: data.bio || 'Mobify Elite User',
+  status: data.status || 'Online'
 });
+const myName = () => userProfile?.name || 'User';
+const myPfp = () => getPfpSrc(userProfile?.pfp, myName(), auth.currentUser?.uid || 'user');
+const currentUid = () => auth.currentUser?.uid || '';
+const safeText = (s) => escapeHTML(s || '');
 
-// AUTH TOGGLE
 window.showToast = showToast;
-document.getElementById('toggleAuth').onclick = () => {
+window.closeModals = () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+window.clearPostImage = () => { postImgBase64 = ''; document.getElementById('postImgPreviewArea').classList.add('hidden'); };
+
+function requireNotBanned() {
+  if (userProfile?.banned) {
+    showToast('You are banned. You can view, but actions are blocked.');
+    return false;
+  }
+  return true;
+}
+
+function setSidebarProfile() {
+  document.getElementById('mySideName').innerText = userProfile?.name || 'User';
+  document.getElementById('mySideHandle').innerText = safeHandle(userProfile?.name || 'User');
+  document.getElementById('mySidePfp').src = myPfp();
+  document.getElementById('mySidePfp').onerror = () => { document.getElementById('mySidePfp').src = fallbackPfp(myName(), currentUid()); };
+}
+
+function updateTopAdminVisibility() {
+  if (isStaff(userProfile)) document.getElementById('adminBtn').classList.remove('hidden');
+  else document.getElementById('adminBtn').classList.add('hidden');
+}
+
+function setPostLikeState(button, liked) {
+  button.classList.toggle('liked', liked);
+}
+
+// AUTH
+const authBtn = document.getElementById('toggleAuth');
+authBtn.onclick = () => {
   isLoginMode = !isLoginMode;
   document.getElementById('authTitle').innerText = isLoginMode ? 'Mobify' : 'Join Mobify';
   document.getElementById('authName').classList.toggle('hidden', isLoginMode);
@@ -353,31 +487,35 @@ document.getElementById('signupPfpInput').onchange = (e) => {
   const f = e.target.files[0];
   if (f) {
     const r = new FileReader();
-    r.onload = (ev) => {
-      signupPfpBase64 = ev.target.result;
-      document.getElementById('signupPfpPreview').src = signupPfpBase64;
-    };
+    r.onload = (ev) => { signupPfpBase64 = ev.target.result; document.getElementById('signupPfpPreview').src = signupPfpBase64; };
     r.readAsDataURL(f);
   }
 };
 
 document.getElementById('authForm').onsubmit = async (e) => {
   e.preventDefault();
-  const email = document.getElementById('authEmail').value;
+  const email = document.getElementById('authEmail').value.trim();
   const pass = document.getElementById('authPass').value;
   try {
     if (isLoginMode) {
       await signInWithEmailAndPassword(auth, email, pass);
     } else {
-      const name = document.getElementById('authName').value || 'User';
+      const name = document.getElementById('authName').value.trim() || 'User';
       const res = await createUserWithEmailAndPassword(auth, email, pass);
       await setDoc(doc(db, 'users', res.user.uid), {
         name,
         email,
         pfp: signupPfpBase64 || fallbackPfp(name, res.user.uid),
         role: 'Member',
+        rankPriority: 0,
         muted: false,
-        bio: 'Mobify Elite User'
+        banned: false,
+        banReason: '',
+        verified: false,
+        verifiedRequested: false,
+        bio: 'Mobify Elite User',
+        status: 'Online',
+        createdAt: Date.now()
       });
     }
   } catch (err) {
@@ -386,40 +524,92 @@ document.getElementById('authForm').onsubmit = async (e) => {
 };
 
 document.getElementById('logoutBtn').onclick = () => signOut(auth);
-document.getElementById('homeBtn').onclick = () => {
-  document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
+document.getElementById('homeBtn').onclick = () => document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
+document.getElementById('trendBtn').onclick = () => document.getElementById('trendsList').parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+document.getElementById('profileEditBtn').onclick = () => openEditProfile();
+document.getElementById('verifyRequestBtn').onclick = async () => {
+  if (!selectedProfileUid || selectedProfileUid !== currentUid()) return;
+  if (userProfile?.verified) return showToast('Already verified.');
+  if (userProfile?.verifiedRequested) return showToast('Verification already requested.');
+  await updateDoc(doc(db, 'users', currentUid()), { verifiedRequested: true });
+  userProfile.verifiedRequested = true;
+  showToast('Verification requested.');
+  openProfile(selectedProfileUid);
 };
-document.getElementById('trendBtn').onclick = () => {
-  document.getElementById('trendsList').parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+document.getElementById('editPfpInput').onchange = (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = (ev) => { editPfpBase64 = ev.target.result; };
+  r.readAsDataURL(f);
+};
+
+window.openEditProfile = () => {
+  if (!userProfile) return;
+  document.getElementById('editName').value = userProfile.name || '';
+  document.getElementById('editBio').value = userProfile.bio || '';
+  document.getElementById('editStatus').value = userProfile.status || '';
+  editPfpBase64 = '';
+  document.getElementById('editPfpInput').value = '';
+  document.getElementById('editProfileModal').style.display = 'flex';
+};
+
+document.getElementById('saveProfileBtn').onclick = async () => {
+  if (!auth.currentUser) return;
+  const name = document.getElementById('editName').value.trim() || 'User';
+  const bio = document.getElementById('editBio').value.trim() || 'Mobify Elite User';
+  const status = document.getElementById('editStatus').value.trim() || 'Online';
+  await updateDoc(doc(db, 'users', currentUid()), {
+    name,
+    bio,
+    status,
+    ...(editPfpBase64 ? { pfp: editPfpBase64 } : {})
+  });
+  showToast('Profile updated');
+  closeModals();
 };
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const snap = await getDoc(doc(db, 'users', user.uid));
-    userProfile = normalizeUser(user.uid, snap.exists() ? snap.data() : { name: user.displayName || 'User', email: user.email });
+    const ref = doc(db, 'users', user.uid);
+    const snap = await getDoc(ref);
+    const raw = snap.exists() ? snap.data() : {};
+    userProfile = normalizeUser(user.uid, raw);
 
     if (!snap.exists()) {
-      await setDoc(doc(db, 'users', user.uid), {
-        name: userProfile.name,
+      await setDoc(ref, {
+        name: user.displayName || 'User',
         email: user.email || '',
-        pfp: userProfile.pfp,
+        pfp: fallbackPfp(user.displayName || 'User', user.uid),
         role: 'Member',
+        rankPriority: 0,
         muted: false,
-        bio: 'Mobify Elite User'
-      }, { merge: true });
+        banned: false,
+        banReason: '',
+        verified: false,
+        verifiedRequested: false,
+        bio: 'Mobify Elite User',
+        status: 'Online',
+        createdAt: Date.now()
+      });
+      userProfile = normalizeUser(user.uid, {
+        name: user.displayName || 'User',
+        email: user.email || '',
+        pfp: fallbackPfp(user.displayName || 'User', user.uid)
+      });
     }
 
     document.getElementById('auth-container').classList.add('hidden');
     document.getElementById('app-container').style.display = 'grid';
     document.getElementById('fab').style.display = 'flex';
-    document.getElementById('mySideName').innerText = userProfile.name;
-    document.getElementById('mySideHandle').innerText = safeHandle(userProfile.name);
-    document.getElementById('mySidePfp').src = getPfpSrc(userProfile.pfp, userProfile.name, user.uid);
-    document.getElementById('mySidePfp').onerror = () => { document.getElementById('mySidePfp').src = fallbackPfp(userProfile.name, user.uid); };
-    if (userProfile.role === 'Admin' || userProfile.role === 'Owner') document.getElementById('adminBtn').classList.remove('hidden');
+    setSidebarProfile();
+    updateTopAdminVisibility();
     initApp();
   } else {
     userProfile = null;
+    selectedProfileUid = null;
     document.getElementById('auth-container').classList.remove('hidden');
     document.getElementById('app-container').style.display = 'none';
     document.getElementById('fab').style.display = 'none';
@@ -427,7 +617,8 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-function renderTrendCounts(posts) {
+// FEED
+function renderTrends(posts) {
   const trends = {};
   posts.forEach(data => {
     const matches = data.text?.match(/#\w+/g);
@@ -438,12 +629,10 @@ function renderTrendCounts(posts) {
   Object.entries(trends).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([name, count]) => {
     const div = document.createElement('div');
     div.className = 'trend-item';
-    div.innerHTML = `<span class="trend-name">${escapeHTML(name)}</span><span class="trend-count">${count} posts</span>`;
+    div.innerHTML = `<span class="trend-name">${safeText(name)}</span><span class="trend-count">${count} posts</span>`;
     tList.appendChild(div);
   });
-  if (!Object.keys(trends).length) {
-    tList.innerHTML = '<div class="tiny">No trending tags yet.</div>';
-  }
+  if (!Object.keys(trends).length) tList.innerHTML = '<div class="tiny">No trending tags yet.</div>';
 }
 
 function initApp() {
@@ -454,8 +643,8 @@ function initApp() {
     const posts = [];
     snapshot.forEach(d => posts.push({ id: d.id, ...d.data() }));
 
-    renderTrendCounts(posts);
-    adminPostsCount = posts.length;
+    renderTrends(posts);
+    adminPostsCache = posts;
     updateAdminStats();
 
     feed.innerHTML = '';
@@ -466,26 +655,34 @@ function initApp() {
 function renderPost(p) {
   const div = document.createElement('div');
   div.className = `post ${p.pinned ? 'pinned' : ''}`;
-  const uid = auth.currentUser?.uid;
+  const uid = currentUid();
   const isLiked = p.likes?.includes(uid);
-  const authorPfp = getPfpSrc(p.authorPfp, p.authorName, p.authorId);
+  const author = normalizeUser(p.authorId, {
+    name: p.authorName,
+    pfp: p.authorPfp,
+    role: p.authorRole,
+    rankPriority: p.authorPriority,
+    verified: p.authorVerified,
+    muted: p.authorMuted,
+    banned: p.authorBanned
+  });
 
   div.innerHTML = `
     ${p.pinned ? `<span class="pinned-label">📌 Pinned</span>` : ''}
-    <img class="avatar" src="${authorPfp}" alt="${escapeHTML(p.authorName || 'User')}" onerror="this.src='${fallbackPfp(p.authorName || 'User', p.authorId)}'" onclick="window.viewUserProfile('${p.authorId}'); event.stopPropagation();">
+    <img class="avatar" src="${author.pfp}" alt="${safeText(author.name)}" onerror="this.src='${fallbackPfp(author.name, author.uid)}'" onclick="window.viewUserProfile('${p.authorId}'); event.stopPropagation();">
     <div class="post-content" onclick="window.showDetail('${p.id}')">
       <div class="post-header">
-        <span class="post-name">${escapeHTML(p.authorName || 'User')}</span>
-        ${getBadgeHTML(p.authorRole, p.authorMuted)}
-        <span class="post-handle">${safeHandle(p.authorName)}</span>
+        <span class="post-name">${safeText(author.name)}</span>
+        ${badgeHTML(author)}
+        <span class="post-handle">${safeHandle(author.name)}</span>
       </div>
-      <div class="post-body">${escapeHTML(p.text || '')}</div>
+      <div class="post-body">${safeText(p.text || '')}</div>
       ${p.image ? `<img src="${p.image}" class="post-media" alt="post media">` : ''}
       <div class="post-actions">
         <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="window.interact('${p.id}', 'likes'); event.stopPropagation();">👍 ${p.likes?.length || 0}</button>
         <button class="action-btn" onclick="window.showDetail('${p.id}'); event.stopPropagation();">💬 ${p.comments?.length || 0}</button>
-        ${(userProfile?.role === 'Admin' || userProfile?.role === 'Owner') ? `
-          <button class="action-btn" style="color:var(--accent)" onclick="window.togglePin('${p.id}', ${p.pinned}); event.stopPropagation();">📌 ${p.pinned ? 'Unpin' : 'Pin'}</button>
+        ${(isStaff(userProfile) || isOwner(userProfile)) ? `
+          <button class="action-btn" style="color:var(--accent)" onclick="window.togglePin('${p.id}', ${!!p.pinned}); event.stopPropagation();">📌 ${p.pinned ? 'Unpin' : 'Pin'}</button>
           <button class="action-btn" style="color:var(--danger)" onclick="window.deletePost('${p.id}'); event.stopPropagation();">🗑️</button>
         ` : ''}
       </div>
@@ -495,36 +692,39 @@ function renderPost(p) {
 }
 
 window.interact = async (pid, type) => {
+  if (!requireNotBanned()) return;
   const ref = doc(db, 'posts', pid);
   const snap = await getDoc(ref);
-  const uid = auth.currentUser.uid;
+  const uid = currentUid();
   const current = snap.data()?.[type] || [];
   if (current.includes(uid)) await updateDoc(ref, { [type]: arrayRemove(uid) });
   else await updateDoc(ref, { [type]: arrayUnion(uid) });
 };
 
 window.togglePin = async (pid, current) => {
+  if (!isStaff(userProfile)) return showToast('No permission.');
   await updateDoc(doc(db, 'posts', pid), { pinned: !current });
   showToast(current ? 'Unpinned' : 'Pinned to top!');
 };
 
 window.deletePost = async (pid) => {
-  if (confirm('Delete this post?')) {
-    await updateDoc(doc(db, 'posts', pid), { text: '[This post was removed by staff]', image: null });
-  }
+  if (!isStaff(userProfile)) return showToast('No permission.');
+  if (!confirm('Delete this post from Firestore?')) return;
+  await deleteDoc(doc(db, 'posts', pid));
+  showToast('Post deleted from Firestore.');
 };
 
 function renderCommentCard(c) {
   const commentPfp = getPfpSrc(c.pfp, c.name, c.uid);
   return `
     <div class="comment-shell">
-      <img class="comment-avatar" src="${commentPfp}" alt="${escapeHTML(c.name || 'User')}" onerror="this.src='${fallbackPfp(c.name || 'User', c.uid || 'comment')}'">
+      <img class="comment-avatar" src="${commentPfp}" alt="${safeText(c.name || 'User')}" onerror="this.src='${fallbackPfp(c.name || 'User', c.uid || 'comment')}'">
       <div class="comment-card">
         <div class="comment-top">
-          <span class="comment-name">${escapeHTML(c.name || 'User')}</span>
+          <span class="comment-name">${safeText(c.name || 'User')}</span>
           <span class="comment-time">${timeAgo(c.time)}</span>
         </div>
-        <div class="comment-text">${escapeHTML(c.text || '')}</div>
+        <div class="comment-text">${safeText(c.text || '')}</div>
       </div>
     </div>
   `;
@@ -534,21 +734,38 @@ window.showDetail = async (pid) => {
   const snap = await getDoc(doc(db, 'posts', pid));
   const p = snap.data();
   if (!p) return;
+  selectedPostId = pid;
 
-  const authorPfp = getPfpSrc(p.authorPfp, p.authorName, p.authorId);
+  await updateDoc(doc(db, 'posts', pid), { views: increment(1) });
+
+  const author = normalizeUser(p.authorId, {
+    name: p.authorName,
+    pfp: p.authorPfp,
+    role: p.authorRole,
+    rankPriority: p.authorPriority,
+    verified: p.authorVerified,
+    muted: p.authorMuted,
+    banned: p.authorBanned
+  });
   const box = document.getElementById('detailContent');
   const comments = (p.comments || []).slice().sort((a,b) => (a.time || 0) - (b.time || 0));
+  const an = postAnalytics(p);
 
   box.innerHTML = `
     <div style="display:flex; gap:12px; align-items:center; margin-bottom:20px;">
-      <img src="${authorPfp}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:1px solid var(--border-bright)" onerror="this.src='${fallbackPfp(p.authorName || 'User', p.authorId)}'">
+      <img src="${author.pfp}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:1px solid var(--border-bright)" onerror="this.src='${fallbackPfp(author.name, author.uid)}'">
       <div>
-        <div style="font-weight:800; font-size:18px;">${escapeHTML(p.authorName || 'User')}</div>
-        <div style="color:var(--muted)">${safeHandle(p.authorName)}</div>
+        <div style="font-weight:800; font-size:18px;">${safeText(author.name)}</div>
+        <div style="color:var(--muted)">${safeHandle(author.name)}</div>
       </div>
     </div>
-    <div style="font-size:20px; line-height:1.5; margin-bottom:20px; white-space:pre-wrap; word-break:break-word;">${escapeHTML(p.text || '')}</div>
+    <div style="font-size:20px; line-height:1.5; margin-bottom:20px; white-space:pre-wrap; word-break:break-word;">${safeText(p.text || '')}</div>
     ${p.image ? `<img src="${p.image}" style="width:100%; border-radius:16px; margin-bottom:20px; border:1px solid var(--border);" alt="post image">` : ''}
+    <div class="glass" style="padding:14px; border-radius:16px; margin-bottom:18px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <div><div class="tiny">Views</div><div style="font-size:18px; font-weight:900;">${an.views}</div></div>
+      <div><div class="tiny">Likes</div><div style="font-size:18px; font-weight:900;">${an.likes}</div></div>
+      <div><div class="tiny">Comments</div><div style="font-size:18px; font-weight:900;">${an.comments}</div></div>
+    </div>
     <hr class="divider">
     <h4 class="section-title">Comments (${comments.length})</h4>
     <div id="detailComments">${comments.length ? comments.map(renderCommentCard).join('') : '<div class="tiny">No comments yet. Be the first.</div>'}</div>
@@ -561,16 +778,16 @@ window.showDetail = async (pid) => {
 };
 
 window.postDetComment = async (pid) => {
+  if (!requireNotBanned()) return;
   const val = document.getElementById('detInp').value.trim();
   if (!val) return;
   if (!userProfile) return showToast('Profile is still loading.');
-  if (userProfile.muted) return showToast('You are restricted.');
 
   await updateDoc(doc(db, 'posts', pid), {
     comments: arrayUnion({
-      uid: auth.currentUser.uid,
+      uid: currentUid(),
       name: userProfile.name,
-      pfp: userProfile.pfp || fallbackPfp(userProfile.name, auth.currentUser.uid),
+      pfp: userProfile.pfp || fallbackPfp(userProfile.name, currentUid()),
       text: val,
       time: Date.now()
     })
@@ -579,22 +796,43 @@ window.postDetComment = async (pid) => {
   window.showDetail(pid);
 };
 
-window.viewUserProfile = async (uid) => {
+async function openProfile(uid) {
+  selectedProfileUid = uid;
   const snap = await getDoc(doc(db, 'users', uid));
   const d = normalizeUser(uid, snap.data() || {});
   document.getElementById('profPfp').src = d.pfp;
   document.getElementById('profPfp').onerror = () => { document.getElementById('profPfp').src = fallbackPfp(d.name, uid); };
   document.getElementById('profName').innerText = d.name;
   document.getElementById('profBio').innerText = d.bio;
-  document.getElementById('profBadgeSlot').innerHTML = getBadgeHTML(d.role, d.muted);
+  document.getElementById('profStatus').innerText = d.status ? `Status: ${d.status}` : '';
+  document.getElementById('profBadgeSlot').innerHTML = badgeHTML(d) + (d.role && d.role !== 'Member' && !isOwner(d) && getPriority(d) < 500 ? `<span class="badge badge-rank">${safeText(d.role)}</span>` : '');
+
+  const notice = document.getElementById('profNotice');
+  if (d.banned) {
+    notice.classList.remove('hidden');
+    notice.innerHTML = `<strong style="color:#fff">Banned</strong><br>${safeText(d.banReason || 'No reason provided.')}`;
+  } else {
+    notice.classList.add('hidden');
+    notice.innerHTML = '';
+  }
+
+  const editBtn = document.getElementById('profileEditBtn');
+  const verifyBtn = document.getElementById('verifyRequestBtn');
+  const isSelf = uid === currentUid();
+  editBtn.classList.toggle('hidden', !isSelf);
+  verifyBtn.classList.toggle('hidden', !isSelf);
+  verifyBtn.disabled = !!d.verified || !!d.verifiedRequested;
+  verifyBtn.innerText = d.verified ? 'Verified' : d.verifiedRequested ? 'Verification Requested' : 'Request Verification';
   document.getElementById('profileModal').style.display = 'flex';
-};
+}
+
+window.viewUserProfile = openProfile;
 
 // POSTING
-window.closeModals = () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-window.clearPostImage = () => { postImgBase64 = ''; document.getElementById('postImgPreviewArea').classList.add('hidden'); };
-
-document.getElementById('fab').onclick = () => document.getElementById('postModal').style.display = 'flex';
+document.getElementById('fab').onclick = () => {
+  if (!requireNotBanned()) return;
+  document.getElementById('postModal').style.display = 'flex';
+};
 
 document.getElementById('postFileInput').onchange = (e) => {
   const f = e.target.files[0];
@@ -610,20 +848,26 @@ document.getElementById('postFileInput').onchange = (e) => {
 };
 
 document.getElementById('submitPostBtn').onclick = async () => {
+  if (!requireNotBanned()) return;
   const text = document.getElementById('postText').value.trim();
   if (!text && !postImgBase64) return;
   if (!userProfile) return showToast('Syncing profile... wait a second.');
-  if (userProfile.muted) return showToast('You are restricted.');
+  if (userProfile.muted) return showToast('You are muted.');
+  if (userProfile.banned) return showToast('You are banned.');
 
   await addDoc(collection(db, 'posts'), {
-    authorId: auth.currentUser.uid,
+    authorId: currentUid(),
     authorName: userProfile.name || 'User',
-    authorPfp: getPfpSrc(userProfile.pfp, userProfile.name, auth.currentUser.uid),
+    authorPfp: myPfp(),
     authorRole: userProfile.role || 'Member',
+    authorPriority: getPriority(userProfile),
     authorMuted: !!userProfile.muted,
+    authorVerified: !!userProfile.verified,
+    authorBanned: !!userProfile.banned,
     text,
     image: postImgBase64,
     timestamp: Date.now(),
+    views: 0,
     likes: [],
     comments: [],
     pinned: false
@@ -634,48 +878,72 @@ document.getElementById('submitPostBtn').onclick = async () => {
   closeModals();
 };
 
-// ADMIN PANEL
+// ADMIN
 const adminFilterEl = document.getElementById('adminFilter');
 const adminSearchEl = document.getElementById('adminSearch');
 
 function updateAdminStats() {
   const users = adminUsersCache || [];
+  const posts = adminPostsCache || [];
   document.getElementById('statUsers').innerText = users.length;
-  document.getElementById('statAdmins').innerText = users.filter(u => u.role === 'Admin' || u.role === 'Owner').length;
-  document.getElementById('statMuted').innerText = users.filter(u => u.muted).length;
-  document.getElementById('statPosts').innerText = adminPostsCount;
-  document.getElementById('adminSummary').innerText = `${users.length} users • ${adminPostsCount} posts • ${users.filter(u => u.muted).length} muted`;
+  document.getElementById('statVerified').innerText = users.filter(u => u.verified).length;
+  document.getElementById('statBanned').innerText = users.filter(u => u.banned).length;
+  document.getElementById('statPosts').innerText = posts.length;
+  document.getElementById('statViews').innerText = posts.reduce((sum, p) => sum + (p.views || 0), 0);
+  document.getElementById('adminSummary').innerText = `${users.length} users • ${posts.length} posts • ${users.filter(u => u.verifiedRequested).length} verification requests`;
+}
+
+function visibleUsersFilter(users) {
+  const search = (adminSearchEl.value || '').trim().toLowerCase();
+  const filter = adminFilterEl.value;
+  return users.filter(u => {
+    const hay = `${u.name} ${u.email} ${u.role} ${u.uid} ${u.status}`.toLowerCase();
+    if (search && !hay.includes(search)) return false;
+    if (filter === 'muted') return u.muted;
+    if (filter === 'banned') return u.banned;
+    if (filter === 'verified') return u.verified;
+    if (filter === 'requested') return u.verifiedRequested;
+    if (filter === 'staff') return isStaff(u);
+    if (filter === 'owners') return isOwner(u);
+    return true;
+  });
 }
 
 function renderAdminUsers(users) {
   const list = document.getElementById('adminUserList');
   list.innerHTML = '';
-
   if (!users.length) {
     list.innerHTML = '<div class="tiny">No users match this filter.</div>';
     return;
   }
 
   users.forEach(u => {
+    const canChange = canModerate(u);
     const div = document.createElement('div');
     div.className = 'admin-card';
     div.innerHTML = `
       <div class="admin-row">
         <img src="${u.pfp}" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:1px solid var(--border-bright)" onerror="this.src='${fallbackPfp(u.name, u.uid)}'">
         <div class="admin-meta">
-          <div class="admin-name">${escapeHTML(u.name)}</div>
-          <div class="admin-email">${escapeHTML(u.email || 'No email')}</div>
+          <div class="admin-name">${safeText(u.name)}</div>
+          <div class="admin-email">${safeText(u.email || 'No email')}</div>
+          <div class="tiny">@${safeText(u.uid.slice(0,8))} • ${safeText(u.status || 'No status')}</div>
         </div>
       </div>
-      <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+      <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end; max-width: 58%;">
         <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
-          <span class="admin-chip">${escapeHTML(u.role || 'Member')}</span>
-          ${u.muted ? '<span class="admin-chip" style="color:var(--danger)">Muted</span>' : ''}
+          <span class="admin-chip">${safeText(u.role || 'Member')} • ${getPriority(u)}</span>
+          ${u.verified ? '<span class="admin-chip" style="color:var(--success)">Verified</span>' : ''}
+          ${u.verifiedRequested ? '<span class="admin-chip" style="color:var(--accent)">Verify Req</span>' : ''}
+          ${u.banned ? '<span class="admin-chip" style="color:var(--danger)">Banned</span>' : ''}
+          ${u.muted ? '<span class="admin-chip" style="color:var(--warning)">Muted</span>' : ''}
         </div>
         <div class="admin-tools">
           <button class="tool-btn accent" onclick="window.viewUserProfile('${u.uid}')">Profile</button>
-          <button class="tool-btn" onclick="window.promoteUser('${u.uid}', '${u.role || 'Member'}')">Role</button>
-          <button class="tool-btn ${u.muted ? 'success' : 'danger'}" onclick="window.toggleUserMute('${u.uid}', ${u.muted})">${u.muted ? 'Unmute' : 'Mute'}</button>
+          <button class="tool-btn" onclick="window.setCustomRank('${u.uid}')" ${!canChange ? 'disabled' : ''}>Rank</button>
+          <button class="tool-btn ${u.verified ? 'danger' : 'success'}" onclick="window.toggleVerified('${u.uid}', ${u.verified})" ${!canChange ? 'disabled' : ''}>${u.verified ? 'Unverify' : 'Verify'}</button>
+          <button class="tool-btn ${u.banned ? 'success' : 'danger'}" onclick="window.toggleBan('${u.uid}', ${u.banned}, ${JSON.stringify(u.name)})" ${!canChange ? 'disabled' : ''}>${u.banned ? 'Unban' : 'Ban'}</button>
+          <button class="tool-btn ${u.muted ? 'success' : 'danger'}" onclick="window.toggleUserMute('${u.uid}', ${u.muted})" ${!canChange ? 'disabled' : ''}>${u.muted ? 'Unmute' : 'Mute'}</button>
         </div>
       </div>
     `;
@@ -684,84 +952,162 @@ function renderAdminUsers(users) {
 }
 
 async function refreshAdminPanel() {
-  const search = (adminSearchEl.value || '').trim().toLowerCase();
-  const filter = adminFilterEl.value;
   const userSnap = await getDocs(collection(db, 'users'));
   const users = [];
   userSnap.forEach(docS => users.push(normalizeUser(docS.id, docS.data())));
   adminUsersCache = users;
-
-  let filtered = users.filter(u => {
-    const hay = `${u.name} ${u.email} ${u.role} ${u.uid}`.toLowerCase();
-    if (search && !hay.includes(search)) return false;
-    if (filter === 'muted') return u.muted;
-    if (filter === 'admins') return u.role === 'Admin';
-    if (filter === 'owners') return u.role === 'Owner';
-    return true;
-  });
-
+  renderAdminUsers(visibleUsersFilter(users));
   updateAdminStats();
-  renderAdminUsers(filtered);
+}
+
+window.setCustomRank = async (uid) => {
+  const targetSnap = await getDoc(doc(db, 'users', uid));
+  const target = normalizeUser(uid, targetSnap.data() || {});
+  if (!canModerate(target)) return showToast('You cannot change this user.');
+  if (isOwner(target)) return showToast('Owner rank is locked.');
+
+  const label = prompt('Rank label', target.role || 'Member');
+  if (label === null) return;
+  const priorityRaw = prompt('Rank priority (higher = more power)', String(target.rankPriority ?? 0));
+  if (priorityRaw === null) return;
+  const nextPriority = Math.max(0, Number(priorityRaw) || 0);
+  const nextLabel = label.trim() || 'Member';
+
+  if (getPriority(userProfile) <= nextPriority && !isOwner(userProfile)) {
+    return showToast('You cannot assign a rank equal to or above your own.');
+  }
+
+  await updateDoc(doc(db, 'users', uid), { role: nextLabel, rankPriority: nextPriority });
+  showToast('Rank updated.');
+  await refreshAdminPanel();
+};
+
+window.toggleVerified = async (uid, verified) => {
+  const targetSnap = await getDoc(doc(db, 'users', uid));
+  const target = normalizeUser(uid, targetSnap.data() || {});
+  if (!canModerate(target)) return showToast('You cannot change this user.');
+  if (isOwner(target)) return showToast('Owner cannot be modified.');
+  await updateDoc(doc(db, 'users', uid), { verified: !verified, verifiedRequested: false });
+  showToast(verified ? 'Verification removed.' : 'User verified.');
+  await refreshAdminPanel();
+};
+
+window.toggleBan = async (uid, banned, labelName = 'user') => {
+  const targetSnap = await getDoc(doc(db, 'users', uid));
+  const target = normalizeUser(uid, targetSnap.data() || {});
+  if (!canModerate(target)) return showToast('You cannot change this user.');
+  if (isOwner(target)) return showToast('Owner cannot be banned.');
+
+  if (!banned) {
+    const reason = prompt(`Ban reason for ${labelName}:`, 'Violation of rules');
+    if (reason === null) return;
+    await updateDoc(doc(db, 'users', uid), { banned: true, banReason: reason.trim() || 'Violation of rules', bannedAt: Date.now(), bannedBy: currentUid() });
+    showToast('User banned.');
+  } else {
+    await updateDoc(doc(db, 'users', uid), { banned: false, banReason: '', bannedAt: null, bannedBy: '' });
+    showToast('User unbanned.');
+  }
+  await refreshAdminPanel();
+};
+
+window.toggleUserMute = async (uid, muted) => {
+  const targetSnap = await getDoc(doc(db, 'users', uid));
+  const target = normalizeUser(uid, targetSnap.data() || {});
+  if (!canModerate(target)) return showToast('You cannot change this user.');
+  if (isOwner(target)) return showToast('Owner cannot be muted.');
+  await updateDoc(doc(db, 'users', uid), { muted: !muted });
+  showToast(muted ? 'User unmuted.' : 'User muted.');
+  await refreshAdminPanel();
+};
+
+async function bulkActionVisible(mode) {
+  const visible = visibleUsersFilter(adminUsersCache);
+  if (!visible.length) return showToast('Nothing visible to change.');
+  if (!confirm(`${mode} ${visible.length} visible users?`)) return;
+  for (const u of visible) {
+    if (!canModerate(u) || isOwner(u)) continue;
+    const ref = doc(db, 'users', u.uid);
+    if (mode === 'Mute') await updateDoc(ref, { muted: true });
+    if (mode === 'Unmute') await updateDoc(ref, { muted: false });
+    if (mode === 'Ban') await updateDoc(ref, { banned: true, banReason: 'Bulk action', bannedAt: Date.now(), bannedBy: currentUid() });
+    if (mode === 'Unban') await updateDoc(ref, { banned: false, banReason: '', bannedAt: null, bannedBy: '' });
+  }
+  await refreshAdminPanel();
 }
 
 document.getElementById('adminBtn').onclick = async () => {
+  if (!isStaff(userProfile)) return showToast('No permission.');
   document.getElementById('adminModal').style.display = 'flex';
   document.getElementById('adminUserList').innerHTML = 'Fetching...';
   await refreshAdminPanel();
 };
-
 document.getElementById('refreshAdminBtn').onclick = refreshAdminPanel;
+document.getElementById('customRankRefreshBtn').onclick = refreshAdminPanel;
 document.getElementById('adminSearch').oninput = refreshAdminPanel;
 document.getElementById('adminFilter').onchange = refreshAdminPanel;
+document.getElementById('muteAllBtn').onclick = () => bulkActionVisible('Mute');
+document.getElementById('unmuteAllBtn').onclick = () => bulkActionVisible('Unmute');
+document.getElementById('banAllBtn').onclick = () => bulkActionVisible('Ban');
+document.getElementById('unbanAllBtn').onclick = () => bulkActionVisible('Unban');
+document.getElementById('createRankBtn').onclick = async () => {
+  if (!isStaff(userProfile)) return showToast('No permission.');
+  const label = document.getElementById('rankLabelInput').value.trim();
+  const priority = Number(document.getElementById('rankPriorityInput').value || 0);
+  if (!label) return showToast('Enter a rank label.');
+  if (priority >= getPriority(userProfile) && !isOwner(userProfile)) return showToast('You cannot create a rank at or above your own priority.');
+  const uid = prompt('User ID to apply this rank to?');
+  if (!uid) return;
+  const targetSnap = await getDoc(doc(db, 'users', uid.trim()));
+  if (!targetSnap.exists()) return showToast('User not found.');
+  const target = normalizeUser(uid.trim(), targetSnap.data() || {});
+  if (!canModerate(target) || isOwner(target)) return showToast('You cannot modify this user.');
+  await updateDoc(doc(db, 'users', uid.trim()), { role: label, rankPriority: priority });
+  showToast('Rank applied.');
+  await refreshAdminPanel();
+};
 
-document.getElementById('muteAllBtn').onclick = async () => {
-  const visible = adminUsersCache.filter(u => {
-    const search = (adminSearchEl.value || '').trim().toLowerCase();
-    const filter = adminFilterEl.value;
-    const hay = `${u.name} ${u.email} ${u.role} ${u.uid}`.toLowerCase();
-    if (search && !hay.includes(search)) return false;
-    if (filter === 'muted') return u.muted;
-    if (filter === 'admins') return u.role === 'Admin';
-    if (filter === 'owners') return u.role === 'Owner';
-    return true;
+// PROFILE + POST ACTIONS
+window.navProfile = () => openProfile(currentUid());
+document.getElementById('navProfileBtn').onclick = () => openProfile(currentUid());
+
+// ADMIN-ONLY FIRESTORE HELPERS
+
+// (Optional helper if you later expand admin tools)
+async function forceDeleteUser(uid) {
+  if (!isOwner(userProfile)) return showToast('Owner only action.');
+  if (!confirm('Permanently delete this user document?')) return;
+  await deleteDoc(doc(db, 'users', uid));
+  showToast('User deleted.');
+  await refreshAdminPanel();
+}
+
+// GLOBAL ESC KEY CLOSE (nice UX)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModals();
+});
+
+// CLICK OUTSIDE MODAL TO CLOSE
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModals();
   });
-  if (!visible.length) return showToast('Nothing visible to mute.');
-  if (!confirm(`Mute ${visible.length} visible users?`)) return;
-  for (const u of visible) await updateDoc(doc(db, 'users', u.uid), { muted: true });
-  await refreshAdminPanel();
-};
+});
 
-document.getElementById('unmuteAllBtn').onclick = async () => {
-  const visible = adminUsersCache.filter(u => {
-    const search = (adminSearchEl.value || '').trim().toLowerCase();
-    const filter = adminFilterEl.value;
-    const hay = `${u.name} ${u.email} ${u.role} ${u.uid}`.toLowerCase();
-    if (search && !hay.includes(search)) return false;
-    if (filter === 'muted') return u.muted;
-    if (filter === 'admins') return u.role === 'Admin';
-    if (filter === 'owners') return u.role === 'Owner';
-    return true;
+// BASIC NAV ACTIVE STATE (visual polish)
+const navButtons = document.querySelectorAll('.nav-btn');
+navButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    navButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
   });
-  if (!visible.length) return showToast('Nothing visible to unmute.');
-  if (!confirm(`Unmute ${visible.length} visible users?`)) return;
-  for (const u of visible) await updateDoc(doc(db, 'users', u.uid), { muted: false });
-  await refreshAdminPanel();
-};
+});
 
-window.toggleUserMute = async (uid, m) => {
-  await updateDoc(doc(db, 'users', uid), { muted: !m });
-  await refreshAdminPanel();
-};
+// SAFETY: Prevent empty profile crash edge case
+if (!window.viewUserProfile) {
+  window.viewUserProfile = (uid) => openProfile(uid);
+}
 
-window.promoteUser = async (uid, currentRole) => {
-  const nextRole = currentRole === 'Owner' ? 'Admin' : currentRole === 'Admin' ? 'Member' : 'Admin';
-  await updateDoc(doc(db, 'users', uid), { role: nextRole });
-  showToast(`Role changed to ${nextRole}`);
-  await refreshAdminPanel();
-};
-
-document.getElementById('navProfileBtn').onclick = () => window.viewUserProfile(auth.currentUser.uid);
-
-</script>
-</body>
-</html>
+// INITIAL UI STATE FIXES
+window.addEventListener('load', () => {
+  document.getElementById('feed').innerHTML = '<div class="tiny">Loading feed...</div>';
+});
