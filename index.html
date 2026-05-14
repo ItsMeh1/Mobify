@@ -37,7 +37,8 @@
       <button class="nav-btn active" id="homeBtn"><span>🏠</span> Home</button>
       <button class="nav-btn" id="trendBtn"><span>🔥</span> Trending</button>
       <button class="nav-btn" id="navProfileBtn"><span>👤</span> Profile</button>
-      <button class="nav-btn hidden" id="adminBtn"><span>🛡️</span> Admin</button>
+      <button class="nav-btn hidden" id="adminBtn"><span>🛡️</span> Admin Perms</button>
+      <button class="nav-btn" id="groupsBtn"><span>👥</span> Groups</button>
       <button class="nav-btn" id="logoutBtn" style="color:var(--danger); margin-top:20px;"><span>🚪</span> Logout</button>
     </nav>
     <div style="margin-top:auto; padding:12px; border-radius:16px; background:rgba(255,255,255,0.03); display:flex; align-items:center; gap:10px;">
@@ -80,6 +81,57 @@
     </div>
     <button id="submitPostBtn" class="btn-primary">Post</button>
     <button onclick="closeModals()" style="width:100%; margin-top:12px; color:var(--muted)">Cancel</button>
+  </div>
+</div>
+
+  <div class="modal" id="groupsModal">
+  <div class="modal-box groups-modal-box">
+
+    <!-- LEFT SIDE -->
+    <div class="groups-sidebar">
+
+      <button id="createGroupBtn" class="group-create-btn">
+        + Create Group
+      </button>
+
+      <input
+        id="groupSearch"
+        class="group-search"
+        placeholder="Search groups..."
+      >
+
+      <div id="groupsList"></div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="groups-main">
+
+      <!-- HEADER -->
+      <div id="groupHeader" class="group-header">
+        Select a group
+      </div>
+
+      <!-- POSTS -->
+      <div id="groupPosts" class="group-posts"></div>
+
+      <!-- CHAT -->
+      <div class="group-chat-box">
+
+        <div id="groupMessages" class="group-messages"></div>
+
+        <div class="group-input-row">
+          <input
+            id="groupMessageInput"
+            placeholder="Message group..."
+          >
+
+          <button id="sendGroupMessageBtn">
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
