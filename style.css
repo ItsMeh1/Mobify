@@ -122,3 +122,223 @@
     .profile-meta { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top: 10px; }
     .profile-note { margin: 10px 0 0; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--muted); text-align:left; }
     .profile-banner { height: 100px; background: var(--accent); }
+
+    /* =========================
+   GROUP SYSTEM UI
+========================= */
+
+#groupPanel {
+  display: none;
+}
+
+#groupPanel .modal-box {
+  max-width: 1200px;
+}
+
+.group-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 14px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.group-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+  border-color: rgba(29, 155, 240, 0.35);
+}
+
+.group-top {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.group-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--accent), #6b5bff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 10px 24px rgba(29, 155, 240, 0.18);
+}
+
+.group-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.group-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.group-members {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.group-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.group-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.group-actions .tool-btn {
+  padding: 8px 12px;
+}
+
+.group-view-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.group-view-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--accent), #6b5bff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.group-view-description {
+  color: var(--muted);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 12px;
+}
+
+.group-msg {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.group-msg strong {
+  color: #fff;
+}
+
+#groupMembersList .admin-card {
+  margin-bottom: 0;
+}
+
+#groupMembersList .admin-card:last-child {
+  margin-bottom: 0;
+}
+
+#groupMembersList .tiny {
+  margin-top: 2px;
+}
+
+#createGroupModal .modal-box,
+#groupPanel .modal-box {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+#groupNameInput,
+#groupDescriptionInput,
+#groupIconInput,
+#groupVisibilityInput {
+  margin-bottom: 14px;
+}
+
+#groupVisibilityInput {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: #fff;
+  outline: none;
+}
+
+#groupsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#groupHeaderName {
+  color: #fff;
+}
+
+#groupHeaderStats {
+  color: var(--muted);
+}
+
+#inviteGroupMemberBtn,
+#leaveGroupBtn {
+  padding: 8px 12px;
+}
+
+#groupMessages {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+#groupMessages::-webkit-scrollbar {
+  width: 8px;
+}
+
+#groupMessages::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 99px;
+}
+
+#groupMessages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Small screens */
+@media (max-width: 900px) {
+  #groupPanel .modal-box {
+    max-width: 100%;
+  }
+
+  #groupPanel > .modal-box > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  #groupPanel > .modal-box > div > div:first-child {
+    border-right: 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  #groupPanel > .modal-box > div > div:nth-child(2) > div:nth-child(2) {
+    grid-template-columns: 1fr !important;
+  }
+}
