@@ -1212,3 +1212,20 @@ window.addEventListener('load', async () => {
     list.innerHTML = '<div class="tiny">Loading groups...</div>';
   }
 });
+
+
+// test
+
+console.log({
+  groupsBtn: document.getElementById('groupsBtn'),
+  groupsList: document.getElementById('groupsList'),
+  groupPanel: document.getElementById('groupPanel'),
+  groupsModal: document.getElementById('groupsModal'),
+  createGroupModal: document.getElementById('createGroupModal'),
+  createGroupBtn: document.getElementById('createGroupBtn'),
+  openCreateGroupBtn: document.getElementById('openCreateGroupBtn'),
+  groupNameInput: document.getElementById('groupNameInput'),
+  groupDescInput: document.getElementById('groupDescInput'),
+  groupViewModal: document.getElementById('groupViewModal'),
+  groupViewContent: document.getElementById('groupViewContent')
+});
