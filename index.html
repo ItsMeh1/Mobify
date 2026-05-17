@@ -278,6 +278,43 @@
   </div>
 </div>
 
+<!-- EXTRA GROUP ELEMENTS REQUIRED BY SCRIPT -->
+
+<!-- Hidden legacy groups modal -->
+<div class="modal hidden" id="groupsModal">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">Groups</h3>
+
+    <div id="groupsList" style="display:flex; flex-direction:column; gap:12px;">
+      <!-- Groups injected here -->
+    </div>
+
+    <button onclick="closeModals()" class="tool-btn" style="width:100%; margin-top:16px;">
+      Close
+    </button>
+  </div>
+</div>
+
+<!-- Hidden group view modal -->
+<div class="modal hidden" id="groupViewModal">
+  <div class="modal-box" style="max-width:700px;">
+    <div id="groupViewContent">
+      <!-- Group content injected here -->
+    </div>
+
+    <button onclick="closeModals()" class="tool-btn" style="width:100%; margin-top:16px;">
+      Close
+    </button>
+  </div>
+</div>
+
+<!-- Hidden compatibility textarea -->
+<textarea
+  id="groupDescInput"
+  class="hidden"
+  style="display:none;"
+></textarea>
+
 <script type="module" src="script.js"></script> <!--just called it script instead of app because why not-->
 </body>
 </html>
