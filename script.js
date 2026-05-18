@@ -24,7 +24,8 @@ import {
   addDoc,
   arrayUnion,
   arrayRemove,
-  increment
+  increment,
+  serverTimeStamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1213,6 +1214,33 @@ window.addEventListener('load', async () => {
   }
 });
 
+const createGroupBtn = document.getElementById('createGroupBtn');
+
+createGroupBtn.addEventListener('click', async () => {
+  try {
+    const name = document.getElementById('groupNameInput').value.trim();
+    const description = document.getElementById('groupDescriptionInput').value.trim();
+
+    if (!name) {
+      alert('Enter a group name');
+      return;
+    }
+
+    await addDoc(collection(db, 'groups'), {
+      name,
+      description,
+      ownerId: auth.currentUser.uid,
+      createdAt: serverTimestamp(),
+      members: [auth.currentUser.uid]
+    });
+
+    alert('Group created!');
+    closeModals();
+
+  } catch (err) {
+    console.error('CREATE GROUP ERROR:', err);
+  }
+});
 
 // test
 
