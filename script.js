@@ -1071,65 +1071,22 @@ window.openCreateGroup = () => {
 };
 
 window.submitCreateGroup = async () => {
-  if (window.__groupCreateBusy) return;
-  window.__groupCreateBusy = true;
+  console.log("CREATE GROUP CLICKED");
 
   try {
-    if (!userProfile) {
-      showToast('Profile is still loading.');
-      return;
-    }
-
-    if (!requireNotBanned()) return;
-
-    const nameEl = getGroupNameEl();
-    const descEl = getGroupDescEl();
-
-    if (!nameEl || !descEl) {
-      showToast('Missing group fields.');
-      return;
-    }
-
-    const name = nameEl.value.trim();
-    const description = descEl.value.trim();
-
-    if (!name) {
-      showToast('Group needs a name.');
-      return;
-    }
-
-    const groupData = {
-      name,
-      description,
-      ownerId: currentUid(),
-      ownerName: userProfile.name || 'User',
-      ownerPfp: myPfp(),
-      createdAt: Date.now(),
-      members: [currentUid()],
-      moderators: [],
-      banner: '',
-      icon: '',
-      postCount: 0,
-      visibility: document.getElementById('groupVisibilityInput')?.value || 'public'
+    const testData = {
+      name: "TEST GROUP",
+      createdAt: Date.now()
     };
 
-    console.log('Creating group...', groupData);
+    console.log("About to add doc...");
 
-    await addDoc(collection(db, 'groups'), groupData);
+    const ref = await addDoc(collection(db, 'groups'), testData);
 
-    nameEl.value = '';
-    descEl.value = '';
+    console.log("SUCCESS:", ref.id);
 
-    showToast('Group created!');
-    closeModals();
-    await refreshVisibleGroups();
   } catch (err) {
-    console.error('GROUP CREATE ERROR:', err);
-    showToast(err.message);
-  } finally {
-    setTimeout(() => {
-      window.__groupCreateBusy = false;
-    }, 500);
+    console.error("GROUP ERROR:", err);
   }
 };
 
