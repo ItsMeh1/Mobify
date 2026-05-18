@@ -24,8 +24,7 @@ import {
   addDoc,
   arrayUnion,
   arrayRemove,
-  increment,
-  serverTimeStamp
+  increment
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
