@@ -24,7 +24,8 @@ import {
   addDoc,
   arrayUnion,
   arrayRemove,
-  increment
+  increment,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1213,32 +1214,481 @@ window.addEventListener('load', async () => {
   }
 });
 
-const createGroupBtn = document.getElementById('createGroupBtn');
-
-createGroupBtn.addEventListener('click', async () => {
+async function createGroup(name, desc) {
   try {
-    const name = document.getElementById('groupNameInput').value.trim();
-    const description = document.getElementById('groupDescriptionInput').value.trim();
 
-    if (!name) {
-      alert('Enter a group name');
+    if (!userProfile) return;
+    if (!requireNotBanned()) return;
+
+    const cleanName = (name || '').trim();
+    const cleanDesc = (desc || '').trim();
+
+    if (!cleanName) {
+      showToast('Group needs a name.');
       return;
     }
 
-    await addDoc(collection(db, 'groups'), {
-      name,
-      description,
-      ownerId: auth.currentUser.uid,
-      createdAt: serverTimestamp(),
-      members: [auth.currentUser.uid]
-    });
+    const groupData = {
+      name: cleanName,
+      description: cleanDesc,
+      ownerId: currentUid(),
+      ownerName: userProfile.name,
+      ownerPfp: myPfp(),
+      createdAt: Date.now(),
+      members: [currentUid()],
+      moderators: [],
+      banner: '',
+      icon: '',
+      postCount: 0
+    };
 
-    alert('Group created!');
-    closeModals();
+    console.log('Creating group...', groupData);
+
+    await addDoc(collection(db, 'groups'), groupData);
+
+    showToast('Group created!');
+    await loadGroups();
 
   } catch (err) {
-    console.error('CREATE GROUP ERROR:', err);
+    console.error('GROUP CREATE ERROR:', err);
+    showToast(err.message);
   }
+}
+
+// =========================
+// GROUP PATCH (APPEND ONLY)
+// =========================
+
+window.__groupCreateBusy = false;
+window.__groupMessagesUnsub = null;
+
+function getVisibleGroupListEl() {
+  return document.getElementById('groupList') || document.getElementById('groupsList');
+}
+
+function getGroupPanelEl() {
+  return document.getElementById('groupPanel') || document.getElementById('groupsModal');
+}
+
+function getGroupDescEl() {
+  return document.getElementById('groupDescriptionInput') || document.getElementById('groupDescInput');
+}
+
+function getGroupNameEl() {
+  return document.getElementById('groupNameInput');
+}
+
+function getGroupMessagesEl() {
+  return document.getElementById('groupMessages');
+}
+
+function getGroupMembersEl() {
+  return document.getElementById('groupMembersList');
+}
+
+async function refreshVisibleGroups() {
+  const wrap = getVisibleGroupListEl();
+  if (!wrap) return;
+
+  wrap.innerHTML = '<div class="tiny">Loading groups...</div>';
+
+  const snap = await getDocs(collection(db, 'groups'));
+  const groups = [];
+
+  snap.forEach(d => groups.push({ id: d.id, ...d.data() }));
+  groupsCache = groups;
+
+  const search = (document.getElementById('groupSearch')?.value || '').trim().toLowerCase();
+
+  const filtered = groups
+    .filter(g => {
+      if (!search) return true;
+      return `${g.name || ''} ${g.description || ''}`.toLowerCase().includes(search);
+    })
+    .sort((a, b) => (b.members?.length || 0) - (a.members?.length || 0));
+
+  wrap.innerHTML = '';
+
+  if (!filtered.length) {
+    wrap.innerHTML = '<div class="tiny">No groups yet.</div>';
+    return;
+  }
+
+  filtered.forEach(g => {
+    const isMember = g.members?.includes(currentUid());
+
+    const card = document.createElement('div');
+    card.className = 'group-card';
+
+    card.innerHTML = `
+      <div class="group-top">
+        <div class="group-icon">${safeText((g.name || 'G')[0])}</div>
+        <div class="group-meta">
+          <div class="group-name">${safeText(g.name || 'Unnamed Group')}</div>
+          <div class="group-members">${g.members?.length || 0} members</div>
+        </div>
+      </div>
+
+      <div class="group-desc">
+        ${safeText(g.description || 'No description')}
+      </div>
+
+      <div class="group-actions">
+        <button class="tool-btn accent" data-open-group="${g.id}">Open</button>
+        <button class="tool-btn ${isMember ? 'danger' : 'success'}" data-join-group="${g.id}">
+          ${isMember ? 'Leave' : 'Join'}
+        </button>
+      </div>
+    `;
+
+    wrap.appendChild(card);
+  });
+
+  wrap.querySelectorAll('[data-open-group]').forEach(btn => {
+    btn.onclick = () => window.openGroup(btn.dataset.openGroup);
+  });
+
+  wrap.querySelectorAll('[data-join-group]').forEach(btn => {
+    btn.onclick = () => window.toggleGroupJoin(btn.dataset.joinGroup);
+  });
+}
+
+window.refreshGroupList = refreshVisibleGroups;
+window.loadGroups = refreshVisibleGroups;
+
+async function renderGroupMembers(group) {
+  const wrap = getGroupMembersEl();
+  if (!wrap) return;
+
+  const memberIds = Array.from(new Set([
+    ...(group.members || []),
+    group.ownerId
+  ].filter(Boolean)));
+
+  wrap.innerHTML = '';
+
+  if (!memberIds.length) {
+    wrap.innerHTML = '<div class="tiny">No members.</div>';
+    return;
+  }
+
+  const memberDocs = await Promise.all(
+    memberIds.map(async (uid) => {
+      const snap = await getDoc(doc(db, 'users', uid));
+      return {
+        uid,
+        data: snap.exists() ? snap.data() : {}
+      };
+    })
+  );
+
+  memberDocs.forEach(({ uid, data }) => {
+    const role = uid === group.ownerId ? 'Owner' : 'Member';
+
+    const item = document.createElement('div');
+    item.className = 'admin-card';
+    item.innerHTML = `
+      <div class="admin-row">
+        <img src="${getPfpSrc(data.pfp, data.name || uid, uid)}" class="avatar" style="width:34px; height:34px;">
+        <div class="admin-meta">
+          <div class="admin-name">${safeText(data.name || uid)}</div>
+          <div class="admin-email">${safeText(role)}</div>
+        </div>
+      </div>
+    `;
+    wrap.appendChild(item);
+  });
+}
+
+async function loadGroupMessages(groupId) {
+  if (window.__groupMessagesUnsub) {
+    window.__groupMessagesUnsub();
+    window.__groupMessagesUnsub = null;
+  }
+
+  const wrap = getGroupMessagesEl();
+  if (!wrap) return;
+
+  const q = query(collection(db, 'groups', groupId, 'messages'), orderBy('createdAt', 'asc'));
+
+  window.__groupMessagesUnsub = onSnapshot(q, (snapshot) => {
+    wrap.innerHTML = '';
+
+    snapshot.forEach(d => {
+      const m = d.data();
+
+      const row = document.createElement('div');
+      row.className = 'group-msg';
+      row.innerHTML = `
+        <strong>${safeText(m.name || 'User')}</strong>
+        <div style="white-space:pre-wrap; margin-top:6px;">${safeText(m.text || '')}</div>
+        <div class="tiny" style="margin-top:8px;">${timeAgo(m.createdAt)}</div>
+      `;
+      wrap.appendChild(row);
+    });
+
+    wrap.scrollTop = wrap.scrollHeight;
+  });
+}
+
+window.openGroup = async (gid) => {
+  currentGroupId = gid;
+
+  const snap = await getDoc(doc(db, 'groups', gid));
+  if (!snap.exists()) return;
+
+  const g = snap.data();
+  const panel = getGroupPanelEl();
+
+  const headerName = document.getElementById('groupHeaderName');
+  const headerStats = document.getElementById('groupHeaderStats');
+  const headerIcon = document.getElementById('groupHeaderIcon');
+  const title = document.getElementById('groupTitle');
+  const info = document.getElementById('groupHeaderInfo');
+
+  if (panel) panel.style.display = 'flex';
+
+  if (headerName) headerName.textContent = g.name || 'Group';
+  if (headerStats) headerStats.textContent = `${g.members?.length || 0} members`;
+  if (title) title.textContent = g.name || 'Group title';
+  if (info) {
+    info.innerHTML = `
+      <div><strong>Visibility:</strong> ${safeText(g.visibility || 'public')}</div>
+      <div><strong>Owner:</strong> ${safeText(g.ownerName || 'Unknown')}</div>
+      <div><strong>Description:</strong> ${safeText(g.description || 'No description')}</div>
+    `;
+  }
+
+  if (headerIcon) {
+    headerIcon.src = g.icon || fallbackPfp(g.name || 'Group', gid);
+    headerIcon.onerror = () => {
+      headerIcon.src = fallbackPfp(g.name || 'Group', gid);
+    };
+  }
+
+  await renderGroupMembers(g);
+  await loadGroupMessages(gid);
+};
+
+window.toggleGroupJoin = async (gid) => {
+  if (!requireNotBanned()) return;
+
+  const ref = doc(db, 'groups', gid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const members = data.members || [];
+
+  if (members.includes(currentUid())) {
+    await updateDoc(ref, { members: arrayRemove(currentUid()) });
+    showToast('Left group.');
+  } else {
+    await updateDoc(ref, { members: arrayUnion(currentUid()) });
+    showToast('Joined group!');
+  }
+
+  await refreshVisibleGroups();
+};
+
+window.openCreateGroup = () => {
+  const modal = document.getElementById('createGroupModal');
+  if (modal) modal.style.display = 'flex';
+};
+
+window.submitCreateGroup = async () => {
+  if (window.__groupCreateBusy) return;
+  window.__groupCreateBusy = true;
+
+  try {
+    if (!userProfile) {
+      showToast('Profile is still loading.');
+      return;
+    }
+
+    if (!requireNotBanned()) return;
+
+    const nameEl = getGroupNameEl();
+    const descEl = getGroupDescEl();
+
+    if (!nameEl || !descEl) {
+      showToast('Missing group fields.');
+      return;
+    }
+
+    const name = nameEl.value.trim();
+    const description = descEl.value.trim();
+
+    if (!name) {
+      showToast('Group needs a name.');
+      return;
+    }
+
+    const groupData = {
+      name,
+      description,
+      ownerId: currentUid(),
+      ownerName: userProfile.name || 'User',
+      ownerPfp: myPfp(),
+      createdAt: Date.now(),
+      members: [currentUid()],
+      moderators: [],
+      banner: '',
+      icon: '',
+      postCount: 0,
+      visibility: document.getElementById('groupVisibilityInput')?.value || 'public'
+    };
+
+    console.log('Creating group...', groupData);
+
+    await addDoc(collection(db, 'groups'), groupData);
+
+    nameEl.value = '';
+    descEl.value = '';
+
+    showToast('Group created!');
+    closeModals();
+    await refreshVisibleGroups();
+  } catch (err) {
+    console.error('GROUP CREATE ERROR:', err);
+    showToast(err.message);
+  } finally {
+    setTimeout(() => {
+      window.__groupCreateBusy = false;
+    }, 500);
+  }
+};
+
+async function sendCurrentGroupMessage() {
+  if (!currentGroupId) {
+    showToast('Open a group first.');
+    return;
+  }
+
+  if (!requireNotBanned()) return;
+
+  const input = document.getElementById('groupInput') || document.getElementById('groupMessageInput');
+  if (!input) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  await addDoc(collection(db, 'groups', currentGroupId, 'messages'), {
+    text,
+    uid: currentUid(),
+    name: userProfile?.name || 'User',
+    pfp: myPfp(),
+    createdAt: Date.now()
+  });
+
+  input.value = '';
+}
+
+async function addCurrentGroupMember() {
+  if (!currentGroupId) {
+    showToast('Open a group first.');
+    return;
+  }
+
+  if (!requireNotBanned()) return;
+
+  const uid = prompt('Enter user UID to add to group:');
+  if (!uid) return;
+
+  await updateDoc(doc(db, 'groups', currentGroupId), {
+    members: arrayUnion(uid.trim())
+  });
+
+  showToast('Member added.');
+  await refreshVisibleGroups();
+  await window.openGroup(currentGroupId);
+}
+
+async function leaveCurrentGroup() {
+  if (!currentGroupId) {
+    showToast('Open a group first.');
+    return;
+  }
+
+  if (!requireNotBanned()) return;
+
+  await updateDoc(doc(db, 'groups', currentGroupId), {
+    members: arrayRemove(currentUid())
+  });
+
+  showToast('You left the group.');
+  currentGroupId = null;
+
+  const headerName = document.getElementById('groupHeaderName');
+  const headerStats = document.getElementById('groupHeaderStats');
+  const headerIcon = document.getElementById('groupHeaderIcon');
+  const title = document.getElementById('groupTitle');
+  const info = document.getElementById('groupHeaderInfo');
+  const members = getGroupMembersEl();
+  const messages = getGroupMessagesEl();
+
+  if (headerName) headerName.textContent = 'Select a group';
+  if (headerStats) headerStats.textContent = 'Messages, members, and posts show here';
+  if (headerIcon) headerIcon.src = '';
+  if (title) title.textContent = 'Group title';
+  if (info) info.textContent = 'Open a group to see details.';
+  if (members) members.innerHTML = '';
+  if (messages) messages.innerHTML = '';
+
+  await refreshVisibleGroups();
+}
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+
+  if (
+    btn.id === 'groupsBtn' ||
+    btn.id === 'openCreateGroupBtn' ||
+    btn.id === 'createGroupBtn' ||
+    btn.id === 'sendGroupMessageBtn' ||
+    btn.id === 'inviteGroupMemberBtn' ||
+    btn.id === 'leaveGroupBtn'
+  ) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    if (btn.id === 'groupsBtn') {
+      await refreshVisibleGroups();
+      const panel = getGroupPanelEl();
+      if (panel) panel.style.display = 'flex';
+      return;
+    }
+
+    if (btn.id === 'openCreateGroupBtn') {
+      window.openCreateGroup();
+      return;
+    }
+
+    if (btn.id === 'createGroupBtn') {
+      await window.submitCreateGroup();
+      return;
+    }
+
+    if (btn.id === 'sendGroupMessageBtn') {
+      await sendCurrentGroupMessage();
+      return;
+    }
+
+    if (btn.id === 'inviteGroupMemberBtn') {
+      await addCurrentGroupMember();
+      return;
+    }
+
+    if (btn.id === 'leaveGroupBtn') {
+      await leaveCurrentGroup();
+      return;
+    }
+  }
+}, true);
+
+window.addEventListener('DOMContentLoaded', async () => {
+  await refreshVisibleGroups();
 });
 
 // test
