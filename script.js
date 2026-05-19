@@ -1281,13 +1281,13 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   if (openCreateBtn) {
-    openCreateBtn.onclick = (e) => {
-      e.preventDefault();
-      console.log('openCreateGroupBtn clicked');
-      const modal = document.getElementById('createGroupModal');
-      if (modal) modal.style.display = 'flex';
-    };
-  }
+  openCreateBtn.onclick = (e) => {
+    e.preventDefault();
+    console.log('openCreateGroupBtn clicked');
+
+    window.openCreateGroup();
+  };
+}
 
   if (createBtn) {
     createBtn.type = 'button';
