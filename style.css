@@ -90,6 +90,12 @@
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
     .modal-box { background: var(--glass-heavy); border: 1px solid var(--border-bright); border-radius: var(--radius-lg); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); position: relative; }
     .modal-box::-webkit-scrollbar { width: 8px; }
+    .modal-content {
+          width: 500px;
+          background: #111;
+          border-radius: 20px;
+          padding: 20px;
+    }
 
     .input-field { width: 100%; padding: 14px 18px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 14px; color: #fff; margin-bottom: 16px; font-size: 15px; outline: none; }
     .input-field:focus { border-color: rgba(29,155,240,0.6); box-shadow: 0 0 0 3px rgba(29,155,240,0.12); }
