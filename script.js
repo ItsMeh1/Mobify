@@ -57,6 +57,18 @@ let selectedPostId = null;
 let groupsCache = [];
 let currentGroupId = null;
 
+window.addEventListener('load', () => {
+  const btn = document.getElementById('createGroupBtn');
+
+  console.log("CREATE BTN:", btn);
+
+  if (btn) {
+    btn.onclick = () => {
+      console.log("BUTTON CLICKED");
+    };
+  }
+});
+
 const showToast = (m) => {
   const c = document.getElementById('toast-container');
   const t = document.createElement('div');
