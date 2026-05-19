@@ -57,17 +57,65 @@ let selectedPostId = null;
 let groupsCache = [];
 let currentGroupId = null;
 
-window.addEventListener('load', () => {
-  const btn = document.getElementById('createGroupBtn');
+window.submitCreateGroup = async () => {
+  console.log("CREATE GROUP CLICKED");
 
-  console.log("CREATE BTN:", btn);
+  try {
+    if (!userProfile) {
+      showToast('Profile is still loading.');
+      return;
+    }
 
-  if (btn) {
-    btn.onclick = () => {
-      console.log("BUTTON CLICKED");
+    if (!requireNotBanned()) return;
+
+    const nameEl = document.getElementById('groupNameInput');
+    const descEl = document.getElementById('groupDescInput') || document.getElementById('groupDescriptionInput');
+
+    if (!nameEl || !descEl) {
+      showToast('Missing group fields.');
+      return;
+    }
+
+    const name = nameEl.value.trim();
+    const description = descEl.value.trim();
+
+    if (!name) {
+      showToast('Group needs a name.');
+      return;
+    }
+
+    const groupData = {
+      name,
+      description,
+      ownerId: currentUid(),
+      ownerName: userProfile.name || 'User',
+      ownerPfp: myPfp(),
+      createdAt: Date.now(),
+      members: [currentUid()],
+      moderators: [],
+      banner: '',
+      icon: '',
+      postCount: 0,
+      visibility: document.getElementById('groupVisibilityInput')?.value || 'public'
     };
+
+    console.log("About to add doc...", groupData);
+
+    const ref = await addDoc(collection(db, 'groups'), groupData);
+
+    console.log("SUCCESS:", ref.id);
+
+    nameEl.value = '';
+    descEl.value = '';
+
+    showToast('Group created!');
+    closeModals();
+    await refreshVisibleGroups();
+  } catch (err) {
+    console.error("GROUP ERROR:", err);
+    showToast(err.message);
   }
-});
+};
 
 const showToast = (m) => {
   const c = document.getElementById('toast-container');
@@ -1180,55 +1228,6 @@ async function leaveCurrentGroup() {
 
   await refreshVisibleGroups();
 }
-
-document.addEventListener('click', async (e) => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-
-  if (
-    btn.id === 'groupsBtn' ||
-    btn.id === 'openCreateGroupBtn' ||
-    btn.id === 'createGroupBtn' ||
-    btn.id === 'sendGroupMessageBtn' ||
-    btn.id === 'inviteGroupMemberBtn' ||
-    btn.id === 'leaveGroupBtn'
-  ) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    if (btn.id === 'groupsBtn') {
-      await refreshVisibleGroups();
-      const panel = getGroupPanelEl();
-      if (panel) panel.style.display = 'flex';
-      return;
-    }
-
-    if (btn.id === 'openCreateGroupBtn') {
-      window.openCreateGroup();
-      return;
-    }
-
-    if (btn.id === 'createGroupBtn') {
-      await window.submitCreateGroup();
-      return;
-    }
-
-    if (btn.id === 'sendGroupMessageBtn') {
-      await sendCurrentGroupMessage();
-      return;
-    }
-
-    if (btn.id === 'inviteGroupMemberBtn') {
-      await addCurrentGroupMember();
-      return;
-    }
-
-    if (btn.id === 'leaveGroupBtn') {
-      await leaveCurrentGroup();
-      return;
-    }
-  }
-}, true);
 
 window.addEventListener('DOMContentLoaded', async () => {
   await refreshVisibleGroups();
