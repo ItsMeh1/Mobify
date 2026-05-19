@@ -117,6 +117,18 @@ window.submitCreateGroup = async () => {
   }
 };
 
+window.openCreateGroup = () => {
+  const panel = document.getElementById('groupPanel') || document.getElementById('groupsModal');
+  const modal = document.getElementById('createGroupModal');
+
+  if (panel) panel.style.display = 'none';
+  
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.style.zIndex = '3000';
+  }
+};
+
 const showToast = (m) => {
   const c = document.getElementById('toast-container');
   const t = document.createElement('div');
