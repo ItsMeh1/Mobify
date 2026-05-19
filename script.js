@@ -1250,3 +1250,92 @@ console.log({
   groupViewModal: document.getElementById('groupViewModal'),
   groupViewContent: document.getElementById('groupViewContent')
 });
+
+window.addEventListener('DOMContentLoaded', () => {
+  const groupsBtn = document.getElementById('groupsBtn');
+  const createBtn = document.getElementById('createGroupBtn');
+  const openCreateBtn = document.getElementById('openCreateGroupBtn');
+  const sendBtn = document.getElementById('sendGroupMessageBtn');
+  const inviteBtn = document.getElementById('inviteGroupMemberBtn');
+  const leaveBtn = document.getElementById('leaveGroupBtn');
+
+  if (groupsBtn) {
+    groupsBtn.onclick = async (e) => {
+      e.preventDefault();
+      console.log('groupsBtn clicked');
+      const panel = document.getElementById('groupPanel') || document.getElementById('groupsModal');
+      if (panel) panel.style.display = 'flex';
+      if (typeof refreshVisibleGroups === 'function') await refreshVisibleGroups();
+    };
+  }
+
+  if (openCreateBtn) {
+    openCreateBtn.onclick = (e) => {
+      e.preventDefault();
+      console.log('openCreateGroupBtn clicked');
+      const modal = document.getElementById('createGroupModal');
+      if (modal) modal.style.display = 'flex';
+    };
+  }
+
+  if (createBtn) {
+    createBtn.type = 'button';
+    createBtn.onclick = async (e) => {
+      e.preventDefault();
+      console.log('createGroupBtn clicked');
+      if (typeof window.submitCreateGroup === 'function') {
+        await window.submitCreateGroup();
+      } else {
+        console.warn('submitCreateGroup is missing');
+      }
+    };
+  }
+
+  if (sendBtn) {
+    sendBtn.type = 'button';
+    sendBtn.onclick = async (e) => {
+      e.preventDefault();
+      console.log('sendGroupMessageBtn clicked');
+      const input = document.getElementById('groupInput') || document.getElementById('groupMessageInput');
+      if (!input) return console.warn('group message input missing');
+      const text = input.value.trim();
+      if (!text) return;
+      await addDoc(collection(db, 'groups', currentGroupId, 'messages'), {
+        text,
+        uid: currentUid(),
+        name: userProfile?.name || 'User',
+        pfp: myPfp(),
+        createdAt: Date.now()
+      });
+      input.value = '';
+    };
+  }
+
+  if (inviteBtn) {
+    inviteBtn.type = 'button';
+    inviteBtn.onclick = async (e) => {
+      e.preventDefault();
+      console.log('inviteGroupMemberBtn clicked');
+      if (!currentGroupId) return showToast('Open a group first.');
+      const uid = prompt('Enter user UID to add to group:');
+      if (!uid) return;
+      await updateDoc(doc(db, 'groups', currentGroupId), { members: arrayUnion(uid.trim()) });
+      showToast('Member added.');
+      if (typeof refreshVisibleGroups === 'function') await refreshVisibleGroups();
+      if (typeof window.openGroup === 'function') await window.openGroup(currentGroupId);
+    };
+  }
+
+  if (leaveBtn) {
+    leaveBtn.type = 'button';
+    leaveBtn.onclick = async (e) => {
+      e.preventDefault();
+      console.log('leaveGroupBtn clicked');
+      if (!currentGroupId) return showToast('Open a group first.');
+      await updateDoc(doc(db, 'groups', currentGroupId), { members: arrayRemove(currentUid()) });
+      showToast('You left the group.');
+      currentGroupId = null;
+      if (typeof refreshVisibleGroups === 'function') await refreshVisibleGroups();
+    };
+  }
+});
