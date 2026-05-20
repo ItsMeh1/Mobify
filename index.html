@@ -37,7 +37,7 @@
       <button class="nav-btn active" id="homeBtn"><span>🏠</span> Home</button>
       <button class="nav-btn" id="trendBtn"><span>🔥</span> Trending</button>
       <button class="nav-btn" id="navProfileBtn"><span>👤</span> Profile</button>
-      <button class="nav-btn" id="groupsBtn" onclick="document.getElementById('groupPanel').style.display='block'"><span>👥</span> Groups</button>
+      <button class="nav-btn" id="groupsBtn"><span>👥</span> Groups</button>
       <button class="nav-btn hidden" id="adminBtn"><span>🛡️</span> Admin</button>
       <button class="nav-btn" id="logoutBtn" style="color:var(--danger); margin-top:20px;"><span>🚪</span> Logout</button>
     </nav>
@@ -263,7 +263,7 @@
 </div>
 
 <!-- CREATE GROUP MODAL -->
-<div class="modal" id="createGroupModal">
+<div class="modal" id="createGroupModal" style="z-index: 5000;">
   <div class="modal-box" style="max-width:520px;">
     <h3 style="margin-top:0">Create Group</h3>
     <input id="groupNameInput" class="input-field" placeholder="Group name">
