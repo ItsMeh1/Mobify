@@ -57,77 +57,7 @@ let selectedPostId = null;
 let groupsCache = [];
 let currentGroupId = null;
 
-window.submitCreateGroup = async () => {
-  console.log("CREATE GROUP CLICKED");
 
-  try {
-    if (!userProfile) {
-      showToast('Profile is still loading.');
-      return;
-    }
-
-    if (!requireNotBanned()) return;
-
-    const nameEl = document.getElementById('groupNameInput');
-    const descEl = document.getElementById('groupDescInput') || document.getElementById('groupDescriptionInput');
-
-    if (!nameEl || !descEl) {
-      showToast('Missing group fields.');
-      return;
-    }
-
-    const name = nameEl.value.trim();
-    const description = descEl.value.trim();
-
-    if (!name) {
-      showToast('Group needs a name.');
-      return;
-    }
-
-    const groupData = {
-      name,
-      description,
-      ownerId: currentUid(),
-      ownerName: userProfile.name || 'User',
-      ownerPfp: myPfp(),
-      createdAt: Date.now(),
-      members: [currentUid()],
-      moderators: [],
-      banner: '',
-      icon: '',
-      postCount: 0,
-      visibility: document.getElementById('groupVisibilityInput')?.value || 'public'
-    };
-
-    console.log("About to add doc...", groupData);
-
-    const ref = await addDoc(collection(db, 'groups'), groupData);
-
-    console.log("SUCCESS:", ref.id);
-
-    nameEl.value = '';
-    descEl.value = '';
-
-    showToast('Group created!');
-    closeModals();
-    await refreshVisibleGroups();
-  } catch (err) {
-    console.error("GROUP ERROR:", err);
-    showToast(err.message);
-  }
-};
-
-window.openCreateGroup = () => {
-  const panel = document.getElementById('groupPanel') || document.getElementById('groupsModal');
-  const modal = document.getElementById('createGroupModal');
-
-  if (panel) panel.style.display = 'none';
-  
-  if (modal) {
-    modal.style.display = 'flex';
-    modal.style.zIndex = '3000';
-  }
-};
 
 const showToast = (m) => {
   const c = document.getElementById('toast-container');
@@ -905,9 +835,6 @@ window.addEventListener('load', () => {
 // GROUP PATCH (APPEND ONLY)
 // =========================
 
-window.__groupCreateBusy = false;
-window.__groupMessagesUnsub = null;
-
 function getVisibleGroupListEl() {
   return document.getElementById('groupList') || document.getElementById('groupsList');
 }
@@ -1137,31 +1064,6 @@ window.toggleGroupJoin = async (gid) => {
   await refreshVisibleGroups();
 };
 
-window.openCreateGroup = () => {
-  const modal = document.getElementById('createGroupModal');
-  if (modal) modal.style.display = 'flex';
-};
-
-window.submitCreateGroup = async () => {
-  console.log("CREATE GROUP CLICKED");
-
-  try {
-    const testData = {
-      name: "TEST GROUP",
-      createdAt: Date.now()
-    };
-
-    console.log("About to add doc...");
-
-    const ref = await addDoc(collection(db, 'groups'), testData);
-
-    console.log("SUCCESS:", ref.id);
-
-  } catch (err) {
-    console.error("GROUP ERROR:", err);
-  }
-};
-
 async function sendCurrentGroupMessage() {
   if (!currentGroupId) {
     showToast('Open a group first.');
@@ -1241,112 +1143,162 @@ async function leaveCurrentGroup() {
   await refreshVisibleGroups();
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
-  await refreshVisibleGroups();
-});
 
+// =========================
+// CLEAN GROUP CONTROLLER
+// =========================
 
-// test
+window.__groupMessagesUnsub = null;
 
-console.log({
-  groupsBtn: document.getElementById('groupsBtn'),
-  groupsList: document.getElementById('groupsList'),
-  groupPanel: document.getElementById('groupPanel'),
-  groupsModal: document.getElementById('groupsModal'),
-  createGroupModal: document.getElementById('createGroupModal'),
-  createGroupBtn: document.getElementById('createGroupBtn'),
-  openCreateGroupBtn: document.getElementById('openCreateGroupBtn'),
-  groupNameInput: document.getElementById('groupNameInput'),
-  groupDescInput: document.getElementById('groupDescInput'),
-  groupViewModal: document.getElementById('groupViewModal'),
-  groupViewContent: document.getElementById('groupViewContent')
-});
-
-window.addEventListener('DOMContentLoaded', () => {
+function setupGroups() {
   const groupsBtn = document.getElementById('groupsBtn');
   const createBtn = document.getElementById('createGroupBtn');
   const openCreateBtn = document.getElementById('openCreateGroupBtn');
   const sendBtn = document.getElementById('sendGroupMessageBtn');
   const inviteBtn = document.getElementById('inviteGroupMemberBtn');
   const leaveBtn = document.getElementById('leaveGroupBtn');
+  const searchInput = document.getElementById('groupSearch');
 
+  // OPEN GROUPS PANEL
   if (groupsBtn) {
     groupsBtn.onclick = async (e) => {
       e.preventDefault();
-      console.log('groupsBtn clicked');
-      const panel = document.getElementById('groupPanel') || document.getElementById('groupsModal');
-      if (panel) panel.style.display = 'flex';
-      if (typeof refreshVisibleGroups === 'function') await refreshVisibleGroups();
+
+      const panel =
+        document.getElementById('groupPanel') ||
+        document.getElementById('groupsModal');
+
+      if (panel) {
+        panel.style.display = 'flex';
+      }
+
+      await refreshVisibleGroups();
     };
   }
 
+  // OPEN CREATE GROUP MODAL
   if (openCreateBtn) {
-  openCreateBtn.onclick = (e) => {
-    e.preventDefault();
-    console.log('openCreateGroupBtn clicked');
+    openCreateBtn.onclick = (e) => {
+      e.preventDefault();
 
-    window.openCreateGroup();
-  };
-}
+      const panel =
+        document.getElementById('groupPanel') ||
+        document.getElementById('groupsModal');
 
+      const modal = document.getElementById('createGroupModal');
+
+      if (panel) panel.style.display = 'none';
+      if (modal) modal.style.display = 'flex';
+    };
+  }
+
+  // CREATE GROUP
   if (createBtn) {
     createBtn.type = 'button';
+
     createBtn.onclick = async (e) => {
       e.preventDefault();
-      console.log('createGroupBtn clicked');
-      if (typeof window.submitCreateGroup === 'function') {
-        await window.submitCreateGroup();
-      } else {
-        console.warn('submitCreateGroup is missing');
+
+      if (!userProfile) {
+        showToast('Profile still loading.');
+        return;
+      }
+
+      if (!requireNotBanned()) return;
+
+      const name =
+        document.getElementById('groupNameInput')?.value.trim() || '';
+
+      const description =
+        document.getElementById('groupDescriptionInput')?.value.trim() ||
+        document.getElementById('groupDescInput')?.value.trim() ||
+        '';
+
+      if (!name) {
+        showToast('Enter a group name.');
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, 'groups'), {
+          name,
+          description,
+          ownerId: currentUid(),
+          ownerName: userProfile.name || 'User',
+          ownerPfp: myPfp(),
+          createdAt: Date.now(),
+          members: [currentUid()],
+          moderators: [],
+          banner: '',
+          icon: '',
+          postCount: 0,
+          visibility: 'public'
+        });
+
+        showToast('Group created!');
+
+        document.getElementById('groupNameInput').value = '';
+
+        const desc1 = document.getElementById('groupDescriptionInput');
+        const desc2 = document.getElementById('groupDescInput');
+
+        if (desc1) desc1.value = '';
+        if (desc2) desc2.value = '';
+
+        closeModals();
+
+        await refreshVisibleGroups();
+
+      } catch (err) {
+        console.error(err);
+        showToast(err.message);
       }
     };
   }
 
+  // SEND MESSAGE
   if (sendBtn) {
     sendBtn.type = 'button';
+
     sendBtn.onclick = async (e) => {
       e.preventDefault();
-      console.log('sendGroupMessageBtn clicked');
-      const input = document.getElementById('groupInput') || document.getElementById('groupMessageInput');
-      if (!input) return console.warn('group message input missing');
-      const text = input.value.trim();
-      if (!text) return;
-      await addDoc(collection(db, 'groups', currentGroupId, 'messages'), {
-        text,
-        uid: currentUid(),
-        name: userProfile?.name || 'User',
-        pfp: myPfp(),
-        createdAt: Date.now()
-      });
-      input.value = '';
+
+      await sendCurrentGroupMessage();
     };
   }
 
+  // INVITE MEMBER
   if (inviteBtn) {
     inviteBtn.type = 'button';
+
     inviteBtn.onclick = async (e) => {
       e.preventDefault();
-      console.log('inviteGroupMemberBtn clicked');
-      if (!currentGroupId) return showToast('Open a group first.');
-      const uid = prompt('Enter user UID to add to group:');
-      if (!uid) return;
-      await updateDoc(doc(db, 'groups', currentGroupId), { members: arrayUnion(uid.trim()) });
-      showToast('Member added.');
-      if (typeof refreshVisibleGroups === 'function') await refreshVisibleGroups();
-      if (typeof window.openGroup === 'function') await window.openGroup(currentGroupId);
+
+      await addCurrentGroupMember();
     };
   }
 
+  // LEAVE GROUP
   if (leaveBtn) {
     leaveBtn.type = 'button';
+
     leaveBtn.onclick = async (e) => {
       e.preventDefault();
-      console.log('leaveGroupBtn clicked');
-      if (!currentGroupId) return showToast('Open a group first.');
-      await updateDoc(doc(db, 'groups', currentGroupId), { members: arrayRemove(currentUid()) });
-      showToast('You left the group.');
-      currentGroupId = null;
-      if (typeof refreshVisibleGroups === 'function') await refreshVisibleGroups();
+
+      await leaveCurrentGroup();
     };
   }
-});
+
+  // LIVE SEARCH
+  if (searchInput) {
+    searchInput.oninput = () => {
+      refreshVisibleGroups();
+    };
+  }
+
+  // INITIAL LOAD
+  refreshVisibleGroups();
+}
+
+// START GROUP SYSTEM
+window.addEventListener('DOMContentLoaded', setupGroups);
