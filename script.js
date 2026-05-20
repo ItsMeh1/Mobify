@@ -1097,14 +1097,38 @@ async function addCurrentGroupMember() {
 
   if (!requireNotBanned()) return;
 
-  const uid = prompt('Enter user UID to add to group:');
-  if (!uid) return;
+  const username = prompt('Enter username to invite:');
+  if (!username) return;
 
-  await updateDoc(doc(db, 'groups', currentGroupId), {
-    members: arrayUnion(uid.trim())
+  const usersSnap = await getDocs(collection(db, 'users'));
+
+  let foundUser = null;
+
+  usersSnap.forEach(docSnap => {
+    const data = docSnap.data();
+
+    if (
+      data.name &&
+      data.name.toLowerCase() === username.trim().toLowerCase()
+    ) {
+      foundUser = {
+        uid: docSnap.id,
+        ...data
+      };
+    }
   });
 
-  showToast('Member added.');
+  if (!foundUser) {
+    showToast('User not found.');
+    return;
+  }
+
+  await updateDoc(doc(db, 'groups', currentGroupId), {
+    members: arrayUnion(foundUser.uid)
+  });
+
+  showToast(`${foundUser.name} added to group!`);
+
   await refreshVisibleGroups();
   await window.openGroup(currentGroupId);
 }
@@ -1193,68 +1217,114 @@ function setupGroups() {
   }
 
   // CREATE GROUP
-  if (createBtn) {
-    createBtn.type = 'button';
+let groupIconBase64 = "";
 
-    createBtn.onclick = async (e) => {
-      e.preventDefault();
+const groupIconInput = document.getElementById('groupIconInput');
 
-      if (!userProfile) {
-        showToast('Profile still loading.');
-        return;
-      }
+if (groupIconInput) {
+  groupIconInput.onchange = (e) => {
+    const file = e.target.files?.[0];
 
-      if (!requireNotBanned()) return;
+    if (!file) return;
 
-      const name =
-        document.getElementById('groupNameInput')?.value.trim() || '';
+    const reader = new FileReader();
 
-      const description =
-        document.getElementById('groupDescriptionInput')?.value.trim() ||
-        document.getElementById('groupDescInput')?.value.trim() ||
-        '';
+    reader.onload = (ev) => {
+      groupIconBase64 = ev.target.result;
 
-      if (!name) {
-        showToast('Enter a group name.');
-        return;
-      }
+      const preview = document.getElementById('groupHeaderIcon');
 
-      try {
-        await addDoc(collection(db, 'groups'), {
-          name,
-          description,
-          ownerId: currentUid(),
-          ownerName: userProfile.name || 'User',
-          ownerPfp: myPfp(),
-          createdAt: Date.now(),
-          members: [currentUid()],
-          moderators: [],
-          banner: '',
-          icon: '',
-          postCount: 0,
-          visibility: 'public'
-        });
-
-        showToast('Group created!');
-
-        document.getElementById('groupNameInput').value = '';
-
-        const desc1 = document.getElementById('groupDescriptionInput');
-        const desc2 = document.getElementById('groupDescInput');
-
-        if (desc1) desc1.value = '';
-        if (desc2) desc2.value = '';
-
-        closeModals();
-
-        await refreshVisibleGroups();
-
-      } catch (err) {
-        console.error(err);
-        showToast(err.message);
+      if (preview) {
+        preview.src = groupIconBase64;
       }
     };
-  }
+
+    reader.readAsDataURL(file);
+  };
+}
+
+if (createBtn) {
+  createBtn.type = 'button';
+
+  createBtn.onclick = async (e) => {
+    e.preventDefault();
+
+    if (!userProfile) {
+      showToast('Profile still loading.');
+      return;
+    }
+
+    if (!requireNotBanned()) return;
+
+    const name =
+      document.getElementById('groupNameInput')?.value.trim() || '';
+
+    const description =
+      document.getElementById('groupDescriptionInput')?.value.trim() ||
+      document.getElementById('groupDescInput')?.value.trim() ||
+      '';
+
+    if (!name) {
+      showToast('Enter a group name.');
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, 'groups'), {
+        name,
+        description,
+
+        ownerId: currentUid(),
+        ownerName: userProfile.name || 'User',
+        ownerPfp: myPfp(),
+
+        createdAt: Date.now(),
+
+        members: [currentUid()],
+        moderators: [],
+
+        banner: '',
+
+        // SAVED ICON
+        icon: groupIconBase64 || fallbackPfp(name, currentUid()),
+
+        postCount: 0,
+        visibility: 'public'
+      });
+
+      showToast('Group created!');
+
+      document.getElementById('groupNameInput').value = '';
+
+      const desc1 = document.getElementById('groupDescriptionInput');
+      const desc2 = document.getElementById('groupDescInput');
+
+      if (desc1) desc1.value = '';
+      if (desc2) desc2.value = '';
+
+      // reset icon stuff
+      groupIconBase64 = '';
+
+      if (groupIconInput) {
+        groupIconInput.value = '';
+      }
+
+      const preview = document.getElementById('groupHeaderIcon');
+
+      if (preview) {
+        preview.src = '';
+      }
+
+      closeModals();
+
+      await refreshVisibleGroups();
+
+    } catch (err) {
+      console.error(err);
+      showToast(err.message);
+    }
+  };
+}
 
   // SEND MESSAGE
   if (sendBtn) {
