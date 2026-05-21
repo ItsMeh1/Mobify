@@ -41,7 +41,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-
+// GLOBAL STATE DATA ARCHITECTURE
 let userProfile = null;
 let isPosting = false;
 let postImgBase64 = "";
@@ -53,18 +53,18 @@ let adminPostsCache = [];
 let feedUnsubscribe = null;
 let selectedProfileUid = null;
 let selectedPostId = null;
-// GROUPS
+
+// GROUPS & ADVANCED SEARCH FILTERS STATE
 let groupsCache = [];
 let currentGroupId = null;
-let allPostsCache = [];       // Central memory repository for real-time posts
-let activeTagFilter = null;    // Stores current filter tag strings (ex: '#gaming')
-let activeSearchQuery = "";    // Holds active raw search field string keys
-let isTrendingSortActive = false; // Toggles conditional engagement sorting
-
-
+let allPostsCache = [];          // Central real-time memory repository for layout posts
+let activeTagFilter = null;       // Stores active string hashtag keys
+let activeSearchQuery = "";       // Holds raw search engine string filter queries
+let isTrendingSortActive = false; // Toggles conditional engagement density sorting
 
 const showToast = (m) => {
   const c = document.getElementById('toast-container');
+  if (!c) return;
   const t = document.createElement('div');
   t.className = 'toast';
   t.innerText = m;
@@ -179,7 +179,7 @@ function setPostLikeState(button, liked) {
   button.classList.toggle('liked', liked);
 }
 
-// AUTH
+// AUTH HANDLERS
 const authBtn = document.getElementById('toggleAuth');
 authBtn.onclick = () => {
   isLoginMode = !isLoginMode;
@@ -230,8 +230,10 @@ document.getElementById('authForm').onsubmit = async (e) => {
 };
 
 document.getElementById('logoutBtn').onclick = () => signOut(auth);
-document.getElementById('homeBtn').onclick = () => document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
-document.getElementById('trendBtn').onclick = () => document.getElementById('trendsList').parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+document.getElementById('homeBtn').onclick = () => {
+  window.clearFeedFilters();
+  document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
 document.getElementById('profileEditBtn').onclick = () => openEditProfile();
 document.getElementById('verifyRequestBtn').onclick = async () => {
@@ -323,7 +325,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// FEED
+// REAL-TIME TREND AGGREGATOR
 function renderTrends(posts) {
   const trends = {};
   posts.forEach(data => {
@@ -331,21 +333,26 @@ function renderTrends(posts) {
     if (matches) matches.forEach(t => trends[t] = (trends[t] || 0) + 1);
   });
   const tList = document.getElementById('trendsList');
+  if (!tList) return;
   tList.innerHTML = '';
+  
   Object.entries(trends).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([name, count]) => {
     const div = document.createElement('div');
-    div.className = 'trend-item';
+    div.className = `trend-item ${activeTagFilter === name ? 'active' : ''}`;
     div.innerHTML = `<span class="trend-name">${safeText(name)}</span><span class="trend-count">${count} posts</span>`;
+    
+    // High efficiency local query filter click toggle
+    div.onclick = () => window.filterByTag(name);
     tList.appendChild(div);
   });
   if (!Object.keys(trends).length) tList.innerHTML = '<div class="tiny">No trending tags yet.</div>';
 }
 
-// Central pipeline engine computing all active filters and layout states
+// PIPELINE COMPILING COMBINED SEARCHES, TAGS & TRENDING SELECTIONS
 function processAndRenderFeed() {
   let processed = [...allPostsCache];
 
-  // 1. Evaluate Explicit Hashtag Restrictions
+  // 1. Evaluate Active Hashtag Filters
   if (activeTagFilter) {
     processed = processed.filter(p => 
       p.text && p.text.toLowerCase().includes(activeTagFilter.toLowerCase())
@@ -362,35 +369,36 @@ function processAndRenderFeed() {
     });
   }
 
-  // 3. Apply Conditional Engagement Sorting Calculations
+  // 3. Apply Conditional Sorting Systems
   if (isTrendingSortActive) {
     processed.sort((a, b) => {
       const scoreA = (a.likes?.length || 0) + (a.comments?.length || 0);
       const scoreB = (b.likes?.length || 0) + (b.comments?.length || 0);
-      return scoreB - scoreA; // Yields highly descriptive engagement density rank
+      return scoreB - scoreA;
     });
   } else {
-    // Standard Sticky Pin Priority + Reverse Chronological Time Default Sort
     processed.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
   }
 
-  // 4. Interface Feedback Visual Renderer Update Hooks
+  // 4. Update Filter Feedback Display Bar
   const bar = document.getElementById('filterControlBar');
   const label = document.getElementById('filterStatusLabel');
-  
-  if (activeTagFilter || activeSearchQuery || isTrendingSortActive) {
-    bar.classList.remove('hidden');
-    let labelParts = [];
-    if (activeTagFilter) labelParts.push(`Tag: ${activeTagFilter}`);
-    if (activeSearchQuery) labelParts.push(`Search: "${activeSearchQuery}"`);
-    if (isTrendingSortActive) labelParts.push(`Sorted by Top Engagement 🔥`);
-    label.innerText = `Active Filters: ${labelParts.join(' • ')}`;
-  } else {
-    bar.classList.add('hidden');
+  if (bar && label) {
+    if (activeTagFilter || activeSearchQuery || isTrendingSortActive) {
+      bar.classList.remove('hidden');
+      let labelParts = [];
+      if (activeTagFilter) labelParts.push(`Tag: ${activeTagFilter}`);
+      if (activeSearchQuery) labelParts.push(`Search: "${activeSearchQuery}"`);
+      if (isTrendingSortActive) labelParts.push(`Sorted by Popularity 🔥`);
+      label.innerText = `Active Filters: ${labelParts.join(' • ')}`;
+    } else {
+      bar.classList.add('hidden');
+    }
   }
 
-  // 5. Build Layout Feed Containers
+  // 5. Render Stream Layout Elements
   const feed = document.getElementById('feed');
+  if (!feed) return;
   feed.innerHTML = '';
   
   if (processed.length === 0) {
@@ -401,28 +409,26 @@ function processAndRenderFeed() {
   processed.forEach(p => feed.appendChild(renderPost(p)));
 }
 
-// Global scope hooks for clearing active search restrictions instantly
+// GLOBAL CONTEXT SCOPE FILTER HANDLERS
 window.clearFeedFilters = () => {
   activeTagFilter = null;
   activeSearchQuery = "";
   isTrendingSortActive = false;
-  document.getElementById('feedSearchInput').value = "";
-  document.getElementById('trendBtn').classList.remove('active');
+  const searchInp = document.getElementById('feedSearchInput');
+  const trendBtn = document.getElementById('trendBtn');
+  if (searchInp) searchInp.value = "";
+  if (trendBtn) trendBtn.classList.remove('active');
   processAndRenderFeed();
 };
 
 window.filterByTag = (tagString) => {
-  // If clicking an already active tag, toggle it off
-  if (activeTagFilter === tagString) {
-    activeTagFilter = null;
-  } else {
-    activeTagFilter = tagString;
-  }
+  activeTagFilter = (activeTagFilter === tagString) ? null : tagString;
+  renderTrends(allPostsCache); // Refreshes active visual state highlights
   document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
   processAndRenderFeed();
 };
 
-// REPLACE your current initApp() with this implementation
+// CORE DATABASE LISTENERS
 function initApp() {
   const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
   if (feedUnsubscribe) feedUnsubscribe();
@@ -434,42 +440,11 @@ function initApp() {
     renderTrends(allPostsCache);
     adminPostsCache = allPostsCache;
     updateAdminStats();
-
-    // Call the filtration processor instead of raw rendering cascades
     processAndRenderFeed();
   });
 }
 
-// REPLACE your existing renderTrends click mapper segment inside renderTrends(posts):
-// Find where you create your trend item elements, and replace with this:
-Object.entries(trends).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([name, count]) => {
-  const div = document.createElement('div');
-  div.className = 'trend-item';
-  div.innerHTML = `<span class="trend-name">${safeText(name)}</span><span class="trend-count">${count} posts</span>`;
-  
-  // High efficiency click filtration mapper assignment
-  div.onclick = () => window.filterByTag(name);
-  
-  tList.appendChild(div);
-});
-
-// REWIRE your trending navigation menu item click handler to toggle sorting
-document.getElementById('trendBtn').onclick = function(e) {
-  e.preventDefault();
-  isTrendingSortActive = !isTrendingSortActive;
-  this.classList.toggle('active', isTrendingSortActive);
-  
-  showToast(isTrendingSortActive ? "Sorting feed by popular engagement!" : "Returned to chronological timeline.");
-  document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  processAndRenderFeed();
-};
-
-// Wire up live query inputs to your processing timeline engine
-document.getElementById('feedSearchInput').oninput = function(e) {
-  activeSearchQuery = e.target.value.trim();
-  processAndRenderFeed();
-};
-
+// UI POST CARDS RENDER ENGINE
 function renderPost(p) {
   const div = document.createElement('div');
   div.className = `post ${p.pinned ? 'pinned' : ''}`;
@@ -646,7 +621,7 @@ async function openProfile(uid) {
 
 window.viewUserProfile = openProfile;
 
-// POSTING
+// POSTING SYSTEM CONTROLS
 document.getElementById('fab').onclick = () => {
   if (!requireNotBanned()) return;
   document.getElementById('postModal').style.display = 'flex';
@@ -666,7 +641,7 @@ document.getElementById('postFileInput').onchange = (e) => {
 };
 
 document.getElementById('submitPostBtn').onclick = async () => {
-  if (isPosting) return; // 🚫 block spam clicks
+  if (isPosting) return; 
   if (!requireNotBanned()) return;
 
   const btn = document.getElementById('submitPostBtn');
@@ -713,7 +688,7 @@ document.getElementById('submitPostBtn').onclick = async () => {
   }
 };
 
-// ADMIN
+// ADMIN MODERATION SYSTEMS
 const adminFilterEl = document.getElementById('adminFilter');
 const adminSearchEl = document.getElementById('adminSearch');
 
@@ -870,621 +845,40 @@ async function bulkActionVisible(mode) {
   await refreshAdminPanel();
 }
 
+// ATTACH CORE VIEW PORT DOM TRiggers
 document.getElementById('adminBtn').onclick = async () => {
   if (!isStaff(userProfile)) return showToast('No permission.');
   document.getElementById('adminModal').style.display = 'flex';
   document.getElementById('adminUserList').innerHTML = 'Fetching...';
   await refreshAdminPanel();
 };
+
 document.getElementById('refreshAdminBtn').onclick = refreshAdminPanel;
-document.getElementById('customRankRefreshBtn').onclick = refreshAdminPanel;
 document.getElementById('adminSearch').oninput = refreshAdminPanel;
 document.getElementById('adminFilter').onchange = refreshAdminPanel;
 document.getElementById('muteAllBtn').onclick = () => bulkActionVisible('Mute');
 document.getElementById('unmuteAllBtn').onclick = () => bulkActionVisible('Unmute');
 document.getElementById('banAllBtn').onclick = () => bulkActionVisible('Ban');
 document.getElementById('unbanAllBtn').onclick = () => bulkActionVisible('Unban');
-document.getElementById('createRankBtn').onclick = async () => {
-  if (!isStaff(userProfile)) return showToast('No permission.');
-  const label = document.getElementById('rankLabelInput').value.trim();
-  const priority = Number(document.getElementById('rankPriorityInput').value || 0);
-  if (!label) return showToast('Enter a rank label.');
-  if (priority >= getPriority(userProfile) && !isOwner(userProfile)) return showToast('You cannot create a rank at or above your own priority.');
-  const uid = prompt('User ID to apply this rank to?');
-  if (!uid) return;
-  const targetSnap = await getDoc(doc(db, 'users', uid.trim()));
-  if (!targetSnap.exists()) return showToast('User not found.');
-  const target = normalizeUser(uid.trim(), targetSnap.data() || {});
-  if (!canModerate(target) || isOwner(target)) return showToast('You cannot modify this user.');
-  await updateDoc(doc(db, 'users', uid.trim()), { role: label, rankPriority: priority });
-  showToast('Rank applied.');
-  await refreshAdminPanel();
-};
 
-// PROFILE + POST ACTIONS
-window.navProfile = () => openProfile(currentUid());
-document.getElementById('navProfileBtn').onclick = () => openProfile(currentUid());
-
-// ADMIN-ONLY FIRESTORE HELPERS
-
-// (Optional helper if you later expand admin tools)
-async function forceDeleteUser(uid) {
-  if (!isOwner(userProfile)) return showToast('Owner only action.');
-  if (!confirm('Permanently delete this user document?')) return;
-  await deleteDoc(doc(db, 'users', uid));
-  showToast('User deleted.');
-  await refreshAdminPanel();
-}
-
-// GLOBAL ESC KEY CLOSE (nice UX)
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModals();
-});
-
-// CLICK OUTSIDE MODAL TO CLOSE
-document.querySelectorAll('.modal').forEach(modal => {
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModals();
-  });
-});
-
-// BASIC NAV ACTIVE STATE (visual polish)
-const navButtons = document.querySelectorAll('.nav-btn');
-navButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    navButtons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
-
-// SAFETY: Prevent empty profile crash edge case
-if (!window.viewUserProfile) {
-  window.viewUserProfile = (uid) => openProfile(uid);
-}
-
-// INITIAL UI STATE FIXES
-window.addEventListener('load', () => {
-  document.getElementById('feed').innerHTML = '<div class="tiny">Loading feed...</div>';
-});
-
-// =========================
-// GROUP PATCH (APPEND ONLY)
-// =========================
-
-function getVisibleGroupListEl() {
-  return document.getElementById('groupList') || document.getElementById('groupsList');
-}
-
-function getGroupPanelEl() {
-  return document.getElementById('groupPanel') || document.getElementById('groupsModal');
-}
-
-function getGroupDescEl() {
-  return document.getElementById('groupDescriptionInput') || document.getElementById('groupDescInput');
-}
-
-function getGroupNameEl() {
-  return document.getElementById('groupNameInput');
-}
-
-function getGroupMessagesEl() {
-  return document.getElementById('groupMessages');
-}
-
-function getGroupMembersEl() {
-  return document.getElementById('groupMembersList');
-}
-
-async function refreshVisibleGroups() {
-  const wrap = getVisibleGroupListEl();
-  if (!wrap) return;
-
-  wrap.innerHTML = '<div class="tiny">Loading groups...</div>';
-
-  const snap = await getDocs(collection(db, 'groups'));
-  const groups = [];
-
-  snap.forEach(d => groups.push({ id: d.id, ...d.data() }));
-  groupsCache = groups;
-
-  const search = (document.getElementById('groupSearch')?.value || '').trim().toLowerCase();
-
-  const filtered = groups
-    .filter(g => {
-      if (!search) return true;
-      return `${g.name || ''} ${g.description || ''}`.toLowerCase().includes(search);
-    })
-    .sort((a, b) => (b.members?.length || 0) - (a.members?.length || 0));
-
-  wrap.innerHTML = '';
-
-  if (!filtered.length) {
-    wrap.innerHTML = '<div class="tiny">No groups yet.</div>';
-    return;
-  }
-
-  filtered.forEach(g => {
-    const isMember = g.members?.includes(currentUid());
-
-    const card = document.createElement('div');
-    card.className = 'group-card';
-
-    card.innerHTML = `
-      <div class="group-top">
-        <div class="group-icon">${safeText((g.name || 'G')[0])}</div>
-        <div class="group-meta">
-          <div class="group-name">${safeText(g.name || 'Unnamed Group')}</div>
-          <div class="group-members">${g.members?.length || 0} members</div>
-        </div>
-      </div>
-
-      <div class="group-desc">
-        ${safeText(g.description || 'No description')}
-      </div>
-
-      <div class="group-actions">
-        <button class="tool-btn accent" data-open-group="${g.id}">Open</button>
-        <button class="tool-btn ${isMember ? 'danger' : 'success'}" data-join-group="${g.id}">
-          ${isMember ? 'Leave' : 'Join'}
-        </button>
-      </div>
-    `;
-
-    wrap.appendChild(card);
-  });
-
-  wrap.querySelectorAll('[data-open-group]').forEach(btn => {
-    btn.onclick = () => window.openGroup(btn.dataset.openGroup);
-  });
-
-  wrap.querySelectorAll('[data-join-group]').forEach(btn => {
-    btn.onclick = () => window.toggleGroupJoin(btn.dataset.joinGroup);
-  });
-}
-
-window.refreshGroupList = refreshVisibleGroups;
-window.loadGroups = refreshVisibleGroups;
-
-async function renderGroupMembers(group) {
-  const wrap = getGroupMembersEl();
-  if (!wrap) return;
-
-  const memberIds = Array.from(new Set([
-    ...(group.members || []),
-    group.ownerId
-  ].filter(Boolean)));
-
-  wrap.innerHTML = '';
-
-  if (!memberIds.length) {
-    wrap.innerHTML = '<div class="tiny">No members.</div>';
-    return;
-  }
-
-  const memberDocs = await Promise.all(
-    memberIds.map(async (uid) => {
-      const snap = await getDoc(doc(db, 'users', uid));
-      return {
-        uid,
-        data: snap.exists() ? snap.data() : {}
-      };
-    })
-  );
-
-  memberDocs.forEach(({ uid, data }) => {
-    const role = uid === group.ownerId ? 'Owner' : 'Member';
-
-    const item = document.createElement('div');
-    item.className = 'admin-card';
-    item.innerHTML = `
-      <div class="admin-row">
-        <img src="${getPfpSrc(data.pfp, data.name || uid, uid)}" class="avatar" style="width:34px; height:34px;">
-        <div class="admin-meta">
-          <div class="admin-name">${safeText(data.name || uid)}</div>
-          <div class="admin-email">${safeText(role)}</div>
-        </div>
-      </div>
-    `;
-    wrap.appendChild(item);
-  });
-}
-
-async function loadGroupMessages(groupId) {
-  if (window.__groupMessagesUnsub) {
-    window.__groupMessagesUnsub();
-    window.__groupMessagesUnsub = null;
-  }
-
-  const wrap = getGroupMessagesEl();
-  if (!wrap) return;
-
-  const q = query(collection(db, 'groups', groupId, 'messages'), orderBy('createdAt', 'asc'));
-
-  window.__groupMessagesUnsub = onSnapshot(q, (snapshot) => {
-    wrap.innerHTML = '';
-
-    snapshot.forEach(d => {
-      const m = d.data();
-
-      const row = document.createElement('div');
-      row.className = 'group-msg';
-      row.innerHTML = `
-        <strong>${safeText(m.name || 'User')}</strong>
-        <div style="white-space:pre-wrap; margin-top:6px;">${safeText(m.text || '')}</div>
-        <div class="tiny" style="margin-top:8px;">${timeAgo(m.createdAt)}</div>
-      `;
-      wrap.appendChild(row);
-    });
-
-    wrap.scrollTop = wrap.scrollHeight;
-  });
-}
-
-window.openGroup = async (gid) => {
-  currentGroupId = gid;
-
-  const snap = await getDoc(doc(db, 'groups', gid));
-  if (!snap.exists()) return;
-
-  const g = snap.data();
-  const panel = getGroupPanelEl();
-
-  const headerName = document.getElementById('groupHeaderName');
-  const headerStats = document.getElementById('groupHeaderStats');
-  const headerIcon = document.getElementById('groupHeaderIcon');
-  const title = document.getElementById('groupTitle');
-  const info = document.getElementById('groupHeaderInfo');
-
-  if (panel) panel.style.display = 'flex';
-
-  if (headerName) headerName.textContent = g.name || 'Group';
-  if (headerStats) headerStats.textContent = `${g.members?.length || 0} members`;
-  if (title) title.textContent = g.name || 'Group title';
-  if (info) {
-    info.innerHTML = `
-      <div><strong>Visibility:</strong> ${safeText(g.visibility || 'public')}</div>
-      <div><strong>Owner:</strong> ${safeText(g.ownerName || 'Unknown')}</div>
-      <div><strong>Description:</strong> ${safeText(g.description || 'No description')}</div>
-    `;
-  }
-
-  if (headerIcon) {
-    headerIcon.src = g.icon || fallbackPfp(g.name || 'Group', gid);
-    headerIcon.onerror = () => {
-      headerIcon.src = fallbackPfp(g.name || 'Group', gid);
-    };
-  }
-
-  await renderGroupMembers(g);
-  await loadGroupMessages(gid);
-};
-
-window.toggleGroupJoin = async (gid) => {
-  if (!requireNotBanned()) return;
-
-  const ref = doc(db, 'groups', gid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return;
-
-  const data = snap.data();
-  const members = data.members || [];
-
-  if (members.includes(currentUid())) {
-    await updateDoc(ref, { members: arrayRemove(currentUid()) });
-    showToast('Left group.');
-  } else {
-    await updateDoc(ref, { members: arrayUnion(currentUid()) });
-    showToast('Joined group!');
-  }
-
-  await refreshVisibleGroups();
-};
-
-async function sendCurrentGroupMessage() {
-  if (!currentGroupId) {
-    showToast('Open a group first.');
-    return;
-  }
-
-  if (!requireNotBanned()) return;
-
-  const input = document.getElementById('groupInput') || document.getElementById('groupMessageInput');
-  if (!input) return;
-
-  const text = input.value.trim();
-  if (!text) return;
-
-  await addDoc(collection(db, 'groups', currentGroupId, 'messages'), {
-    text,
-    uid: currentUid(),
-    name: userProfile?.name || 'User',
-    pfp: myPfp(),
-    createdAt: Date.now()
-  });
-
-  input.value = '';
-}
-
-async function addCurrentGroupMember() {
-  if (!currentGroupId) {
-    showToast('Open a group first.');
-    return;
-  }
-
-  if (!requireNotBanned()) return;
-
-  const username = prompt('Enter username to invite:');
-  if (!username) return;
-
-  const usersSnap = await getDocs(collection(db, 'users'));
-
-  let foundUser = null;
-
-  usersSnap.forEach(docSnap => {
-    const data = docSnap.data();
-
-    if (
-      data.name &&
-      data.name.toLowerCase() === username.trim().toLowerCase()
-    ) {
-      foundUser = {
-        uid: docSnap.id,
-        ...data
-      };
-    }
-  });
-
-  if (!foundUser) {
-    showToast('User not found.');
-    return;
-  }
-
-  await updateDoc(doc(db, 'groups', currentGroupId), {
-    members: arrayUnion(foundUser.uid)
-  });
-
-  showToast(`${foundUser.name} added to group!`);
-
-  await refreshVisibleGroups();
-  await window.openGroup(currentGroupId);
-}
-
-async function leaveCurrentGroup() {
-  if (!currentGroupId) {
-    showToast('Open a group first.');
-    return;
-  }
-
-  if (!requireNotBanned()) return;
-
-  await updateDoc(doc(db, 'groups', currentGroupId), {
-    members: arrayRemove(currentUid())
-  });
-
-  showToast('You left the group.');
-  currentGroupId = null;
-
-  const headerName = document.getElementById('groupHeaderName');
-  const headerStats = document.getElementById('groupHeaderStats');
-  const headerIcon = document.getElementById('groupHeaderIcon');
-  const title = document.getElementById('groupTitle');
-  const info = document.getElementById('groupHeaderInfo');
-  const members = getGroupMembersEl();
-  const messages = getGroupMessagesEl();
-
-  if (headerName) headerName.textContent = 'Select a group';
-  if (headerStats) headerStats.textContent = 'Messages, members, and posts show here';
-  if (headerIcon) headerIcon.src = '';
-  if (title) title.textContent = 'Group title';
-  if (info) info.textContent = 'Open a group to see details.';
-  if (members) members.innerHTML = '';
-  if (messages) messages.innerHTML = '';
-
-  await refreshVisibleGroups();
-}
-
-
-// =========================
-// CLEAN GROUP CONTROLLER
-// =========================
-
-window.__groupMessagesUnsub = null;
-
-function setupGroups() {
-  const groupsBtn = document.getElementById('groupsBtn');
-  const createBtn = document.getElementById('createGroupBtn');
-  const openCreateBtn = document.getElementById('openCreateGroupBtn');
-  const sendBtn = document.getElementById('sendGroupMessageBtn');
-  const inviteBtn = document.getElementById('inviteGroupMemberBtn');
-  const leaveBtn = document.getElementById('leaveGroupBtn');
-  const searchInput = document.getElementById('groupSearch');
-
-  // OPEN GROUPS PANEL
-  if (groupsBtn) {
-    groupsBtn.onclick = async (e) => {
-      e.preventDefault();
-
-      const panel =
-        document.getElementById('groupPanel') ||
-        document.getElementById('groupsModal');
-
-      if (panel) {
-        panel.style.display = 'flex';
-      }
-
-      await refreshVisibleGroups();
-    };
-  }
-
-  // OPEN CREATE GROUP MODAL
-  if (openCreateBtn) {
-    openCreateBtn.onclick = (e) => {
-      e.preventDefault();
-
-      const panel =
-        document.getElementById('groupPanel') ||
-        document.getElementById('groupsModal');
-
-      const modal = document.getElementById('createGroupModal');
-
-      if (panel) panel.style.display = 'none';
-      if (modal) modal.style.display = 'flex';
-    };
-  }
-
-  // CREATE GROUP
-let groupIconBase64 = "";
-
-const groupIconInput = document.getElementById('groupIconInput');
-
-if (groupIconInput) {
-  groupIconInput.onchange = (e) => {
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = (ev) => {
-      groupIconBase64 = ev.target.result;
-
-      const preview = document.getElementById('groupHeaderIcon');
-
-      if (preview) {
-        preview.src = groupIconBase64;
-      }
-    };
-
-    reader.readAsDataURL(file);
+// REAL-TIME INPUT EVENT ROUTINES
+const feedSearchInput = document.getElementById('feedSearchInput');
+if (feedSearchInput) {
+  feedSearchInput.oninput = (e) => {
+    activeSearchQuery = e.target.value.trim();
+    processAndRenderFeed();
   };
 }
 
-if (createBtn) {
-  createBtn.type = 'button';
-
-  createBtn.onclick = async (e) => {
+const trendBtn = document.getElementById('trendBtn');
+if (trendBtn) {
+  trendBtn.onclick = function(e) {
     e.preventDefault();
-
-    if (!userProfile) {
-      showToast('Profile still loading.');
-      return;
-    }
-
-    if (!requireNotBanned()) return;
-
-    const name =
-      document.getElementById('groupNameInput')?.value.trim() || '';
-
-    const description =
-      document.getElementById('groupDescriptionInput')?.value.trim() ||
-      document.getElementById('groupDescInput')?.value.trim() ||
-      '';
-
-    if (!name) {
-      showToast('Enter a group name.');
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, 'groups'), {
-        name,
-        description,
-
-        ownerId: currentUid(),
-        ownerName: userProfile.name || 'User',
-        ownerPfp: myPfp(),
-
-        createdAt: Date.now(),
-
-        members: [currentUid()],
-        moderators: [],
-
-        banner: '',
-
-        // SAVED ICON
-        icon: groupIconBase64 || fallbackPfp(name, currentUid()),
-
-        postCount: 0,
-        visibility: 'public'
-      });
-
-      showToast('Group created!');
-
-      document.getElementById('groupNameInput').value = '';
-
-      const desc1 = document.getElementById('groupDescriptionInput');
-      const desc2 = document.getElementById('groupDescInput');
-
-      if (desc1) desc1.value = '';
-      if (desc2) desc2.value = '';
-
-      // reset icon stuff
-      groupIconBase64 = '';
-
-      if (groupIconInput) {
-        groupIconInput.value = '';
-      }
-
-      const preview = document.getElementById('groupHeaderIcon');
-
-      if (preview) {
-        preview.src = '';
-      }
-
-      closeModals();
-
-      await refreshVisibleGroups();
-
-    } catch (err) {
-      console.error(err);
-      showToast(err.message);
-    }
+    isTrendingSortActive = !isTrendingSortActive;
+    this.classList.toggle('active', isTrendingSortActive);
+    
+    showToast(isTrendingSortActive ? "Sorting feed by popular engagement!" : "Returned to chronological timeline.");
+    document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    processAndRenderFeed();
   };
 }
-
-  // SEND MESSAGE
-  if (sendBtn) {
-    sendBtn.type = 'button';
-
-    sendBtn.onclick = async (e) => {
-      e.preventDefault();
-
-      await sendCurrentGroupMessage();
-    };
-  }
-
-  // INVITE MEMBER
-  if (inviteBtn) {
-    inviteBtn.type = 'button';
-
-    inviteBtn.onclick = async (e) => {
-      e.preventDefault();
-
-      await addCurrentGroupMember();
-    };
-  }
-
-  // LEAVE GROUP
-  if (leaveBtn) {
-    leaveBtn.type = 'button';
-
-    leaveBtn.onclick = async (e) => {
-      e.preventDefault();
-
-      await leaveCurrentGroup();
-    };
-  }
-
-  // LIVE SEARCH
-  if (searchInput) {
-    searchInput.oninput = () => {
-      refreshVisibleGroups();
-    };
-  }
-
-  // INITIAL LOAD
-  refreshVisibleGroups();
-}
-
-// START GROUP SYSTEM
-window.addEventListener('DOMContentLoaded', setupGroups);
