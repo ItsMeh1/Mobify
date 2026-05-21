@@ -56,6 +56,10 @@ let selectedPostId = null;
 // GROUPS
 let groupsCache = [];
 let currentGroupId = null;
+let allPostsCache = [];       // Central memory repository for real-time posts
+let activeTagFilter = null;    // Stores current filter tag strings (ex: '#gaming')
+let activeSearchQuery = "";    // Holds active raw search field string keys
+let isTrendingSortActive = false; // Toggles conditional engagement sorting
 
 
 
@@ -337,22 +341,134 @@ function renderTrends(posts) {
   if (!Object.keys(trends).length) tList.innerHTML = '<div class="tiny">No trending tags yet.</div>';
 }
 
+// Central pipeline engine computing all active filters and layout states
+function processAndRenderFeed() {
+  let processed = [...allPostsCache];
+
+  // 1. Evaluate Explicit Hashtag Restrictions
+  if (activeTagFilter) {
+    processed = processed.filter(p => 
+      p.text && p.text.toLowerCase().includes(activeTagFilter.toLowerCase())
+    );
+  }
+
+  // 2. Evaluate Global Search Input Box Queries
+  if (activeSearchQuery) {
+    const query = activeSearchQuery.toLowerCase();
+    processed = processed.filter(p => {
+      const matchText = (p.text || "").toLowerCase().includes(query);
+      const matchAuthor = (p.authorName || "").toLowerCase().includes(query);
+      return matchText || matchAuthor;
+    });
+  }
+
+  // 3. Apply Conditional Engagement Sorting Calculations
+  if (isTrendingSortActive) {
+    processed.sort((a, b) => {
+      const scoreA = (a.likes?.length || 0) + (a.comments?.length || 0);
+      const scoreB = (b.likes?.length || 0) + (b.comments?.length || 0);
+      return scoreB - scoreA; // Yields highly descriptive engagement density rank
+    });
+  } else {
+    // Standard Sticky Pin Priority + Reverse Chronological Time Default Sort
+    processed.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+  }
+
+  // 4. Interface Feedback Visual Renderer Update Hooks
+  const bar = document.getElementById('filterControlBar');
+  const label = document.getElementById('filterStatusLabel');
+  
+  if (activeTagFilter || activeSearchQuery || isTrendingSortActive) {
+    bar.classList.remove('hidden');
+    let labelParts = [];
+    if (activeTagFilter) labelParts.push(`Tag: ${activeTagFilter}`);
+    if (activeSearchQuery) labelParts.push(`Search: "${activeSearchQuery}"`);
+    if (isTrendingSortActive) labelParts.push(`Sorted by Top Engagement 🔥`);
+    label.innerText = `Active Filters: ${labelParts.join(' • ')}`;
+  } else {
+    bar.classList.add('hidden');
+  }
+
+  // 5. Build Layout Feed Containers
+  const feed = document.getElementById('feed');
+  feed.innerHTML = '';
+  
+  if (processed.length === 0) {
+    feed.innerHTML = '<div class="tiny" style="padding: 40px; text-align: center;">No matching posts found.</div>';
+    return;
+  }
+  
+  processed.forEach(p => feed.appendChild(renderPost(p)));
+}
+
+// Global scope hooks for clearing active search restrictions instantly
+window.clearFeedFilters = () => {
+  activeTagFilter = null;
+  activeSearchQuery = "";
+  isTrendingSortActive = false;
+  document.getElementById('feedSearchInput').value = "";
+  document.getElementById('trendBtn').classList.remove('active');
+  processAndRenderFeed();
+};
+
+window.filterByTag = (tagString) => {
+  // If clicking an already active tag, toggle it off
+  if (activeTagFilter === tagString) {
+    activeTagFilter = null;
+  } else {
+    activeTagFilter = tagString;
+  }
+  document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  processAndRenderFeed();
+};
+
+// REPLACE your current initApp() with this implementation
 function initApp() {
   const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
   if (feedUnsubscribe) feedUnsubscribe();
+  
   feedUnsubscribe = onSnapshot(q, (snapshot) => {
-    const feed = document.getElementById('feed');
-    const posts = [];
-    snapshot.forEach(d => posts.push({ id: d.id, ...d.data() }));
+    allPostsCache = [];
+    snapshot.forEach(d => allPostsCache.push({ id: d.id, ...d.data() }));
 
-    renderTrends(posts);
-    adminPostsCache = posts;
+    renderTrends(allPostsCache);
+    adminPostsCache = allPostsCache;
     updateAdminStats();
 
-    feed.innerHTML = '';
-    posts.sort((a,b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).forEach(p => feed.appendChild(renderPost(p)));
+    // Call the filtration processor instead of raw rendering cascades
+    processAndRenderFeed();
   });
 }
+
+// REPLACE your existing renderTrends click mapper segment inside renderTrends(posts):
+// Find where you create your trend item elements, and replace with this:
+Object.entries(trends).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([name, count]) => {
+  const div = document.createElement('div');
+  div.className = 'trend-item';
+  div.innerHTML = `<span class="trend-name">${safeText(name)}</span><span class="trend-count">${count} posts</span>`;
+  
+  // High efficiency click filtration mapper assignment
+  div.onclick = () => window.filterByTag(name);
+  
+  tList.appendChild(div);
+});
+
+// REWIRE your trending navigation menu item click handler to toggle sorting
+document.getElementById('trendBtn').onclick = function(e) {
+  e.preventDefault();
+  isTrendingSortActive = !isTrendingSortActive;
+  this.classList.toggle('active', isTrendingSortActive);
+  
+  showToast(isTrendingSortActive ? "Sorting feed by popular engagement!" : "Returned to chronological timeline.");
+  document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  processAndRenderFeed();
+};
+
+// Wire up live query inputs to your processing timeline engine
+document.getElementById('feedSearchInput').oninput = function(e) {
+  activeSearchQuery = e.target.value.trim();
+  processAndRenderFeed();
+};
 
 function renderPost(p) {
   const div = document.createElement('div');
