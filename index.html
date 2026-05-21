@@ -52,8 +52,19 @@
 
   <main class="main">
     <div class="main-header">
-      <h2 style="margin:0; font-size:18px;">Timeline</h2>
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px;">
+    <h2 style="margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px;">Home</h2>
+    <div style="position: relative; flex: 1; max-width: 360px;">
+      <input type="text" id="feedSearchInput" class="input-field" style="margin: 0; padding: 10px 16px 10px 40px; font-size: 14px;" placeholder="Search posts, users, tags...">
+      <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none;">🔍</span>
     </div>
+  </div>
+  
+  <div id="filterControlBar" class="hidden" style="display: flex; align-items: center; gap: 10px; padding: 4px 0; animate: fadeIn 0.2s ease;">
+    <span id="filterStatusLabel" class="tiny" style="color: var(--accent); font-weight: 700;">Viewing filter results</span>
+    <button onclick="window.clearFeedFilters()" class="tool-btn danger" style="padding: 4px 10px; font-size: 11px;">Clear Filter ✕</button>
+  </div>
+</div>
     <div id="feed"></div>
   </main>
 
