@@ -352,6 +352,11 @@ function renderTrends(posts) {
 function processAndRenderFeed() {
   let processed = [...allPostsCache];
 
+  // Evaluate Active Group Filters
+  if (currentGroupId) {
+    processed = processed.filter(p => p.groupId === currentGroupId);
+  }
+
   // 1. Evaluate Active Hashtag Filters
   if (activeTagFilter) {
     processed = processed.filter(p => 
@@ -384,9 +389,13 @@ function processAndRenderFeed() {
   const bar = document.getElementById('filterControlBar');
   const label = document.getElementById('filterStatusLabel');
   if (bar && label) {
-    if (activeTagFilter || activeSearchQuery || isTrendingSortActive) {
+    if (activeTagFilter || activeSearchQuery || isTrendingSortActive || currentGroupId) {
       bar.classList.remove('hidden');
       let labelParts = [];
+      if (currentGroupId) {
+        const currentGroup = groupsCache.find(g => g.id === currentGroupId);
+        labelParts.push(`Group: ${currentGroup ? currentGroup.name : 'Unknown'}`);
+      }
       if (activeTagFilter) labelParts.push(`Tag: ${activeTagFilter}`);
       if (activeSearchQuery) labelParts.push(`Search: "${activeSearchQuery}"`);
       if (isTrendingSortActive) labelParts.push(`Sorted by Popularity 🔥`);
@@ -414,10 +423,12 @@ window.clearFeedFilters = () => {
   activeTagFilter = null;
   activeSearchQuery = "";
   isTrendingSortActive = false;
+  currentGroupId = null;
   const searchInp = document.getElementById('feedSearchInput');
   const trendBtn = document.getElementById('trendBtn');
   if (searchInp) searchInp.value = "";
   if (trendBtn) trendBtn.classList.remove('active');
+  renderGroupsList();
   processAndRenderFeed();
 };
 
@@ -442,6 +453,8 @@ function initApp() {
     updateAdminStats();
     processAndRenderFeed();
   });
+
+  initGroups();
 }
 
 // UI POST CARDS RENDER ENGINE
@@ -672,7 +685,8 @@ document.getElementById('submitPostBtn').onclick = async () => {
       views: 0,
       likes: [],
       comments: [],
-      pinned: false
+      pinned: false,
+      groupId: currentGroupId || null
     });
 
     document.getElementById('postText').value = '';
@@ -806,17 +820,13 @@ window.toggleBan = async (uid, banned, labelName = 'user') => {
   const targetSnap = await getDoc(doc(db, 'users', uid));
   const target = normalizeUser(uid, targetSnap.data() || {});
   if (!canModerate(target)) return showToast('You cannot change this user.');
-  if (isOwner(target)) return showToast('Owner cannot be banned.');
+  if (isOwner(target)) return showToast('Owner cannot be modified.');
 
-  if (!banned) {
-    const reason = prompt(`Ban reason for ${labelName}:`, 'Violation of rules');
-    if (reason === null) return;
-    await updateDoc(doc(db, 'users', uid), { banned: true, banReason: reason.trim() || 'Violation of rules', bannedAt: Date.now(), bannedBy: currentUid() });
-    showToast('User banned.');
-  } else {
-    await updateDoc(doc(db, 'users', uid), { banned: false, banReason: '', bannedAt: null, bannedBy: '' });
-    showToast('User unbanned.');
-  }
+  const reason = banned ? "" : (prompt(`Reason for banning ${labelName}:`) || "No reason specified");
+  if (!banned && reason === null) return;
+
+  await updateDoc(doc(db, 'users', uid), { banned: !banned, banReason: reason });
+  showToast(banned ? 'User unbanned.' : 'User banned.');
   await refreshAdminPanel();
 };
 
@@ -824,61 +834,96 @@ window.toggleUserMute = async (uid, muted) => {
   const targetSnap = await getDoc(doc(db, 'users', uid));
   const target = normalizeUser(uid, targetSnap.data() || {});
   if (!canModerate(target)) return showToast('You cannot change this user.');
-  if (isOwner(target)) return showToast('Owner cannot be muted.');
+  if (isOwner(target)) return showToast('Owner cannot be modified.');
   await updateDoc(doc(db, 'users', uid), { muted: !muted });
   showToast(muted ? 'User unmuted.' : 'User muted.');
   await refreshAdminPanel();
 };
 
-async function bulkActionVisible(mode) {
-  const visible = visibleUsersFilter(adminUsersCache);
-  if (!visible.length) return showToast('Nothing visible to change.');
-  if (!confirm(`${mode} ${visible.length} visible users?`)) return;
-  for (const u of visible) {
-    if (!canModerate(u) || isOwner(u)) continue;
-    const ref = doc(db, 'users', u.uid);
-    if (mode === 'Mute') await updateDoc(ref, { muted: true });
-    if (mode === 'Unmute') await updateDoc(ref, { muted: false });
-    if (mode === 'Ban') await updateDoc(ref, { banned: true, banReason: 'Bulk action', bannedAt: Date.now(), bannedBy: currentUid() });
-    if (mode === 'Unban') await updateDoc(ref, { banned: false, banReason: '', bannedAt: null, bannedBy: '' });
-  }
-  await refreshAdminPanel();
-}
+// ADMIN EVENT LISTENERS
+if (adminFilterEl) adminFilterEl.onchange = () => renderAdminUsers(visibleUsersFilter(adminUsersCache));
+if (adminSearchEl) adminSearchEl.oninput = () => renderAdminUsers(visibleUsersFilter(adminUsersCache));
 
-// ATTACH CORE VIEW PORT DOM TRiggers
-document.getElementById('adminBtn').onclick = async () => {
-  if (!isStaff(userProfile)) return showToast('No permission.');
-  document.getElementById('adminModal').style.display = 'flex';
-  document.getElementById('adminUserList').innerHTML = 'Fetching...';
-  await refreshAdminPanel();
-};
-
-document.getElementById('refreshAdminBtn').onclick = refreshAdminPanel;
-document.getElementById('adminSearch').oninput = refreshAdminPanel;
-document.getElementById('adminFilter').onchange = refreshAdminPanel;
-document.getElementById('muteAllBtn').onclick = () => bulkActionVisible('Mute');
-document.getElementById('unmuteAllBtn').onclick = () => bulkActionVisible('Unmute');
-document.getElementById('banAllBtn').onclick = () => bulkActionVisible('Ban');
-document.getElementById('unbanAllBtn').onclick = () => bulkActionVisible('Unban');
-
-// REAL-TIME INPUT EVENT ROUTINES
-const feedSearchInput = document.getElementById('feedSearchInput');
-if (feedSearchInput) {
-  feedSearchInput.oninput = (e) => {
-    activeSearchQuery = e.target.value.trim();
-    processAndRenderFeed();
+const adminBtn = document.getElementById('adminBtn');
+if (adminBtn) {
+  adminBtn.onclick = async () => {
+    if (!isStaff(userProfile)) return showToast('Access denied.');
+    document.getElementById('adminModal').style.display = 'flex';
+    await refreshAdminPanel();
   };
 }
 
-const trendBtn = document.getElementById('trendBtn');
-if (trendBtn) {
-  trendBtn.onclick = function(e) {
-    e.preventDefault();
-    isTrendingSortActive = !isTrendingSortActive;
-    this.classList.toggle('active', isTrendingSortActive);
-    
-    showToast(isTrendingSortActive ? "Sorting feed by popular engagement!" : "Returned to chronological timeline.");
-    document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    processAndRenderFeed();
+// GROUPS MANAGEMENT & SUBSCRIPTION ENGINE
+function initGroups() {
+  const q = query(collection(db, 'groups'), orderBy('createdAt', 'desc'));
+  onSnapshot(q, (snapshot) => {
+    groupsCache = [];
+    snapshot.forEach(d => groupsCache.push({ id: d.id, ...d.data() }));
+    renderGroupsList();
+  });
+}
+
+function renderGroupsList() {
+  const container = document.getElementById('groupsList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // Global feed layout filter link option
+  const allDiv = document.createElement('div');
+  allDiv.className = `group-item ${!currentGroupId ? 'active' : ''}`;
+  allDiv.innerHTML = `<span class="group-name">🌐 Global Feed</span>`;
+  allDiv.onclick = () => window.switchGroup(null);
+  container.appendChild(allDiv);
+
+  groupsCache.forEach(g => {
+    const div = document.createElement('div');
+    div.className = `group-item ${currentGroupId === g.id ? 'active' : ''}`;
+    div.innerHTML = `
+      <span class="group-name"># ${safeText(g.name)}</span>
+      <span class="tiny" style="display:block; color:var(--muted); font-size:11px;">${safeText(g.description || '')}</span>
+    `;
+    div.onclick = () => window.switchGroup(g.id);
+    container.appendChild(div);
+  });
+}
+
+window.switchGroup = (groupId) => {
+  currentGroupId = groupId;
+  renderGroupsList();
+  processAndRenderFeed();
+};
+
+const openGroupModalBtn = document.getElementById('openGroupModalBtn');
+if (openGroupModalBtn) {
+  openGroupModalBtn.onclick = () => {
+    if (!requireNotBanned()) return;
+    document.getElementById('createGroupModal').style.display = 'flex';
+  };
+}
+
+const submitGroupBtn = document.getElementById('submitGroupBtn');
+if (submitGroupBtn) {
+  submitGroupBtn.onclick = async () => {
+    if (!requireNotBanned()) return;
+    const nameEl = document.getElementById('groupNameInput');
+    const descEl = document.getElementById('groupDescInput');
+    const name = nameEl ? nameEl.value.trim() : '';
+    const description = descEl ? descEl.value.trim() : '';
+    if (!name) return showToast('Group name is required.');
+
+    try {
+      await addDoc(collection(db, 'groups'), {
+        name,
+        description,
+        createdBy: currentUid(),
+        createdAt: Date.now()
+      });
+      showToast(`Group "${name}" created successfully!`);
+      if (nameEl) nameEl.value = '';
+      if (descEl) descEl.value = '';
+      closeModals();
+    } catch (err) {
+      showToast(err.message);
+    }
   };
 }
