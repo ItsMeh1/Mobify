@@ -51,6 +51,8 @@ let isLoginMode = true;
 let adminUsersCache = [];
 let adminPostsCache = [];
 let feedUnsubscribe = null;
+let profileUnsubscribe = null; // Real-time listener attachment instance
+let groupsUnsubscribe = null;  // Real-time tracker attachment instance
 let selectedProfileUid = null;
 let selectedPostId = null;
 
@@ -241,9 +243,7 @@ document.getElementById('verifyRequestBtn').onclick = async () => {
   if (userProfile?.verified) return showToast('Already verified.');
   if (userProfile?.verifiedRequested) return showToast('Verification already requested.');
   await updateDoc(doc(db, 'users', currentUid()), { verifiedRequested: true });
-  userProfile.verifiedRequested = true;
   showToast('Verification requested.');
-  openProfile(selectedProfileUid);
 };
 
 document.getElementById('editPfpInput').onchange = (e) => {
@@ -282,10 +282,9 @@ document.getElementById('saveProfileBtn').onclick = async () => {
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     const ref = doc(db, 'users', user.uid);
+    
+    // Check if the user document exists in Firestore first
     const snap = await getDoc(ref);
-    const raw = snap.exists() ? snap.data() : {};
-    userProfile = normalizeUser(user.uid, raw);
-
     if (!snap.exists()) {
       await setDoc(ref, {
         name: user.displayName || 'User',
@@ -302,18 +301,26 @@ onAuthStateChanged(auth, async (user) => {
         status: 'Online',
         createdAt: Date.now()
       });
-      userProfile = normalizeUser(user.uid, {
-        name: user.displayName || 'User',
-        email: user.email || '',
-        pfp: fallbackPfp(user.displayName || 'User', user.uid)
-      });
     }
+
+    // Attach real-time listener to user profile document updates
+    if (profileUnsubscribe) profileUnsubscribe();
+    profileUnsubscribe = onSnapshot(ref, (docSnap) => {
+      if (docSnap.exists()) {
+        userProfile = normalizeUser(user.uid, docSnap.data());
+        setSidebarProfile();
+        updateTopAdminVisibility();
+        
+        // Refresh the active open profile view modal if currently tracking yourself
+        if (selectedProfileUid === user.uid) {
+          openProfile(user.uid);
+        }
+      }
+    });
 
     document.getElementById('auth-container').classList.add('hidden');
     document.getElementById('app-container').style.display = 'grid';
     document.getElementById('fab').style.display = 'flex';
-    setSidebarProfile();
-    updateTopAdminVisibility();
     initApp();
   } else {
     userProfile = null;
@@ -322,6 +329,8 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('app-container').style.display = 'none';
     document.getElementById('fab').style.display = 'none';
     if (feedUnsubscribe) { feedUnsubscribe(); feedUnsubscribe = null; }
+    if (profileUnsubscribe) { profileUnsubscribe(); profileUnsubscribe = null; }
+    if (groupsUnsubscribe) { groupsUnsubscribe(); groupsUnsubscribe = null; }
   }
 });
 
@@ -341,7 +350,6 @@ function renderTrends(posts) {
     div.className = `trend-item ${activeTagFilter === name ? 'active' : ''}`;
     div.innerHTML = `<span class="trend-name">${safeText(name)}</span><span class="trend-count">${count} posts</span>`;
     
-    // High efficiency local query filter click toggle
     div.onclick = () => window.filterByTag(name);
     tList.appendChild(div);
   });
@@ -434,7 +442,7 @@ window.clearFeedFilters = () => {
 
 window.filterByTag = (tagString) => {
   activeTagFilter = (activeTagFilter === tagString) ? null : tagString;
-  renderTrends(allPostsCache); // Refreshes active visual state highlights
+  renderTrends(allPostsCache); 
   document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
   processAndRenderFeed();
 };
@@ -455,6 +463,50 @@ function initApp() {
   });
 
   initGroups();
+}
+
+// GROUPS FUNCTIONALITY ADDITIONS
+function initGroups() {
+  const q = query(collection(db, 'groups'), orderBy('name', 'asc'));
+  if (groupsUnsubscribe) groupsUnsubscribe();
+
+  groupsUnsubscribe = onSnapshot(q, (snapshot) => {
+    groupsCache = [];
+    snapshot.forEach(d => groupsCache.push({ id: d.id, ...d.data() }));
+    renderGroupsList();
+    // Reprocess the feed in case group details altered
+    if (currentGroupId) processAndRenderFeed();
+  }, (err) => console.error("Groups subscription error:", err));
+}
+
+function renderGroupsList() {
+  const container = document.getElementById('groupsList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // "All Posts" base view selector element
+  const allDiv = document.createElement('div');
+  allDiv.className = `group-item ${!currentGroupId ? 'active' : ''}`;
+  allDiv.innerHTML = `<span class="group-icon">🌐</span> <span class="group-title">Global Feed</span>`;
+  allDiv.onclick = () => {
+    currentGroupId = null;
+    renderGroupsList();
+    processAndRenderFeed();
+  };
+  container.appendChild(allDiv);
+
+  // Render individual cache components
+  groupsCache.forEach(g => {
+    const div = document.createElement('div');
+    div.className = `group-item ${currentGroupId === g.id ? 'active' : ''}`;
+    div.innerHTML = `<span class="group-icon">📁</span> <span class="group-title">${safeText(g.name || 'Unnamed')}</span>`;
+    div.onclick = () => {
+      currentGroupId = g.id;
+      renderGroupsList();
+      processAndRenderFeed();
+    };
+    container.appendChild(div);
+  });
 }
 
 // UI POST CARDS RENDER ENGINE
@@ -478,9 +530,9 @@ function renderPost(p) {
     <img class="avatar" src="${author.pfp}" alt="${safeText(author.name)}" onerror="this.src='${fallbackPfp(author.name, author.uid)}'" onclick="window.viewUserProfile('${p.authorId}'); event.stopPropagation();">
     <div class="post-content" onclick="window.showDetail('${p.id}')">
       <div class="post-header">
-        <span class="post-name">${safeText(author.name)}</span>
+        <span class="post-name" style="cursor:pointer" onclick="window.viewUserProfile('${p.authorId}'); event.stopPropagation();">${safeText(author.name)}</span>
         ${badgeHTML(author)}
-        <span class="post-handle">${safeHandle(author.name)}</span>
+        <span class="post-handle" style="cursor:pointer" onclick="window.viewUserProfile('${p.authorId}'); event.stopPropagation();">${safeHandle(author.name)}</span>
       </div>
       <div class="post-body">${safeText(p.text || '')}</div>
       ${p.image ? `<img src="${p.image}" class="post-media" alt="post media">` : ''}
@@ -527,7 +579,7 @@ function renderCommentCard(c) {
       <img class="comment-avatar" src="${commentPfp}" alt="${safeText(c.name || 'User')}" onerror="this.src='${fallbackPfp(c.name || 'User', c.uid || 'comment')}'">
       <div class="comment-card">
         <div class="comment-top">
-          <span class="comment-name">${safeText(c.name || 'User')}</span>
+          <span class="comment-name" style="cursor:pointer" onclick="window.viewUserProfile('${c.uid}'); event.stopPropagation();">${safeText(c.name || 'User')}</span>
           <span class="comment-time">${timeAgo(c.time)}</span>
         </div>
         <div class="comment-text">${safeText(c.text || '')}</div>
@@ -558,7 +610,7 @@ window.showDetail = async (pid) => {
   const an = postAnalytics(p);
 
   box.innerHTML = `
-    <div style="display:flex; gap:12px; align-items:center; margin-bottom:20px;">
+    <div style="display:flex; gap:12px; align-items:center; margin-bottom:20px; cursor:pointer;" onclick="window.viewUserProfile('${p.authorId}');">
       <img src="${author.pfp}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:1px solid var(--border-bright)" onerror="this.src='${fallbackPfp(author.name, author.uid)}'">
       <div>
         <div style="font-weight:800; font-size:18px;">${safeText(author.name)}</div>
@@ -735,6 +787,7 @@ function visibleUsersFilter(users) {
 
 function renderAdminUsers(users) {
   const list = document.getElementById('adminUserList');
+  if (!list) return;
   list.innerHTML = '';
   if (!users.length) {
     list.innerHTML = '<div class="tiny">No users match this filter.</div>';
@@ -809,121 +862,50 @@ window.setCustomRank = async (uid) => {
 window.toggleVerified = async (uid, verified) => {
   const targetSnap = await getDoc(doc(db, 'users', uid));
   const target = normalizeUser(uid, targetSnap.data() || {});
-  if (!canModerate(target)) return showToast('You cannot change this user.');
-  if (isOwner(target)) return showToast('Owner cannot be modified.');
-  await updateDoc(doc(db, 'users', uid), { verified: !verified, verifiedRequested: false });
-  showToast(verified ? 'Verification removed.' : 'User verified.');
+  if (!canModerate(target)) return showToast('You cannot edit verification status for this user.');
+  
+  await updateDoc(doc(db, 'users', uid), { 
+    verified: !verified, 
+    verifiedRequested: false 
+  });
+  showToast(verified ? 'User unverified.' : 'User verified!');
   await refreshAdminPanel();
 };
 
-window.toggleBan = async (uid, banned, labelName = 'user') => {
+window.toggleBan = async (uid, banned, name) => {
   const targetSnap = await getDoc(doc(db, 'users', uid));
   const target = normalizeUser(uid, targetSnap.data() || {});
-  if (!canModerate(target)) return showToast('You cannot change this user.');
-  if (isOwner(target)) return showToast('Owner cannot be modified.');
+  if (!canModerate(target)) return showToast('You cannot change the ban status of this user.');
 
-  const reason = banned ? "" : (prompt(`Reason for banning ${labelName}:`) || "No reason specified");
-  if (!banned && reason === null) return;
+  const reason = banned ? "" : (prompt(`Enter reason to ban ${name}:`) || "Violation of community rules");
+  if (!banned && reason === null) return; // Prompt cancelled
 
-  await updateDoc(doc(db, 'users', uid), { banned: !banned, banReason: reason });
-  showToast(banned ? 'User unbanned.' : 'User banned.');
+  await updateDoc(doc(db, 'users', uid), {
+    banned: !banned,
+    banReason: banned ? "" : reason
+  });
+  showToast(banned ? 'User unbanned successfully.' : 'User banned from community operations.');
   await refreshAdminPanel();
 };
 
 window.toggleUserMute = async (uid, muted) => {
   const targetSnap = await getDoc(doc(db, 'users', uid));
   const target = normalizeUser(uid, targetSnap.data() || {});
-  if (!canModerate(target)) return showToast('You cannot change this user.');
-  if (isOwner(target)) return showToast('Owner cannot be modified.');
+  if (!canModerate(target)) return showToast('You cannot toggle mute rules on this account.');
+
   await updateDoc(doc(db, 'users', uid), { muted: !muted });
   showToast(muted ? 'User unmuted.' : 'User muted.');
   await refreshAdminPanel();
 };
 
-// ADMIN EVENT LISTENERS
+// Wire up structural layout listeners 
 if (adminFilterEl) adminFilterEl.onchange = () => renderAdminUsers(visibleUsersFilter(adminUsersCache));
 if (adminSearchEl) adminSearchEl.oninput = () => renderAdminUsers(visibleUsersFilter(adminUsersCache));
 
 const adminBtn = document.getElementById('adminBtn');
 if (adminBtn) {
-  adminBtn.onclick = async () => {
-    if (!isStaff(userProfile)) return showToast('Access denied.');
+  adminBtn.onclick = () => {
     document.getElementById('adminModal').style.display = 'flex';
-    await refreshAdminPanel();
-  };
-}
-
-// GROUPS MANAGEMENT & SUBSCRIPTION ENGINE
-function initGroups() {
-  const q = query(collection(db, 'groups'), orderBy('createdAt', 'desc'));
-  onSnapshot(q, (snapshot) => {
-    groupsCache = [];
-    snapshot.forEach(d => groupsCache.push({ id: d.id, ...d.data() }));
-    renderGroupsList();
-  });
-}
-
-function renderGroupsList() {
-  const container = document.getElementById('groupsList');
-  if (!container) return;
-  container.innerHTML = '';
-
-  // Global feed layout filter link option
-  const allDiv = document.createElement('div');
-  allDiv.className = `group-item ${!currentGroupId ? 'active' : ''}`;
-  allDiv.innerHTML = `<span class="group-name">🌐 Global Feed</span>`;
-  allDiv.onclick = () => window.switchGroup(null);
-  container.appendChild(allDiv);
-
-  groupsCache.forEach(g => {
-    const div = document.createElement('div');
-    div.className = `group-item ${currentGroupId === g.id ? 'active' : ''}`;
-    div.innerHTML = `
-      <span class="group-name"># ${safeText(g.name)}</span>
-      <span class="tiny" style="display:block; color:var(--muted); font-size:11px;">${safeText(g.description || '')}</span>
-    `;
-    div.onclick = () => window.switchGroup(g.id);
-    container.appendChild(div);
-  });
-}
-
-window.switchGroup = (groupId) => {
-  currentGroupId = groupId;
-  renderGroupsList();
-  processAndRenderFeed();
-};
-
-const openGroupModalBtn = document.getElementById('openGroupModalBtn');
-if (openGroupModalBtn) {
-  openGroupModalBtn.onclick = () => {
-    if (!requireNotBanned()) return;
-    document.getElementById('createGroupModal').style.display = 'flex';
-  };
-}
-
-const submitGroupBtn = document.getElementById('submitGroupBtn');
-if (submitGroupBtn) {
-  submitGroupBtn.onclick = async () => {
-    if (!requireNotBanned()) return;
-    const nameEl = document.getElementById('groupNameInput');
-    const descEl = document.getElementById('groupDescInput');
-    const name = nameEl ? nameEl.value.trim() : '';
-    const description = descEl ? descEl.value.trim() : '';
-    if (!name) return showToast('Group name is required.');
-
-    try {
-      await addDoc(collection(db, 'groups'), {
-        name,
-        description,
-        createdBy: currentUid(),
-        createdAt: Date.now()
-      });
-      showToast(`Group "${name}" created successfully!`);
-      if (nameEl) nameEl.value = '';
-      if (descEl) descEl.value = '';
-      closeModals();
-    } catch (err) {
-      showToast(err.message);
-    }
+    refreshAdminPanel();
   };
 }
