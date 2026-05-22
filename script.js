@@ -334,26 +334,57 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// REAL-TIME TREND AGGREGATOR
 function renderTrends(posts) {
   const trends = {};
   posts.forEach(data => {
     const matches = data.text?.match(/#\w+/g);
     if (matches) matches.forEach(t => trends[t] = (trends[t] || 0) + 1);
   });
+
   const tList = document.getElementById('trendsList');
-  if (!tList) return;
+  if (!tList) return; // Prevent crashing if element isn't rendered yet
   tList.innerHTML = '';
-  
-  Object.entries(trends).sort((a,b) => b[1] - a[1]).slice(0, 5).forEach(([name, count]) => {
-    const div = document.createElement('div');
-    div.className = `trend-item ${activeTagFilter === name ? 'active' : ''}`;
-    div.innerHTML = `<span class="trend-name">${safeText(name)}</span><span class="trend-count">${count} posts</span>`;
+
+  Object.entries(trends)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .forEach(([name, count]) => {
+      const div = document.createElement('div');
+      div.className = 'trend-item';
+      div.innerHTML = `<span class="trend-name">${safeText(name)}</span><span class="trend-count">${count} posts</span>`;
+      
+      // Wire up the click filter directly to the trend item
+      div.onclick = () => window.filterByTag(name);
+      
+      tList.appendChild(div);
+    });
+
+  if (!Object.keys(trends).length) {
+    tList.innerHTML = '<div class="tiny">No trending tags yet.</div>';
+  }
+}
+
+// Bind real-time input filtering to the search bar
+const searchInput = document.getElementById('feedSearchInput');
+if (searchInput) {
+  searchInput.oninput = function(e) {
+    activeSearchQuery = e.target.value.trim();
+    processAndRenderFeed();
+  };
+}
+
+// Rewire the trend navigation button to toggle popularity sorting
+const trendBtn = document.getElementById('trendBtn');
+if (trendBtn) {
+  trendBtn.onclick = function(e) {
+    e.preventDefault();
+    isTrendingSortActive = !isTrendingSortActive;
+    this.classList.toggle('active', isTrendingSortActive);
     
-    div.onclick = () => window.filterByTag(name);
-    tList.appendChild(div);
-  });
-  if (!Object.keys(trends).length) tList.innerHTML = '<div class="tiny">No trending tags yet.</div>';
+    showToast(isTrendingSortActive ? "Sorting feed by popular engagement 🔥" : "Returned to chronological timeline.");
+    document.getElementById('feed').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    processAndRenderFeed();
+  };
 }
 
 // PIPELINE COMPILING COMBINED SEARCHES, TAGS & TRENDING SELECTIONS
