@@ -349,6 +349,13 @@ function renderTrends(posts) {
 
 function processAndRenderFeed() {
   let processed = [...allPostsCache];
+  // Evaluate Channel Group Context Isolation
+  if (currentGroupId) {
+    processed = processed.filter(p => p.groupId === currentGroupId);
+  } else {
+    // Keeps the global feed clean by showing only primary root posts
+    processed = processed.filter(p => !p.groupId);
+  }
 
   // 1. Evaluate Hashtag Filters
   if (activeTagFilter) {
@@ -446,6 +453,7 @@ document.getElementById('trendBtn').onclick = function(e) {
 };
 
 function initApp() {
+  initGroups();
   const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
   if (feedUnsubscribe) feedUnsubscribe();
   
@@ -675,6 +683,7 @@ document.getElementById('submitPostBtn').onclick = async () => {
 
     await addDoc(collection(db, 'posts'), {
       authorId: currentUid(),
+      groupId: currentGroupId || null,
       authorName: userProfile.name || 'User',
       authorPfp: myPfp(),
       authorRole: userProfile.role || 'Member',
@@ -827,3 +836,107 @@ window.toggleUserMute = async (uid, isMuted) => {
   showToast(isMuted ? "User unmuted." : "User mutated write restrictions toggled active.");
   refreshAdminPanel();
 };
+
+// Wire up main Profile navigation button
+const profileBtn = document.getElementById('profileBtn');
+if (profileBtn) {
+  profileBtn.onclick = () => {
+    const uid = currentUid();
+    if (uid) openProfile(uid);
+  };
+}
+
+// Make the sidebar avatar area clickable to open personal profile
+const sidePfpEl = document.getElementById('mySidePfp');
+if (sidePfpEl) {
+  sidePfpEl.style.cursor = 'pointer';
+  sidePfpEl.onclick = () => {
+    const uid = currentUid();
+    if (uid) openProfile(uid);
+  };
+}
+// ==========================================
+// PROGRAMMATIC REAL-TIME GROUPS ENGINE
+// ==========================================
+function initGroups() {
+  const q = query(collection(db, 'groups'), orderBy('createdAt', 'desc'));
+  onSnapshot(q, (snapshot) => {
+    groupsCache = [];
+    snapshot.forEach(d => groupsCache.push({ id: d.id, ...d.data() }));
+    renderGroupsList();
+  });
+}
+
+function renderGroupsList() {
+  const gList = document.getElementById('groupsList');
+  if (!gList) return;
+  gList.innerHTML = '';
+
+  // 1. Render Global Feed Reset Control Entry
+  const globalDiv = document.createElement('div');
+  globalDiv.className = `group-item ${!currentGroupId ? 'active' : ''}`;
+  globalDiv.innerHTML = `<strong>🌍 Global Timeline</strong>`;
+  globalDiv.onclick = () => window.selectGroup(null);
+  gList.appendChild(globalDiv);
+
+  // 2. Render Synced Channel Items
+  groupsCache.forEach(g => {
+    const div = document.createElement('div');
+    div.className = `group-item ${currentGroupId === g.id ? 'active' : ''}`;
+    div.innerHTML = `
+      <div class="group-info">
+        <span class="group-name">#${safeText(g.name)}</span>
+        <span class="group-desc">${safeText(g.description || '')}</span>
+      </div>
+    `;
+    div.onclick = () => window.selectGroup(g.id);
+    gList.appendChild(div);
+  });
+}
+
+window.selectGroup = (groupId) => {
+  currentGroupId = groupId;
+  renderGroupsList(); // Refresh active visualization CSS states
+  
+  // Optional UI update for main feed title header label if present
+  const titleLabel = document.getElementById('feedTitleLabel');
+  if (titleLabel) {
+    if (groupId) {
+      const match = groupsCache.find(g => g.id === groupId);
+      titleLabel.innerText = match ? `📌 #${match.name}` : 'Group Feed';
+    } else {
+      titleLabel.innerText = '🌍 Home Feed';
+    }
+  }
+  
+  processAndRenderFeed();
+};
+
+window.createNewGroup = async () => {
+  if (!requireNotBanned()) return;
+  
+  const name = prompt("Enter new channel group name (letters/numbers only):");
+  if (!name) return;
+  const cleanName = name.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+  if (!cleanName) return showToast("Invalid structural name format.");
+
+  const desc = prompt("Enter brief group description context:");
+  
+  try {
+    await addDoc(collection(db, 'groups'), {
+      name: cleanName,
+      description: desc || 'A custom Mobify space.',
+      creatorId: currentUid(),
+      createdAt: Date.now()
+    });
+    showToast(`Channel #${cleanName} created!`);
+  } catch (err) {
+    showToast("Error processing group: " + err.message);
+  }
+};
+
+// Bind Group UI Creation Action Targets
+const createGroupBtn = document.getElementById('createGroupBtn');
+if (createGroupBtn) {
+  createGroupBtn.onclick = window.createNewGroup;
+}
