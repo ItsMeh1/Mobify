@@ -838,7 +838,7 @@ window.toggleUserMute = async (uid, isMuted) => {
 };
 
 // Wire up main Profile navigation button
-const profileBtn = document.getElementById('profileBtn');
+const profileBtn = document.getElementById('navProfileBtn');
 if (profileBtn) {
   profileBtn.onclick = () => {
     const uid = currentUid();
