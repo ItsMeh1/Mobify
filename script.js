@@ -973,6 +973,7 @@ if (profileBtn) {
 
 // 3. Groups Directory Navigation
 // (Assuming you have a 'groupsBtn' that opens a groups modal)
+const groupsBtn = document.getElementById('groupsBtn');
 if (groupsBtn) {
   groupsBtn.onclick = (e) => {
     e.preventDefault();
