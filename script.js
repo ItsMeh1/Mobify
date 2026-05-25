@@ -940,3 +940,51 @@ const createGroupBtn = document.getElementById('createGroupBtn');
 if (createGroupBtn) {
   createGroupBtn.onclick = window.createNewGroup;
 }
+
+// ==========================================
+// NAVIGATION & MODAL CLICK BINDINGS
+// ==========================================
+
+// 1. Admin Panel Navigation
+const adminBtn = document.getElementById('adminBtn');
+if (adminBtn) {
+  adminBtn.onclick = (e) => {
+    e.preventDefault();
+    const adminModal = document.getElementById('adminModal');
+    if (adminModal) {
+      adminModal.style.display = 'flex';
+      if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
+    } else {
+      showToast("Admin modal HTML is missing.");
+    }
+  };
+}
+
+// 2. Personal Profile Navigation
+const profileBtn = document.getElementById('profileBtn');
+if (profileBtn) {
+  profileBtn.onclick = (e) => {
+    e.preventDefault();
+    const uid = currentUid();
+    if (uid) {
+      if (typeof openProfile === 'function') openProfile(uid);
+    } else {
+      showToast("Profile not synced yet.");
+    }
+  };
+}
+
+// 3. Groups Directory Navigation
+// (Assuming you have a 'groupsBtn' that opens a groups modal)
+const groupsBtn = document.getElementById('groupsBtn');
+if (groupsBtn) {
+  groupsBtn.onclick = (e) => {
+    e.preventDefault();
+    const groupsModal = document.getElementById('groupsModal');
+    if (groupsModal) {
+      groupsModal.style.display = 'flex';
+    } else {
+      showToast("Groups menu active. Check your sidebar.");
+    }
+  };
+}
