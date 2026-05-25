@@ -936,7 +936,6 @@ window.createNewGroup = async () => {
 };
 
 // Bind Group UI Creation Action Targets
-const createGroupBtn = document.getElementById('createGroupBtn');
 if (createGroupBtn) {
   createGroupBtn.onclick = window.createNewGroup;
 }
@@ -946,7 +945,6 @@ if (createGroupBtn) {
 // ==========================================
 
 // 1. Admin Panel Navigation
-const adminBtn = document.getElementById('adminBtn');
 if (adminBtn) {
   adminBtn.onclick = (e) => {
     e.preventDefault();
@@ -961,7 +959,6 @@ if (adminBtn) {
 }
 
 // 2. Personal Profile Navigation
-const profileBtn = document.getElementById('profileBtn');
 if (profileBtn) {
   profileBtn.onclick = (e) => {
     e.preventDefault();
@@ -976,7 +973,6 @@ if (profileBtn) {
 
 // 3. Groups Directory Navigation
 // (Assuming you have a 'groupsBtn' that opens a groups modal)
-const groupsBtn = document.getElementById('groupsBtn');
 if (groupsBtn) {
   groupsBtn.onclick = (e) => {
     e.preventDefault();
