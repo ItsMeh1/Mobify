@@ -52,6 +52,10 @@ let adminPostsCache = [];
 let feedUnsubscribe = null;
 let selectedProfileUid = null;
 let selectedPostId = null;
+const adminBtn = document.getElementById('adminBtn');
+const profileBtn = document.getElementById('navProfileBtn');
+const groupsBtn = document.getElementById('groupsBtn');
+const createGroupBtn = document.getElementById('createGroupBtn');
 
 // GROUPS & CACHES
 let groupsCache = [];
@@ -838,7 +842,6 @@ window.toggleUserMute = async (uid, isMuted) => {
 };
 
 // Wire up main Profile navigation button
-const profileBtn = document.getElementById('navProfileBtn');
 if (profileBtn) {
   profileBtn.onclick = () => {
     const uid = currentUid();
@@ -935,99 +938,34 @@ window.createNewGroup = async () => {
   }
 };
 
-// Bind Group UI Creation Action Targets
+
+if (adminBtn) {
+  adminBtn.onclick = (e) => {
+    e.preventDefault();
+    const adminModal = document.getElementById('adminModal');
+    if (adminModal) {
+      adminModal.style.display = 'flex';
+      refreshAdminPanel();
+    }
+  };
+}
+
+if (profileBtn) {
+  profileBtn.onclick = (e) => {
+    e.preventDefault();
+    const uid = currentUid();
+    if (uid) openProfile(uid);
+  };
+}
+
+if (groupsBtn) {
+  groupsBtn.onclick = (e) => {
+    e.preventDefault();
+    const groupsModal = document.getElementById('groupsModal');
+    if (groupsModal) groupsModal.style.display = 'flex';
+  };
+}
+
 if (createGroupBtn) {
   createGroupBtn.onclick = window.createNewGroup;
-}
-
-// ==========================================
-// NAVIGATION & MODAL CLICK BINDINGS
-// ==========================================
-
-// 1. Admin Panel Navigation
-if (adminBtn) {
-  adminBtn.onclick = (e) => {
-    e.preventDefault();
-    const adminModal = document.getElementById('adminModal');
-    if (adminModal) {
-      adminModal.style.display = 'flex';
-      if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
-    } else {
-      showToast("Admin modal HTML is missing.");
-    }
-  };
-}
-
-// 2. Personal Profile Navigation
-if (profileBtn) {
-  profileBtn.onclick = (e) => {
-    e.preventDefault();
-    const uid = currentUid();
-    if (uid) {
-      if (typeof openProfile === 'function') openProfile(uid);
-    } else {
-      showToast("Profile not synced yet.");
-    }
-  };
-}
-
-// 3. Groups Directory Navigation
-// (Assuming you have a 'groupsBtn' that opens a groups modal)
-const groupsBtn = document.getElementById('groupsBtn');
-if (groupsBtn) {
-  groupsBtn.onclick = (e) => {
-    e.preventDefault();
-    const groupsModal = document.getElementById('groupsModal');
-    if (groupsModal) {
-      groupsModal.style.display = 'flex';
-    } else {
-      showToast("Groups menu active. Check your sidebar.");
-    }
-  };
-}
-
-// ==========================================
-// NAVIGATION & MODAL CLICK BINDINGS
-// ==========================================
-
-// 1. Admin Panel Navigation
-const adminBtn = document.getElementById('adminBtn');
-if (adminBtn) {
-  adminBtn.onclick = (e) => {
-    e.preventDefault();
-    const adminModal = document.getElementById('adminModal');
-    if (adminModal) {
-      adminModal.style.display = 'flex';
-      if (typeof refreshAdminPanel === 'function') refreshAdminPanel();
-    } else {
-      showToast("Admin modal HTML is missing.");
-    }
-  };
-}
-
-// 2. Personal Profile Navigation
-if (profileBtn) {
-  profileBtn.onclick = (e) => {
-    e.preventDefault();
-    const uid = currentUid();
-    if (uid) {
-      if (typeof openProfile === 'function') openProfile(uid);
-    } else {
-      showToast("Profile not synced yet.");
-    }
-  };
-}
-
-// 3. Groups Directory Navigation
-// (Assuming you have a 'groupsBtn' that opens a groups modal)
-if (groupsBtn) {
-  groupsBtn.onclick = (e) => {
-    e.preventDefault();
-    const groupsModal = document.getElementById('groupsModal');
-    if (groupsModal) {
-      groupsModal.style.display = 'flex';
-    } else {
-      showToast("Groups menu active. Check your sidebar.");
-    }
-  };
 }
