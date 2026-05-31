@@ -960,6 +960,7 @@ if (profileBtn) {
 
 if (groupsBtn) {
   groupsBtn.onclick = (e) => {
+    console.log("Group Button Clicked!")
     e.preventDefault();
     const groupsModal = document.getElementById('groupsModal');
     if (groupsModal) groupsModal.style.display = 'flex';
@@ -967,5 +968,6 @@ if (groupsBtn) {
 }
 
 if (createGroupBtn) {
+  console.log("Create Group Button Clicked!")
   createGroupBtn.onclick = window.createNewGroup;
 }
