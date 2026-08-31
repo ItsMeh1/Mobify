@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot, query, orderBy, addDoc, arrayUnion, arrayRemove, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot, query, orderBy, addDoc, arrayUnion, arrayRemove, increment, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBprG8pYZ1WQNh2wt0kih3P7Z3nIxhnU5k",
@@ -346,3 +346,102 @@ document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>applyAppearan
 document.querySelectorAll('[data-accent]').forEach(b=>b.onclick=()=>applyAppearance({...loadAppearance(),accent:b.dataset.accent}));
 const glass=$('glassIntensity');if(glass)glass.oninput=e=>applyAppearance({...loadAppearance(),glass:Number(e.target.value)});
 const reset=$('resetAppearance');if(reset)reset.onclick=()=>applyAppearance(DEFAULT_APPEARANCE);applyAppearance(loadAppearance());
+
+// FINAL PART 5: moderation, live trending refresh, and defensive DOM fixes
+const rolePriority = role => ({member:0,user:0,mod:500,moderator:500,admin:800,owner:1000}[String(role || "").toLowerCase()] ?? 0);
+const effectivePriority = user => Math.max(Number(user?.rankPriority || 0), rolePriority(user?.rank || user?.role));
+let adminUsers = [];
+let adminUsersUnsubscribe = null;
+
+function canModerate(target) {
+  if (!userProfile || !target || target.uid === currentUid()) return false;
+  return effectivePriority(userProfile) > effectivePriority(target);
+}
+async function setModeration(uid, patch) {
+  const target = adminUsers.find(user => user.uid === uid);
+  if (!canModerate(target)) return showToast("You cannot moderate this account.");
+  await updateDoc(doc(db, "users", uid), patch);
+  showToast("Moderation action saved.");
+}
+function renderAdmin() {
+  const root = $("adminUserList");
+  if (!root) return;
+  if (!isStaff(userProfile)) { root.innerHTML = "<p>You do not have permission to use admin tools.</p>"; return; }
+  root.innerHTML = adminUsers.map(user => {
+    const locked = !canModerate(user);
+    const state = user.banned ? "Banned" : user.suspended ? "Suspended" : user.muted ? "Muted" : "Active";
+    return '<div class="admin-user"><img class="avatar avatar-md" src="' + escapeHTML(user.pfp) + '"><div class="admin-user-copy"><strong>' + escapeHTML(user.name) + '</strong><span>' + escapeHTML(user.email || safeHandle(user.name)) + ' · ' + escapeHTML(state) + '</span></div><div class="admin-actions">' +
+      '<button data-admin-action="mute" data-uid="' + user.uid + '" ' + (locked ? "disabled" : "") + '>' + (user.muted ? "Unmute" : "Mute") + '</button>' +
+      '<button data-admin-action="suspend" data-uid="' + user.uid + '" ' + (locked ? "disabled" : "") + '>' + (user.suspended ? "Unsuspend" : "Suspend") + '</button>' +
+      '<button data-admin-action="ban" data-uid="' + user.uid + '" ' + (locked ? "disabled" : "") + '>' + (user.banned ? "Unban" : "Ban") + '</button></div></div>';
+  }).join("") || "<p>No users found.</p>";
+  root.querySelectorAll("[data-admin-action]").forEach(button => button.onclick = async () => {
+    const user = adminUsers.find(item => item.uid === button.dataset.uid);
+    if (!user) return;
+    const action = button.dataset.adminAction;
+    if (action === "mute") await setModeration(user.uid, { muted: !user.muted });
+    if (action === "suspend") await setModeration(user.uid, { suspended: !user.suspended });
+    if (action === "ban") await setModeration(user.uid, { banned: !user.banned, suspended: user.banned ? !!user.suspended : false });
+  });
+}
+function startAdminUsers() {
+  if (!isStaff(userProfile) || adminUsersUnsubscribe) return;
+  adminUsersUnsubscribe = onSnapshot(collection(db, "users"), snapshot => {
+    adminUsers = snapshot.docs.map(item => normalizeUser(item.id, item.data()));
+    adminUsers.forEach((user, index) => adminUsers[index].suspended = !!snapshot.docs[index].data().suspended);
+    renderAdmin();
+  });
+}
+const baseOpenView = openView;
+openView = function(name) {
+  baseOpenView(name);
+  if (name === "trending") renderTrending();
+  if (name === "admin") startAdminUsers();
+};
+const basePermission = requireActionPermission;
+requireActionPermission = function() {
+  if (userProfile?.suspended) { showToast("Your account is suspended."); return false; }
+  return basePermission();
+};
+document.querySelectorAll(".nav-item[data-view-target]").forEach(button => button.onclick = () => openView(button.dataset.viewTarget));
+const motionControl = $("reduceMotion");
+if (motionControl) motionControl.onclick = () => {
+  const current = loadAppearance();
+  current.reduceMotion = !current.reduceMotion;
+  document.documentElement.dataset.reduceMotion = current.reduceMotion ? "true" : "false";
+  localStorage.setItem(APPEARANCE_KEY, JSON.stringify(current));
+  motionControl.classList.toggle("on", current.reduceMotion);
+};
+const baseRenderTrending = renderTrending;
+renderTrending = function() {
+  const root = $("trendingFeed");
+  if (!root) return baseRenderTrending();
+  const posts = [...allPostsCache].filter(post => !post.groupId);
+  const score = post => {
+    if (trendCategory === "comments") return post.comments?.length || 0;
+    if (trendCategory === "views") return post.views || 0;
+    if (trendCategory === "likes") return post.likes?.length || 0;
+    const age = Math.max(1, (Date.now() - (post.timestamp || Date.now())) / 3600000);
+    return postScore(post) / Math.pow(age, .45);
+  };
+  posts.sort((a,b) => score(b) - score(a));
+  root.innerHTML = "";
+  posts.slice(0,12).forEach(post => root.appendChild(renderPost(post)));
+  if (!posts.length) root.innerHTML = '<div class="empty-feed glass-panel"><h3>Nothing trending yet.</h3><p>Posts will appear here when people start engaging.</p></div>';
+  refreshIcons();
+};
+const trendButtons = document.querySelectorAll("[data-trend-category]");
+trendButtons.forEach(button => button.onclick = () => {
+  trendCategory = button.dataset.trendCategory;
+  trendButtons.forEach(item => item.classList.toggle("active", item === button));
+  renderTrending();
+});
+const oldStartFeed = startFeed;
+startFeed = function() {
+  if (feedUnsubscribe) feedUnsubscribe();
+  feedUnsubscribe = onSnapshot(query(collection(db, "posts"), orderBy("timestamp", "desc")), snapshot => {
+    allPostsCache = snapshot.docs.map(item => ({ id:item.id, ...item.data() }));
+    renderFeed(); renderTrends(allPostsCache);
+    if (document.querySelector('.view[data-view="trending"]')?.classList.contains("active-view")) renderTrending();
+  }, error => showToast(error.message || "Could not load the feed."));
+};
