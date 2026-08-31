@@ -339,3 +339,10 @@ function applyAppearance(v){const x={...DEFAULT_APPEARANCE,...v};document.docume
 function loadAppearance(){try{return {...DEFAULT_APPEARANCE,...JSON.parse(localStorage.getItem(APPEARANCE_KEY)||'{}')}}catch{return DEFAULT_APPEARANCE}}
 let trendCategory='comments';
 function renderTrending(){const root=$('trendingFeed');if(!root)return;const p=[...allPostsCache];p.sort((a,b)=>{const n=x=>trendCategory==='views'?(x.views||0):trendCategory==='likes'?(x.likes?.length||0):trendCategory==='comments'?(x.comments?.length||0):postScore(x);return n(b)-n(a)});root.innerHTML='';p.slice(0,12).forEach(x=>root.appendChild(renderPost(x)));if(!p.length)root.innerHTML='<div class="empty-feed glass-panel">Nothing trending yet.</div>';refreshIcons();}
+
+const ext=$('openConferExternal');if(ext)ext.onclick=()=>window.open('https://itsmeh1.github.io/confer/confer.html?.amplify.com','_blank','noopener');
+document.querySelectorAll('[data-trend-category]').forEach(b=>b.onclick=()=>{trendCategory=b.dataset.trendCategory;document.querySelectorAll('[data-trend-category]').forEach(x=>x.classList.toggle('active',x===b));renderTrending()});
+document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>applyAppearance({...loadAppearance(),theme:b.dataset.theme}));
+document.querySelectorAll('[data-accent]').forEach(b=>b.onclick=()=>applyAppearance({...loadAppearance(),accent:b.dataset.accent}));
+const glass=$('glassIntensity');if(glass)glass.oninput=e=>applyAppearance({...loadAppearance(),glass:Number(e.target.value)});
+const reset=$('resetAppearance');if(reset)reset.onclick=()=>applyAppearance(DEFAULT_APPEARANCE);applyAppearance(loadAppearance());
