@@ -1,15 +1,128 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mobify</title><link rel="stylesheet" href="style.css"><script src="https://unpkg.com/lucide@latest"></script></head><body><div id="toast-container"></div>
-<section id="auth-container" class="auth-screen"><div class="auth-card glass-panel"><div class="brand-mark">M</div><div class="auth-heading"><span class="eyebrow">SOCIAL, WITHOUT THE NOISE</span><h1 id="authTitle">Mobify</h1><p>Share what matters. Stay connected.</p></div><form id="authForm" class="auth-form"><label id="authNameWrap" class="field-wrap is-hidden"><input id="authName" placeholder="Your name"></label><label class="field-wrap"><input id="authEmail" type="email" placeholder="Email" required></label><label class="field-wrap"><input id="authPass" type="password" placeholder="Password" required></label><button id="authBtn" class="primary-button">Sign in</button><button id="toggleAuth" class="quiet-button" type="button">New here? <strong>Create an account</strong></button></form></div></section>
-<div id="app-container" class="app hidden"><header class="topbar"><button id="brandHome" class="wordmark">mobify</button><div class="topbar-context"><span class="status-dot"></span><span id="sideName">User</span></div></header>
-<main id="content-shell" class="content-shell">
-<section class="view active-view" data-view="messages"><div class="view-header"><div><span class="eyebrow">YOUR FEED</span><h2>Messages</h2><p>Newest conversations from your community.</p></div><button id="refreshFeedBtn" class="icon-button"><i data-lucide="refresh-cw"></i></button></div><button id="openComposer" class="composer glass-panel"><img id="composerAvatar" class="avatar avatar-md"><span class="composer-placeholder">What are you thinking?</span></button><div class="feed-toolbar"><button class="feed-filter active" data-feed-filter="newest">Newest</button><button class="feed-filter" data-feed-filter="popular">Popular</button></div><div id="feed" class="feed"></div></section>
-<section class="view" data-view="video"><div class="view-header"><div><span class="eyebrow">MOBIFY CALLS</span><h2>Video</h2><p>Confer, integrated into Mobify.</p></div></div><div class="video-shell glass-panel"><div class="video-toolbar"><strong>Mobify Calls</strong><button id="openConferExternal" class="secondary-button">Open full call</button></div><div class="video-frame-wrap"><iframe src="https://itsmeh1.github.io/confer/confer.html?.amplify.com" allow="camera;microphone;display-capture;fullscreen"></iframe></div></div></section>
-<section class="view" data-view="trending"><div class="view-header"><div><span class="eyebrow">WHAT'S MOVING</span><h2>Trending</h2><p>Real engagement from Mobify posts.</p></div></div><div class="trend-category-grid"><button class="trend-category active" data-trend-category="comments">Most commented</button><button class="trend-category" data-trend-category="views">Most viewed</button><button class="trend-category" data-trend-category="likes">Most liked</button><button class="trend-category" data-trend-category="rising">Rising now</button></div><div id="trendingFeed" class="feed"></div></section>
-<section class="view" data-view="settings"><div class="view-header"><div><span class="eyebrow">MAKE IT YOURS</span><h2>Settings</h2></div></div><div class="settings-list glass-panel"><div class="setting-row"><strong>Theme</strong><div class="segmented"><button data-theme="dark">Dark</button><button data-theme="midnight">Midnight</button><button data-theme="light">Light</button></div></div><div class="setting-row"><strong>Accent</strong><div class="accent-grid"><button data-accent="#9b8cff"></button><button data-accent="#6fdaff"></button><button data-accent="#ff7aa2"></button><button data-accent="#72df9a"></button><button data-accent="#ffb86b"></button></div></div><div class="setting-row"><strong>Glass intensity</strong><input id="glassIntensity" type="range" min="10" max="42" value="28"><output id="glassIntensityValue">28px</output></div><div class="setting-row"><strong>Reduced motion</strong><button id="reduceMotion" class="toggle" type="button"><span></span></button></div><div class="setting-row"><strong>Reset appearance</strong><button id="resetAppearance" class="secondary-button">Reset</button></div></div></section>
-<section class="view" data-view="admin"><div class="view-header"><div><span class="eyebrow">STAFF ONLY</span><h2>Admin</h2><p>Final moderation controls.</p></div></div><div id="adminUserList" class="glass-panel" style="padding:20px">Admin controls are loading.</div></section>
-</main><aside class="right-rail"><div class="mini-profile glass-panel"><img id="sideAvatar" class="avatar avatar-md"><div><strong id="sideNameRail">User</strong><span id="sideHandle">@user</span></div><button id="profileNav" class="icon-button">Profile</button></div><div class="rail-card glass-panel"><strong>Trending tags</strong><div id="trendsList"></div></div><button id="logoutBtn" class="secondary-button">Sign out</button></aside>
-<nav class="nav-pill glass-panel"><button class="nav-item active" data-view-target="messages"><i data-lucide="message-circle"></i><span>Messages</span></button><button class="nav-item" data-view-target="video"><i data-lucide="video"></i><span>Video</span></button><button class="nav-item" data-view-target="trending"><i data-lucide="flame"></i><span>Trending</span></button><button class="nav-item" data-view-target="settings"><i data-lucide="settings"></i><span>Settings</span></button><button id="adminNav" class="nav-item is-hidden" data-view-target="admin"><i data-lucide="shield"></i><span>Admin</span></button></nav><button id="fab" class="fab"><i data-lucide="plus"></i></button></div>
-<div id="composerModal" class="modal"><div class="modal-card glass-panel"><button data-close-modal="composerModal" class="modal-close">×</button><h3>New post</h3><textarea id="postText" class="composer-textarea"></textarea><div id="postImagePreview" class="post-image-preview is-hidden"></div><input id="postFileInput" type="file" accept="image/*" hidden><button id="composerPhoto" class="secondary-button">Add image</button><button id="submitPostBtn" class="primary-button">Post</button></div></div>
-<div id="detailModal" class="modal"><div class="modal-card glass-panel"><button data-close-modal="detailModal" class="modal-close">×</button><div id="detailContent"></div></div></div>
-<div id="profileModal" class="modal"><div class="modal-card glass-panel profile-modal-card"><button data-close-modal="profileModal" class="modal-close">×</button><div class="profile-body"><img id="profPfp" class="avatar profile-avatar"><h3 id="profName"></h3><div id="profBadgeSlot"></div><div id="profStatus"></div><p id="profBio"></p><button id="profileEditBtn" class="secondary-button">Edit profile</button><button id="verifyRequestBtn" class="quiet-button">Request verification</button></div></div></div>
-<script type="module" src="script.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b10">
+  <title>Mobify</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div id="toast-container"></div>
+
+  <section id="auth-container" class="auth-screen">
+    <div class="auth-art" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="auth-card glass-panel">
+      <div class="brand-line"><div class="brand-mark">M</div><div class="brand-word">mobify<span>.</span></div></div>
+      <div class="auth-heading"><span class="eyebrow">A PLACE FOR YOUR PEOPLE</span><h1 id="authTitle">Welcome back.</h1><p>Messages, conversations, groups and calls — in one calm space.</p></div>
+      <form id="authForm" class="auth-form">
+        <label id="authNameWrap" class="field-wrap is-hidden"><i data-lucide="user"></i><input id="authName" placeholder="Your name" autocomplete="name"></label>
+        <label class="field-wrap"><i data-lucide="mail"></i><input id="authEmail" type="email" placeholder="Email" required autocomplete="email"></label>
+        <label class="field-wrap"><i data-lucide="lock-keyhole"></i><input id="authPass" type="password" placeholder="Password" required autocomplete="current-password"></label>
+        <button id="authBtn" class="primary-button" type="submit">Sign in</button>
+        <button id="toggleAuth" class="quiet-button" type="button">New here? <strong>Create an account</strong></button>
+      </form>
+    </div>
+  </section>
+
+  <div id="app-container" class="app hidden">
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <button id="brandHome" class="wordmark" type="button">mobify<span>.</span></button>
+      <div class="topbar-note"><span class="live-dot"></span><span id="sideName">User</span></div>
+    </header>
+
+    <div class="layout">
+      <aside class="left-rail">
+        <div class="rail-kicker">NAVIGATE</div>
+        <nav class="rail-nav">
+          <button class="nav-item active" data-view-target="messages"><i data-lucide="message-circle"></i><span>Messages</span><b>01</b></button>
+          <button class="nav-item" data-view-target="video"><i data-lucide="video"></i><span>Video</span><b>02</b></button>
+          <button class="nav-item" data-view-target="trending"><i data-lucide="flame"></i><span>Trending</span><b>03</b></button>
+          <button class="nav-item" data-view-target="settings"><i data-lucide="sliders-horizontal"></i><span>Settings</span><b>04</b></button>
+          <button id="adminNav" class="nav-item is-hidden" data-view-target="admin"><i data-lucide="shield"></i><span>Control room</span><b>05</b></button>
+        </nav>
+        <div class="rail-bottom">
+          <button id="profileNav" class="rail-profile" type="button"><img id="sideAvatar" class="avatar avatar-md" alt=""><span><strong id="sideHandle">@user</strong><small>Open profile</small></span><i data-lucide="arrow-up-right"></i></button>
+          <button id="logoutBtn" class="rail-exit" type="button"><i data-lucide="log-out"></i><span>Sign out</span></button>
+        </div>
+      </aside>
+
+      <main id="content-shell" class="content-shell">
+        <section class="view active-view" data-view="messages">
+          <div class="hero-heading">
+            <div><span class="eyebrow">TODAY'S CONVERSATION</span><h1>Messages<span class="accent-dot">.</span></h1><p>The newest things people in your Mobify world are saying.</p></div>
+            <button id="refreshFeedBtn" class="icon-button glass-button" type="button" aria-label="Refresh feed"><i data-lucide="refresh-cw"></i></button>
+          </div>
+
+          <button id="openComposer" class="composer glass-panel" type="button">
+            <img id="composerAvatar" class="avatar avatar-md" alt="">
+            <span>Start a thought, question, update...</span>
+            <i data-lucide="arrow-up-right"></i>
+          </button>
+
+          <div class="feed-head"><div class="feed-switch"><button class="feed-filter active" data-feed-filter="newest">Fresh</button><button class="feed-filter" data-feed-filter="popular">Popular</button></div><span>LIVE FEED</span></div>
+          <div id="feed" class="feed"></div>
+        </section>
+
+        <section class="view" data-view="video">
+          <div class="hero-heading"><div><span class="eyebrow">MOBIFY CALLS</span><h1>Video<span class="accent-dot">.</span></h1><p>Confer lives here now. No visual disconnect between the call and the social app.</p></div></div>
+          <div class="video-stage glass-panel"><div class="video-top"><div><span class="video-status"><i></i> Ready</span><strong>Mobify / Confer</strong></div><button id="openConferExternal" class="secondary-button" type="button"><i data-lucide="maximize-2"></i> Expand</button></div><div class="video-frame-wrap"><iframe title="Mobify Calls" src="https://itsmeh1.github.io/confer/confer.html?.amplify.com" allow="camera; microphone; display-capture; fullscreen"></iframe></div></div>
+        </section>
+
+        <section class="view" data-view="trending">
+          <div class="hero-heading"><div><span class="eyebrow">THE PULSE</span><h1>Trending<span class="accent-dot">.</span></h1><p>Not just what's new — what's getting people to stop and respond.</p></div></div>
+          <div class="trend-grid"><button class="trend-category active" data-trend-category="comments"><span class="trend-num">01</span><strong>Most commented</strong><small>Conversation starters</small><i data-lucide="message-circle"></i></button><button class="trend-category" data-trend-category="views"><span class="trend-num">02</span><strong>Most viewed</strong><small>Everyone's looking</small><i data-lucide="eye"></i></button><button class="trend-category" data-trend-category="likes"><span class="trend-num">03</span><strong>Most liked</strong><small>Community favorites</small><i data-lucide="heart"></i></button><button class="trend-category" data-trend-category="rising"><span class="trend-num">04</span><strong>Rising now</strong><small>Fast-moving posts</small><i data-lucide="flame"></i></button></div>
+          <div id="trendingFeed" class="feed trend-feed"></div>
+        </section>
+
+        <section class="view" data-view="settings">
+          <div class="hero-heading"><div><span class="eyebrow">PERSONAL SPACE</span><h1>Settings<span class="accent-dot">.</span></h1><p>Shape the atmosphere. These choices stay on this device.</p></div></div>
+          <div class="settings-stack glass-panel">
+            <div class="setting-row"><div><strong>Atmosphere</strong><small>Pick the base mood.</small></div><div class="segmented"><button data-theme="dark">Dark</button><button data-theme="midnight">Night</button><button data-theme="light">Light</button></div></div>
+            <div class="setting-row"><div><strong>Accent</strong><small>A little color goes a long way.</small></div><div class="accent-grid"><button data-accent="#9a8cff"></button><button data-accent="#68d9ff"></button><button data-accent="#ff7fa3"></button><button data-accent="#70d8a1"></button><button data-accent="#ffb45f"></button></div></div>
+            <div class="setting-row"><div><strong>Glass depth</strong><small>How deeply Mobify melts into the background.</small></div><div class="range-wrap"><input id="glassIntensity" type="range" min="10" max="42" value="28"><output id="glassIntensityValue">28px</output></div></div>
+            <div class="setting-row"><div><strong>Reduced motion</strong><small>Keep transitions quiet.</small></div><button id="reduceMotion" class="toggle" type="button"><span></span></button></div>
+            <div class="setting-row"><div><strong>Reset</strong><small>Return the visual system to default.</small></div><button id="resetAppearance" class="secondary-button" type="button">Restore default</button></div>
+          </div>
+        </section>
+
+        <section class="view" data-view="admin">
+          <div class="hero-heading"><div><span class="eyebrow">STAFF / CONTROL ROOM</span><h1>Moderation<span class="accent-dot">.</span></h1><p>Keep Mobify healthy without turning the admin panel into a spreadsheet.</p></div></div>
+          <div class="admin-stats"><div class="stat-card"><span>USERS</span><strong id="statUsers">0</strong></div><div class="stat-card"><span>POSTS</span><strong id="statPosts">0</strong></div><div class="stat-card"><span>BANNED</span><strong id="statBanned">0</strong></div><div class="stat-card"><span>MUTED</span><strong id="statMuted">0</strong></div></div>
+          <div class="admin-bar glass-panel"><input id="adminSearch" placeholder="Search a user..."><select id="adminFilter"><option value="all">All users</option><option value="muted">Muted</option><option value="banned">Banned</option><option value="suspended">Suspended</option><option value="staff">Staff</option><option value="verified">Verified</option></select><button id="refreshAdminBtn" class="secondary-button" type="button"><i data-lucide="refresh-cw"></i></button></div>
+          <div id="adminUserList" class="admin-list glass-panel"></div>
+        </section>
+      </main>
+
+      <aside class="right-rail">
+        <div class="pulse-card">
+          <div class="pulse-header"><span>YOUR PULSE</span><i data-lucide="activity"></i></div>
+          <div class="pulse-number">Now</div>
+          <p>You're looking at the live Mobify stream.</p>
+          <div class="pulse-line"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="tag-card glass-panel"><div class="tag-heading"><strong>Tags in motion</strong><i data-lucide="hash"></i></div><div id="trendsList"></div></div>
+      </aside>
+    </div>
+
+    <nav class="mobile-dock glass-panel" aria-label="Mobify navigation">
+      <button class="nav-item active" data-view-target="messages"><i data-lucide="message-circle"></i><span>Messages</span></button><button class="nav-item" data-view-target="video"><i data-lucide="video"></i><span>Video</span></button><button class="nav-item" data-view-target="trending"><i data-lucide="flame"></i><span>Trending</span></button><button class="nav-item" data-view-target="settings"><i data-lucide="sliders-horizontal"></i><span>Settings</span></button><button id="mobileAdminNav" class="nav-item is-hidden" data-view-target="admin"><i data-lucide="shield"></i><span>Admin</span></button>
+    </nav>
+
+    <button id="fab" class="fab" type="button" aria-label="Create post"><i data-lucide="plus"></i></button>
+  </div>
+
+  <div id="composerModal" class="modal" aria-hidden="true"><div class="modal-card glass-panel"><button data-close-modal="composerModal" class="modal-close" type="button">×</button><span class="eyebrow">NEW POST</span><h3>Put it out there.</h3><textarea id="postText" class="composer-textarea" maxlength="5000" placeholder="What's on your mind?"></textarea><div id="postImagePreview" class="post-image-preview is-hidden"></div><div class="composer-footer"><button id="composerPhoto" class="secondary-button" type="button"><i data-lucide="image"></i> Add image</button><input id="postFileInput" type="file" accept="image/*" hidden><button id="submitPostBtn" class="primary-button" type="button">Publish</button></div></div></div>
+
+  <div id="detailModal" class="modal" aria-hidden="true"><div class="modal-card glass-panel"><button data-close-modal="detailModal" class="modal-close" type="button">×</button><div id="detailContent"></div></div></div>
+
+  <div id="profileModal" class="modal" aria-hidden="true"><div class="modal-card glass-panel profile-card"><button data-close-modal="profileModal" class="modal-close" type="button">×</button><div class="profile-cover"></div><div class="profile-body"><img id="profPfp" class="avatar profile-avatar" alt=""><h3 id="profName">User</h3><div id="profBadgeSlot" class="badge-row"></div><div id="profStatus" class="profile-status"></div><p id="profBio"></p><button id="profileEditBtn" class="secondary-button" type="button">Edit profile</button><button id="verifyRequestBtn" class="quiet-button" type="button">Request verification</button></div></div></div>
+
+  <div id="editProfileModal" class="modal" aria-hidden="true"><div class="modal-card glass-panel"><button data-close-modal="editProfileModal" class="modal-close" type="button">×</button><span class="eyebrow">ACCOUNT</span><h3>Edit profile</h3><div class="auth-form profile-form"><input id="editName" placeholder="Name"><input id="editStatus" placeholder="Status"><textarea id="editBio" class="composer-textarea" placeholder="Bio"></textarea><input id="editPfpInput" type="file" accept="image/*"><button id="saveProfileBtn" class="primary-button" type="button">Save profile</button></div></div></div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
