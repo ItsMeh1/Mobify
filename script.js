@@ -332,3 +332,10 @@ onAuthStateChanged(auth, async user => {
 });
 
 refreshIcons();
+
+const APPEARANCE_KEY='mobify.appearance.v1';
+const DEFAULT_APPEARANCE={theme:'dark',accent:'#9b8cff',glass:28,reduceMotion:false};
+function applyAppearance(v){const x={...DEFAULT_APPEARANCE,...v};document.documentElement.dataset.theme=x.theme;document.documentElement.style.setProperty('--accent',x.accent);document.documentElement.style.setProperty('--accent-2',x.accent);document.documentElement.style.setProperty('--glass-blur',x.glass+'px');localStorage.setItem(APPEARANCE_KEY,JSON.stringify(x));}
+function loadAppearance(){try{return {...DEFAULT_APPEARANCE,...JSON.parse(localStorage.getItem(APPEARANCE_KEY)||'{}')}}catch{return DEFAULT_APPEARANCE}}
+let trendCategory='comments';
+function renderTrending(){const root=$('trendingFeed');if(!root)return;const p=[...allPostsCache];p.sort((a,b)=>{const n=x=>trendCategory==='views'?(x.views||0):trendCategory==='likes'?(x.likes?.length||0):trendCategory==='comments'?(x.comments?.length||0):postScore(x);return n(b)-n(a)});root.innerHTML='';p.slice(0,12).forEach(x=>root.appendChild(renderPost(x)));if(!p.length)root.innerHTML='<div class="empty-feed glass-panel">Nothing trending yet.</div>';refreshIcons();}
