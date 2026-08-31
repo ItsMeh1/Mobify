@@ -41,6 +41,7 @@ const normalizeUser = (uid, data = {}) => ({
   rankPriority: Number(data.rankPriority || 0),
   muted: !!data.muted,
   banned: !!data.banned,
+  suspended: !!data.suspended,
   verified: !!data.verified,
   verifiedRequested: !!data.verifiedRequested,
   bio: data.bio || "New to Mobify.",
